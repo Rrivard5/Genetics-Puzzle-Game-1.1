@@ -1,0 +1,20 @@
+[
+  {
+    "id": "p1",
+    "question": "What is the probability of a male offspring with orange scales and dark vision from a cross between Female (RB dd) × Male (Yi d)?",
+    "options": ["1/4", "1/8", "1/2", "3/4"],
+    "answer": "1/4"
+  },
+  {
+    "id": "p2",
+    "question": "What is the probability that a female offspring without dark vision will have blue OR red scales? (Cross: Female BY Dd × Male BR d)",
+    "options": ["1/2", "3/4", "1/8", "1/4"],
+    "answer": "1/2"
+  },
+  {
+    "id": "p3",
+    "question": "If two loci are 33 cM apart, what is the recombination frequency between them?",
+    "options": ["0%", "12.5%", "25%", "33%", "50%"],
+    "answer": "33%"
+  }
+]
