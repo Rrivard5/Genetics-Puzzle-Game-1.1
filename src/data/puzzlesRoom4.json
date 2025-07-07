@@ -1,0 +1,20 @@
+[
+  {
+    "id": "p1",
+    "question": "What population genetics phenomenon is most likely if a small population is isolated on an island and shows reduced genetic diversity?",
+    "options": ["Founder Effect", "Migration", "Natural Selection", "Non-random mating", "Population Bottleneck"],
+    "answer": "Founder Effect"
+  },
+  {
+    "id": "p2",
+    "question": "If the dominant allele frequency is 0.6, what is the expected frequency of homozygous recessive individuals in Hardy-Weinberg equilibrium?",
+    "options": ["0.04", "0.16", "0.36", "0.64"],
+    "answer": "0.16"
+  },
+  {
+    "id": "p3",
+    "question": "Which segments remain in the final processed mRNA transcript?",
+    "options": ["Exon A, Exon B, Exon C", "Intron A, Intron B, Intron C", "Exon A, Intron B, Exon C", "1, 4, 5"],
+    "answer": "1, 4, 5"
+  }
+]
