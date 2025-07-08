@@ -93,8 +93,10 @@ export default function Room1() {
             <h3 className="text-center text-2xl font-bold text-purple-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
               🧬 CODON CHART 🧬
             </h3>
-            <div className="flex justify-center">
-              <CodonChart />
+            <div className="flex justify-center w-full">
+              <div className="w-full max-w-6xl">
+                <CodonChart />
+              </div>
             </div>
             <div className="text-center mt-4">
               <p className="text-purple-200 text-sm">Ancient genetic translation cipher recovered from alien archives</p>
@@ -103,51 +105,75 @@ export default function Room1() {
           </div>
         )}
 
-        {/* Ancient Temple Door */}
+        {/* Ancient Temple Door - Inspired by realistic temple architecture */}
         <div className="relative flex justify-center mb-12">
           <div className="relative">
             <svg width="500" height="700" viewBox="0 0 500 700" className="drop-shadow-2xl">
-              {/* Door Frame/Architecture */}
-              <rect x="50" y="50" width="400" height="600" rx="20" fill="url(#stoneFrame)" stroke="#8b5a2b" strokeWidth="6"/>
+              {/* Outer Temple Frame */}
+              <rect x="30" y="30" width="440" height="640" rx="25" fill="url(#outerStone)" stroke="#6b4423" strokeWidth="8"/>
               
-              {/* Door Panels */}
-              <rect x="80" y="80" width="340" height="540" rx="15" fill="url(#doorSurface)"/>
+              {/* Inner Frame */}
+              <rect x="60" y="60" width="380" height="580" rx="20" fill="url(#innerStone)" stroke="#8b5a2b" strokeWidth="4"/>
               
-              {/* Header Text */}
-              <rect x="100" y="100" width="300" height="60" rx="8" fill="url(#carving)" opacity="0.7"/>
-              <text x="250" y="135" textAnchor="middle" fill="#10b981" fontSize="16" fontFamily="serif">GENETIC TEMPLE</text>
+              {/* Door Panels - More realistic proportions */}
+              <rect x="80" y="100" width="340" height="520" rx="15" fill="url(#doorSurface)"/>
               
-              {/* Central Door Seam */}
-              <line x1="250" y1="80" x2="250" y2="620" stroke="#4a5568" strokeWidth="3"/>
+              {/* Ornate Header Section */}
+              <rect x="90" y="110" width="320" height="80" rx="10" fill="url(#headerCarving)" stroke="#4a5568" strokeWidth="2"/>
+              <text x="250" y="155" textAnchor="middle" fill="#10b981" fontSize="18" fontFamily="serif" fontWeight="bold">TEMPLE OF GENESIS</text>
               
-              {/* Door Handles */}
-              <circle cx="180" cy="400" r="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
-              <circle cx="320" cy="400" r="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
+              {/* Central Vertical Divide */}
+              <line x1="250" y1="100" x2="250" y2="620" stroke="#374151" strokeWidth="4"/>
               
-              {/* Subtle Pea Plant Etchings */}
-              <g opacity="0.3" fill="#10b981" stroke="#047857" strokeWidth="1">
-                {/* Left side pea plant */}
-                <path d="M120 250 Q130 240, 140 250 Q150 240, 160 250" fill="none" strokeWidth="2"/>
-                <circle cx="125" cy="250" r="3"/>
-                <circle cx="135" cy="245" r="3"/>
-                <circle cx="145" cy="250" r="3"/>
-                <circle cx="155" cy="245" r="3"/>
+              {/* Realistic Door Panels with Carved Details */}
+              <g opacity="0.4" stroke="#4a5568" strokeWidth="2" fill="none">
+                {/* Left door panel carvings */}
+                <rect x="100" y="220" width="130" height="180" rx="8"/>
+                <rect x="110" y="230" width="110" height="160" rx="6"/>
+                <circle cx="165" cy="310" r="25"/>
+                <path d="M145 310 Q165 290, 185 310" strokeWidth="3"/>
                 
-                {/* Right side pea plant */}
-                <path d="M340 350 Q350 340, 360 350 Q370 340, 380 350" fill="none" strokeWidth="2"/>
-                <circle cx="345" cy="350" r="3"/>
-                <circle cx="355" cy="345" r="3"/>
-                <circle cx="365" cy="350" r="3"/>
-                <circle cx="375" cy="345" r="3"/>
+                {/* Right door panel carvings */}
+                <rect x="270" y="220" width="130" height="180" rx="8"/>
+                <rect x="280" y="230" width="110" height="160" rx="6"/>
+                <circle cx="335" cy="310" r="25"/>
+                <path d="M315 310 Q335 290, 355 310" strokeWidth="3"/>
                 
-                {/* Bottom center decorative plants */}
-                <path d="M220 500 Q230 490, 240 500 Q250 490, 260 500 Q270 490, 280 500" fill="none" strokeWidth="2"/>
-                <circle cx="225" cy="500" r="2"/>
-                <circle cx="235" cy="495" r="2"/>
-                <circle cx="245" cy="500" r="2"/>
-                <circle cx="255" cy="495" r="2"/>
-                <circle cx="265" cy="500" r="2"/>
-                <circle cx="275" cy="495" r="2"/>
+                {/* Lower panels */}
+                <rect x="100" y="420" width="130" height="140" rx="8"/>
+                <rect x="270" y="420" width="130" height="140" rx="8"/>
+                
+                {/* Decorative corner elements */}
+                <circle cx="120" cy="240" r="8"/>
+                <circle cx="380" cy="240" r="8"/>
+                <circle cx="120" cy="580" r="8"/>
+                <circle cx="380" cy="580" r="8"/>
+              </g>
+              
+              {/* Realistic Door Handles */}
+              <g>
+                <ellipse cx="190" cy="380" rx="12" ry="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
+                <rect x="185" y="375" width="10" height="10" fill="#8b5a2b" rx="2"/>
+                
+                <ellipse cx="310" cy="380" rx="12" ry="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
+                <rect x="305" y="375" width="10" height="10" fill="#8b5a2b" rx="2"/>
+              </g>
+              
+              {/* Subtle DNA Helix Etchings */}
+              <g opacity="0.3" fill="#10b981" stroke="#047857" strokeWidth="1.5">
+                {/* Left DNA helix */}
+                <path d="M130 260 Q140 250, 150 260 Q160 250, 170 260 Q180 250, 190 260" fill="none" strokeWidth="2"/>
+                <path d="M130 280 Q140 270, 150 280 Q160 270, 170 280 Q180 270, 190 280" fill="none" strokeWidth="2"/>
+                <line x1="135" y1="265" x2="165" y2="275" strokeWidth="1"/>
+                <line x1="145" y1="255" x2="175" y2="285" strokeWidth="1"/>
+                <line x1="155" y1="275" x2="185" y2="265" strokeWidth="1"/>
+                
+                {/* Right DNA helix */}
+                <path d="M310 460 Q320 450, 330 460 Q340 450, 350 460 Q360 450, 370 460" fill="none" strokeWidth="2"/>
+                <path d="M310 480 Q320 470, 330 480 Q340 470, 350 480 Q360 470, 370 480" fill="none" strokeWidth="2"/>
+                <line x1="315" y1="465" x2="345" y2="475" strokeWidth="1"/>
+                <line x1="325" y1="455" x2="355" y2="485" strokeWidth="1"/>
+                <line x1="335" y1="475" x2="365" y2="465" strokeWidth="1"/>
               </g>
               
               {/* Lock Positions */}
@@ -216,21 +242,29 @@ export default function Room1() {
                 </g>
               )}
               
-              {/* SVG Gradients and Effects */}
+              {/* SVG Gradients and Effects - Updated for realistic stone */}
               <defs>
-                <linearGradient id="stoneFrame" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5a2b"/>
-                  <stop offset="50%" stopColor="#a16232"/>
-                  <stop offset="100%" stopColor="#6b4423"/>
+                <linearGradient id="outerStone" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b7355"/>
+                  <stop offset="30%" stopColor="#a0845c"/>
+                  <stop offset="70%" stopColor="#9a7c54"/>
+                  <stop offset="100%" stopColor="#7a6547"/>
+                </linearGradient>
+                <linearGradient id="innerStone" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6b5d48"/>
+                  <stop offset="50%" stopColor="#7a6b56"/>
+                  <stop offset="100%" stopColor="#5c4f3c"/>
                 </linearGradient>
                 <linearGradient id="doorSurface" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#1f2937"/>
-                  <stop offset="50%" stopColor="#374151"/>
-                  <stop offset="100%" stopColor="#111827"/>
+                  <stop offset="0%" stopColor="#2d3748"/>
+                  <stop offset="30%" stopColor="#4a5568"/>
+                  <stop offset="70%" stopColor="#374151"/>
+                  <stop offset="100%" stopColor="#1a202c"/>
                 </linearGradient>
-                <linearGradient id="carving" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#4b5563"/>
-                  <stop offset="100%" stopColor="#1f2937"/>
+                <linearGradient id="headerCarving" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4a5568"/>
+                  <stop offset="50%" stopColor="#2d3748"/>
+                  <stop offset="100%" stopColor="#1a202c"/>
                 </linearGradient>
                 <radialGradient id="lockBackground">
                   <stop offset="0%" stopColor="#1f2937"/>
