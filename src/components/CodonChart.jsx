@@ -1,9 +1,8 @@
-// src/components/CodonChart.jsx
 import React from 'react';
 
 const CodonChart = () => (
-  <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg border-2 border-purple-300 shadow-xl">
-    <svg viewBox="0 0 900 700" className="w-full h-auto max-h-[500px]">
+  <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg border-2 border-purple-300 shadow-xl max-w-7xl mx-auto">
+    <svg viewBox="0 0 900 700" className="w-full h-auto min-h-[600px] max-h-[800px]">
       {/* Title */}
       <text x="450" y="40" textAnchor="middle" fill="#e879f9" fontSize="28" fontWeight="bold">
         Genetic Code Chart
