@@ -73,3 +73,112 @@ export default function Room1() {
           <div 
             className="bg-yellow-400 rounded-full h-3 transition-all duration-300"
             style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* DNA Sequence Display */}
+      <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-6 mb-6">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-green-800 mb-4">🧬 Genetic Code Analysis</h2>
+          <div className="bg-white rounded-lg p-4 font-mono text-lg border-2 border-green-300">
+            <div className="mb-2 text-green-700">Original: 3'CGACGATACG<span className="bg-yellow-300 px-1 rounded">G</span>AGGGGTCACTCCT5'</div>
+            <div className="text-green-600">Potential mutations:</div>
+            <div className="text-sm mt-2 space-y-1">
+              <div className="text-yellow-600">🟡 Point mutation from G to A</div>
+              <div className="text-yellow-600">🟡 Point mutation from G to C</div>
+              <div className="text-blue-600">🔵 Point mutation from G to T</div>
+              <div className="text-purple-600">🟣 Point mutation from G to T</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Questions */}
+      <div className="space-y-6">
+        {puzzles.map((puzzle, index) => (
+          <div key={puzzle.id} className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                {index + 1}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 leading-relaxed">
+                  {puzzle.question}
+                </h3>
+                <div className="space-y-2 mb-4">
+                  {puzzle.options.map((option, optIndex) => (
+                    <label 
+                      key={optIndex}
+                      className="flex items-center p-3 rounded-lg hover:bg-green-50 cursor-pointer transition-colors border border-green-100"
+                    >
+                      <input
+                        type="radio"
+                        name={puzzle.id}
+                        value={option}
+                        checked={responses[puzzle.id] === option}
+                        onChange={(e) => handleChange(e, puzzle.id)}
+                        className="mr-3 h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
+                      />
+                      <span className="text-gray-700">{option}</span>
+                    </label>
+                  ))}
+                </div>
+                
+                {/* Hint Button */}
+                {puzzle.hint && (
+                  <div className="mt-4">
+                    <button
+                      onClick={() => toggleHint(puzzle.id)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      {showHint[puzzle.id] ? 'Hide Hint' : 'Click here to try and unlock a hint'}
+                    </button>
+                    {showHint[puzzle.id] && (
+                      <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p className="text-yellow-800 text-sm">💡 {puzzle.hint}</p>
+                        <p className="text-xs text-yellow-600 mt-2">Please record on your worksheet that you used this hint.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <span className="text-red-600 mr-2">🚫</span>
+            <span className="text-red-700 font-medium">{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Button */}
+      <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className={`px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 ${
+            isSubmitting
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-xl transform hover:-translate-y-0.5'
+          }`}
+        >
+          {isSubmitting ? (
+            <span className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Unlocking Temple Door...
+            </span>
+          ) : (
+            'Submit Temple Code'
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
