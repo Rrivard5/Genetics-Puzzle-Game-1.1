@@ -15,3 +15,21 @@
     "question": "In the same cross (BY Dd × BR d), what is the probability of getting a male offspring with orange scales and dark vision?",
     "options": [
       "1/8",
+      "1/4",
+      "1/2",
+      "0"
+    ],
+    "answer": "1/4"
+  },
+  {
+    "id": "p3",
+    "question": "If two loci are 33 centiMorgans apart, what is the recombination frequency between them?",
+    "options": [
+      "0%",
+      "16.5%",
+      "33%",
+      "50%"
+    ],
+    "answer": "33%"
+  }
+]
