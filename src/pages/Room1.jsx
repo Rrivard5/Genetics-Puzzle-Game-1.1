@@ -76,134 +76,34 @@ export default function Room1() {
           </p>
         </div>
 
-        {/* Genetic Code Table */}
+        {/* Codon Chart */}
         <div className="mb-8 flex justify-center">
           <button
             onClick={() => setShowGeneticCode(!showGeneticCode)}
             className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-6 py-3 rounded-lg font-bold text-lg border-2 border-purple-400 hover:border-purple-300 transition-all transform hover:scale-105 shadow-lg"
             style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
           >
-            {showGeneticCode ? '⬆ HIDE' : '⬇ REVEAL'} ANCIENT GENETIC CODEX
+            {showGeneticCode ? '⬆ HIDE' : '⬇ REVEAL'} CODON CHART
           </button>
         </div>
 
         {showGeneticCode && (
           <div className="mb-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-black border-4 border-purple-400 rounded-xl p-6 shadow-2xl">
-            <h3 className="text-center text-2xl font-bold text-purple-300 mb-4" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-              🧬 ALIEN GENETIC TRANSLATION MATRIX 🧬
+            <h3 className="text-center text-2xl font-bold text-purple-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+              🧬 CODON CHART 🧬
             </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-center text-sm">
-                <thead>
-                  <tr>
-                    <th rowSpan="2" className="border-2 border-purple-400 p-2 bg-gradient-to-br from-purple-800 to-indigo-800 text-purple-200 font-bold text-xs">
-                      First base<br/>in codon
-                    </th>
-                    <th colSpan="4" className="border-2 border-purple-400 p-2 bg-gradient-to-r from-indigo-700 to-purple-700 text-white font-bold">
-                      Second base in codon
-                    </th>
-                    <th rowSpan="2" className="border-2 border-purple-400 p-2 bg-gradient-to-br from-purple-800 to-indigo-800 text-purple-200 font-bold text-xs">
-                      Last base<br/>in codon
-                    </th>
-                  </tr>
-                  <tr>
-                    <th className="border-2 border-purple-400 p-2 bg-blue-700 text-white font-bold">U</th>
-                    <th className="border-2 border-purple-400 p-2 bg-emerald-700 text-white font-bold">C</th>
-                    <th className="border-2 border-purple-400 p-2 bg-amber-700 text-white font-bold">A</th>
-                    <th className="border-2 border-purple-400 p-2 bg-rose-700 text-white font-bold">G</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs font-mono">
-                  {/* U row */}
-                  <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-blue-700 text-white font-bold text-lg">U</td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      UUU<br/>UUC <span className="text-amber-300 font-bold">Phe</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      UCU<br/>UCC<br/>UCA<br/>UCG <span className="text-amber-300 font-bold">Ser</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      UAU<br/>UAC <span className="text-amber-300 font-bold">Tyr</span><br/>
-                      UAA <span className="text-rose-400 font-bold">STOP</span><br/>
-                      UAG <span className="text-rose-400 font-bold">STOP</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      UGU<br/>UGC <span className="text-amber-300 font-bold">Cys</span><br/>
-                      UGA <span className="text-rose-400 font-bold">STOP</span><br/>
-                      UGG <span className="text-amber-300 font-bold">Trp</span>
-                    </td>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-rose-700 text-white font-bold">U<br/>C<br/>A<br/>G</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      UUA<br/>UUG <span className="text-amber-300 font-bold">Leu</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800"></td>
-                    <td className="border border-purple-400 p-2 bg-gray-800"></td>
-                    <td className="border border-purple-400 p-2 bg-gray-800"></td>
-                  </tr>
-                  
-                  {/* C row */}
-                  <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-emerald-700 text-white font-bold text-lg">C</td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      CUU<br/>CUC<br/>CUA<br/>CUG <span className="text-amber-300 font-bold">Leu</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      CCU<br/>CCC<br/>CCA<br/>CCG <span className="text-amber-300 font-bold">Pro</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      CAU<br/>CAC <span className="text-amber-300 font-bold">His</span><br/>
-                      CAA<br/>CAG <span className="text-amber-300 font-bold">Gln</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      CGU<br/>CGC<br/>CGA<br/>CGG <span className="text-amber-300 font-bold">Arg</span>
-                    </td>
-                  </tr>
-                  <tr><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td></tr>
-                  
-                  {/* A row */}
-                  <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-amber-700 text-white font-bold text-lg">A</td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      AUU<br/>AUC<br/>AUA <span className="text-amber-300 font-bold">Ile</span><br/>
-                      <span className="text-emerald-400 font-bold">AUG Met (start)</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      ACU<br/>ACC<br/>ACA<br/>ACG <span className="text-amber-300 font-bold">Thr</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      AAU<br/>AAC <span className="text-amber-300 font-bold">Asn</span><br/>
-                      AAA<br/>AAG <span className="text-amber-300 font-bold">Lys</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      AGU<br/>AGC <span className="text-amber-300 font-bold">Ser</span><br/>
-                      AGA<br/>AGG <span className="text-amber-300 font-bold">Arg</span>
-                    </td>
-                  </tr>
-                  <tr><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td></tr>
-                  
-                  {/* G row */}
-                  <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-rose-700 text-white font-bold text-lg">G</td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      GUU<br/>GUC<br/>GUA<br/>GUG <span className="text-amber-300 font-bold">Val</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      GCU<br/>GCC<br/>GCA<br/>GCG <span className="text-amber-300 font-bold">Ala</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      GAU<br/>GAC <span className="text-amber-300 font-bold">Asp</span><br/>
-                      GAA<br/>GAG <span className="text-amber-300 font-bold">Glu</span>
-                    </td>
-                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
-                      GGU<br/>GGC<br/>GGA<br/>GGG <span className="text-amber-300 font-bold">Gly</span>
-                    </td>
-                  </tr>
-                  <tr><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td><td className="border border-purple-400 p-1 bg-gray-800"></td></tr>
-                </tbody>
-              </table>
+            <div className="flex justify-center">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-lg border-2 border-purple-300 shadow-xl">
+                <img 
+                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAI4CAYAAACuP8FjAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABxYSURBVHhe7d1PjBz3feDxb3d6Zme2Z/9QFClSomVJlmTJli1bdiK/OE4cOxfnAeQCOSQHHxJAQC5BgAQ4BAjyB3kEOSQIcsgfBDgESJBTgBwSJLZjO1YSR3Ecy5Il27Il27L+UBQpiqRIcXd2Z3pmdma6X/WrX1VPdU/PTM/MDLun5/sBGu6q7urq6p7u+nzr961fGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" 
+                  alt="Codon Chart" 
+                  className="max-w-full h-auto rounded-md"
+                  style={{ maxHeight: '500px' }}
+                />
+              </div>
+            </div>
+            <div className="text-center mt-4">
+              <p className="text-purple-200 text-sm">Ancient genetic translation cipher recovered from alien archives</p>
             </div>
           </div>
         )}
@@ -218,9 +118,9 @@ export default function Room1() {
               {/* Door Panels */}
               <rect x="80" y="80" width="340" height="540" rx="15" fill="url(#doorSurface)"/>
               
-              {/* Ancient Carvings */}
+              {/* Header Text */}
               <rect x="100" y="100" width="300" height="60" rx="8" fill="url(#carving)" opacity="0.7"/>
-              <text x="250" y="135" textAnchor="middle" fill="#10b981" fontSize="16" fontFamily="serif" className="animate-pulse">⚔ GENETIC TEMPLE ⚔</text>
+              <text x="250" y="135" textAnchor="middle" fill="#10b981" fontSize="16" fontFamily="serif">GENETIC TEMPLE</text>
               
               {/* Central Door Seam */}
               <line x1="250" y1="80" x2="250" y2="620" stroke="#4a5568" strokeWidth="3"/>
@@ -229,13 +129,33 @@ export default function Room1() {
               <circle cx="180" cy="400" r="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
               <circle cx="320" cy="400" r="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
               
-              {/* Ancient Geometric Patterns */}
-              <rect x="120" y="200" width="260" height="300" rx="10" fill="url(#pattern)" opacity="0.4"/>
+              {/* Subtle Pea Plant Etchings */}
+              <g opacity="0.3" fill="#10b981" stroke="#047857" strokeWidth="1">
+                {/* Left side pea plant */}
+                <path d="M120 250 Q130 240, 140 250 Q150 240, 160 250" fill="none" strokeWidth="2"/>
+                <circle cx="125" cy="250" r="3"/>
+                <circle cx="135" cy="245" r="3"/>
+                <circle cx="145" cy="250" r="3"/>
+                <circle cx="155" cy="245" r="3"/>
+                
+                {/* Right side pea plant */}
+                <path d="M340 350 Q350 340, 360 350 Q370 340, 380 350" fill="none" strokeWidth="2"/>
+                <circle cx="345" cy="350" r="3"/>
+                <circle cx="355" cy="345" r="3"/>
+                <circle cx="365" cy="350" r="3"/>
+                <circle cx="375" cy="345" r="3"/>
+                
+                {/* Bottom center decorative plants */}
+                <path d="M220 500 Q230 490, 240 500 Q250 490, 260 500 Q270 490, 280 500" fill="none" strokeWidth="2"/>
+                <circle cx="225" cy="500" r="2"/>
+                <circle cx="235" cy="495" r="2"/>
+                <circle cx="245" cy="500" r="2"/>
+                <circle cx="255" cy="495" r="2"/>
+                <circle cx="265" cy="500" r="2"/>
+                <circle cx="275" cy="495" r="2"/>
+              </g>
               
-              {/* Mystical Glow Effect */}
-              <rect x="90" y="90" width="320" height="520" rx="12" fill="none" stroke="url(#glowEffect)" strokeWidth="2" opacity="0.8"/>
-              
-              {/* Lock Positions with Mystical Circles */}
+              {/* Lock Positions */}
               {puzzles.map((puzzle, index) => {
                 const lockY = 250 + (index * 100);
                 const isAnswered = responses[puzzle.id];
@@ -243,18 +163,18 @@ export default function Room1() {
                 
                 return (
                   <g key={puzzle.id}>
-                    {/* Mystical Circle Background */}
+                    {/* Lock Circle Background */}
                     <circle 
                       cx="250" 
                       cy={lockY} 
-                      r="40" 
+                      r="35" 
                       fill="url(#lockBackground)"
                       stroke={isCorrect ? "#10b981" : isAnswered ? "#f59e0b" : "#71717a"}
                       strokeWidth="3"
                       opacity="0.8"
                     />
                     
-                    {/* Inner Mystical Circle */}
+                    {/* Inner Lock Circle */}
                     <circle 
                       cx="250" 
                       cy={lockY} 
@@ -266,7 +186,7 @@ export default function Room1() {
                       onClick={() => handleLockClick(puzzle.id)}
                     />
                     
-                    {/* Lock Symbol */}
+                    {/* Lock Icon */}
                     <text 
                       x="250" 
                       y={lockY + 6} 
@@ -278,34 +198,12 @@ export default function Room1() {
                       {isCorrect ? '🔓' : '🔒'}
                     </text>
                     
-                    {/* Ancient Runes Around Lock */}
-                    <text 
-                      x="200" 
-                      y={lockY + 5} 
-                      fill="#10b981" 
-                      fontSize="12" 
-                      fontFamily="serif"
-                      className="pointer-events-none opacity-70"
-                    >
-                      ᚱ
-                    </text>
-                    <text 
-                      x="300" 
-                      y={lockY + 5} 
-                      fill="#10b981" 
-                      fontSize="12" 
-                      fontFamily="serif"
-                      className="pointer-events-none opacity-70"
-                    >
-                      ᚠ
-                    </text>
-                    
                     {/* Lock Number */}
                     <text 
-                      x="320" 
+                      x="290" 
                       y={lockY + 5} 
                       fill="#f59e0b" 
-                      fontSize="12" 
+                      fontSize="14" 
                       fontFamily="Impact, Arial Black, sans-serif"
                       className="pointer-events-none"
                     >
@@ -317,10 +215,9 @@ export default function Room1() {
               
               {/* Master Keyhole (appears when all locks solved) */}
               {solvedCount === 3 && (
-                <g className="animate-pulse">
+                <g>
                   <ellipse cx="250" cy="580" rx="20" ry="25" fill="#f59e0b" opacity="0.9"/>
                   <rect x="243" y="590" width="14" height="25" fill="#f59e0b" opacity="0.9"/>
-                  <circle cx="250" cy="580" r="30" fill="none" stroke="#10b981" strokeWidth="3" className="animate-ping"/>
                 </g>
               )}
               
@@ -339,16 +236,6 @@ export default function Room1() {
                 <linearGradient id="carving" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#4b5563"/>
                   <stop offset="100%" stopColor="#1f2937"/>
-                </linearGradient>
-                <linearGradient id="pattern" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.3"/>
-                  <stop offset="50%" stopColor="#059669" stopOpacity="0.2"/>
-                  <stop offset="100%" stopColor="#047857" stopOpacity="0.3"/>
-                </linearGradient>
-                <linearGradient id="glowEffect" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#10b981"/>
-                  <stop offset="50%" stopColor="#059669"/>
-                  <stop offset="100%" stopColor="#047857"/>
                 </linearGradient>
                 <radialGradient id="lockBackground">
                   <stop offset="0%" stopColor="#1f2937"/>
@@ -374,7 +261,7 @@ export default function Room1() {
               <p className="text-amber-300 font-bold text-lg" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
                 {solvedCount === 3 ? 
                   "🗝️ ANCIENT DOOR UNSEALED" : 
-                  `🔒 ${3 - solvedCount} MYSTICAL LOCKS REMAINING`
+                  `🔒 ${3 - solvedCount} LOCKS REMAINING`
                 }
               </p>
               <p className="text-emerald-400 text-sm mt-2">Click the locks to reveal their mysteries</p>
