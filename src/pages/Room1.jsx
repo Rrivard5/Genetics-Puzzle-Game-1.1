@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGame } from '../context/GameStateContext'
 import puzzles from '../data/puzzlesRoom1.json'
+import CodonChart from '../components/CodonChart'
 
 export default function Room1() {
   const [responses, setResponses] = useState({})
@@ -93,17 +94,11 @@ export default function Room1() {
               🧬 CODON CHART 🧬
             </h3>
             <div className="flex justify-center">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-lg border-2 border-purple-300 shadow-xl">
-                <img 
-                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAI4CAYAAACuP8FjAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABxYSURBVHhe7d1PjBz3feDxb3d6Zme2Z/9QFClSomVJlmTJli1bdiK/OE4cOxfnAeQCOSQHHxJAQC5BgAQ4BAjyB3kEOSQIcsgfBDgESJBTgBwSJLZjO1YSR3Ecy5Il27Il27L+UBQpiqRIcXd2Z3pmdma6X/WrX1VPdU/PTM/MDLun5/sBGu6q7urq6p7u+nzr961fGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" 
-                  alt="Codon Chart" 
-                  className="max-w-full h-auto rounded-md"
-                  style={{ maxHeight: '500px' }}
-                />
-              </div>
+              <CodonChart />
             </div>
             <div className="text-center mt-4">
               <p className="text-purple-200 text-sm">Ancient genetic translation cipher recovered from alien archives</p>
+              <p className="text-purple-300 text-xs mt-2">For detailed codon mappings, search "genetic code table" or consult your genetics textbook</p>
             </div>
           </div>
         )}
