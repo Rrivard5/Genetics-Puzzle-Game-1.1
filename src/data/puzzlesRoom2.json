@@ -16,4 +16,20 @@
     "options": [
       "XDXd RB",
       "XdXd BB", 
-      "XdX
+      "XdXd RB",
+      "XDXd BB"
+    ],
+    "answer": "XdXd BB"
+  },
+  {
+    "id": "p3",
+    "question": "Based on the inheritance patterns shown, if individual 9 had children with a normal vision male, what percentage of their daughters would have dark vision?",
+    "options": [
+      "0%",
+      "25%", 
+      "50%",
+      "100%"
+    ],
+    "answer": "0%"
+  }
+]
