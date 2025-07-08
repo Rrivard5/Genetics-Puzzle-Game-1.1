@@ -1,16 +1,38 @@
 [
   {
     "id": "p1",
-    "question": "What type of mutation results from changing X to A in the DNA sequence 3’CGACGATACGGAGGGGTCACTCCT5’?",
-    "options": ["Point mutation from X to A", "Point mutation from X to G", "Point mutation from X to T"],
-    "answer": "Point mutation from X to A"
+    "question": "What type of mutation results from changing the highlighted G to A in the DNA sequence 3'CGACGATACGGAGGGGTCACTCCT5'?",
+    "options": [
+      "Point mutation from G to A",
+      "Point mutation from G to C", 
+      "Point mutation from G to T",
+      "Insertion mutation"
+    ],
+    "answer": "Point mutation from G to A",
+    "hint": "Look at the color coding - the mutation type is determined by the color of the highlighted nucleotide."
   },
   {
     "id": "p2",
-    "question": "What is the correct alteration for the allele 3’TTTCCTTACCTGG*C*AGGGCATTGACTTGGC5’?",
-    "options": ["Insertion of A", "Insertion of ATC", "Deletion of indicated nucleotide"],
-    "answer": "Insertion of ATC"
+    "question": "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
+    "options": [
+      "RPQ",
+      "RSE", 
+      "SPE",
+      "SPQ"
+    ],
+    "answer": "RPQ",
+    "hint": "Use the codon wheel to translate the mRNA sequence after the mutation occurs."
   },
   {
-    "id": "p3",
-    "question": "Which mutation best describes a section of DNA flipping and reinserti
+    "id": "p3", 
+    "question": "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
+    "options": [
+      "CPE → RPQ",
+      "PPE → RSE",
+      "PPQ → SPE", 
+      "RPE → SPQ"
+    ],
+    "answer": "CPE → RPQ",
+    "hint": "Compare the original sequence translation with the mutated sequence translation."
+  }
+]
