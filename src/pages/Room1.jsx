@@ -87,163 +87,295 @@ export default function Room1() {
               🧬 ALIEN GENETIC TRANSLATION MATRIX 🧬
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse text-center">
                 <thead>
                   <tr>
-                    <th className="border-2 border-purple-400 p-2 text-center bg-gradient-to-br from-purple-800 to-indigo-800">
-                      <div className="text-purple-200 font-bold">Second letter</div>
+                    <th rowSpan="2" className="border-2 border-purple-400 p-3 bg-gradient-to-br from-purple-800 to-indigo-800">
+                      <div className="text-purple-200 font-bold text-sm">First base<br/>in codon</div>
                     </th>
-                    <th className="border-2 border-purple-400 p-2 bg-blue-800 text-white font-bold">U</th>
-                    <th className="border-2 border-purple-400 p-2 bg-yellow-700 text-white font-bold">C</th>
-                    <th className="border-2 border-purple-400 p-2 bg-green-700 text-white font-bold">A</th>
-                    <th className="border-2 border-purple-400 p-2 bg-purple-700 text-white font-bold">G</th>
-                    <th className="border-2 border-purple-400 p-2 text-center bg-gradient-to-br from-purple-800 to-indigo-800">
-                      <div className="text-purple-200 font-bold">Third letter</div>
+                    <th colSpan="4" className="border-2 border-purple-400 p-2 bg-gradient-to-r from-blue-700 to-purple-700 text-white font-bold">
+                      Second base in codon
                     </th>
+                    <th rowSpan="2" className="border-2 border-purple-400 p-3 bg-gradient-to-br from-purple-800 to-indigo-800">
+                      <div className="text-purple-200 font-bold text-sm">Last base<br/>in codon</div>
+                    </th>
+                  </tr>
+                  <tr>
+                    <th className="border-2 border-purple-400 p-2 bg-blue-600 text-white font-bold">U</th>
+                    <th className="border-2 border-purple-400 p-2 bg-green-600 text-white font-bold">C</th>
+                    <th className="border-2 border-purple-400 p-2 bg-yellow-600 text-white font-bold">A</th>
+                    <th className="border-2 border-purple-400 p-2 bg-red-600 text-white font-bold">G</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm font-mono">
+                <tbody className="text-xs font-mono">
+                  {/* U row */}
                   <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 text-center bg-blue-800 text-white font-bold">U</td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">UUU<br/>UUC} <span className="text-yellow-300">Phe</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">UCU<br/>UCC<br/>UCA<br/>UCG} <span className="text-yellow-300">Ser</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">UAU<br/>UAC} <span className="text-yellow-300">Tyr</span><br/>UAA <span className="text-red-400">Stop</span><br/>UAG <span className="text-red-400">Stop</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">UGU<br/>UGC} <span className="text-yellow-300">Cys</span><br/>UGA <span className="text-red-400">Stop</span><br/>UGG <span className="text-yellow-300">Trp</span></td>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 text-center bg-purple-800 text-white font-bold">U<br/>C<br/>A<br/>G</td>
+                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-blue-600 text-white font-bold text-lg">U</td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      UUU<br/>UUC <span className="text-yellow-300 font-bold">Phe</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      UCU<br/>UCC<br/>UCA<br/>UCG <span className="text-yellow-300 font-bold">Ser</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      UAU<br/>UAC <span className="text-yellow-300 font-bold">Tyr</span><br/>
+                      UAA <span className="text-red-400 font-bold">STOP</span><br/>
+                      UAG <span className="text-red-400 font-bold">STOP</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      UGU<br/>UGC <span className="text-yellow-300 font-bold">Cys</span><br/>
+                      UGA <span className="text-red-400 font-bold">STOP</span><br/>
+                      UGG <span className="text-yellow-300 font-bold">Trp</span>
+                    </td>
+                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-red-600 text-white font-bold">U<br/>C<br/>A<br/>G</td>
                   </tr>
                   <tr>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">UUA<br/>UUG} <span className="text-yellow-300">Leu</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white"></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white"></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white"></td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      UUA<br/>UUG <span className="text-yellow-300 font-bold">Leu</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white"></td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white"></td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white"></td>
                   </tr>
+                  
+                  {/* C row */}
                   <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 text-center bg-yellow-700 text-white font-bold">C</td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">CUU<br/>CUC<br/>CUA<br/>CUG} <span className="text-yellow-300">Leu</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">CCU<br/>CCC<br/>CCA<br/>CCG} <span className="text-yellow-300">Pro</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">CAU<br/>CAC} <span className="text-yellow-300">His</span><br/>CAA<br/>CAG} <span className="text-yellow-300">Gln</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">CGU<br/>CGC<br/>CGA<br/>CGG} <span className="text-yellow-300">Arg</span></td>
+                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-green-600 text-white font-bold text-lg">C</td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      CUU<br/>CUC<br/>CUA<br/>CUG <span className="text-yellow-300 font-bold">Leu</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      CCU<br/>CCC<br/>CCA<br/>CCG <span className="text-yellow-300 font-bold">Pro</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      CAU<br/>CAC <span className="text-yellow-300 font-bold">His</span><br/>
+                      CAA<br/>CAG <span className="text-yellow-300 font-bold">Gln</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      CGU<br/>CGC<br/>CGA<br/>CGG <span className="text-yellow-300 font-bold">Arg</span>
+                    </td>
                   </tr>
+                  <tr><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td></tr>
+                  
+                  {/* A row */}
                   <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 text-center bg-green-700 text-white font-bold">A</td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">AUU<br/>AUC<br/>AUA} <span className="text-yellow-300">Ile</span><br/><span className="text-red-300">AUG</span> <span className="text-yellow-300">Met</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">ACU<br/>ACC<br/>ACA<br/>ACG} <span className="text-yellow-300">Thr</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">AAU<br/>AAC} <span className="text-yellow-300">Asn</span><br/>AAA<br/>AAG} <span className="text-yellow-300">Lys</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">AGU<br/>AGC} <span className="text-yellow-300">Ser</span><br/>AGA<br/>AGG} <span className="text-yellow-300">Arg</span></td>
+                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-yellow-600 text-white font-bold text-lg">A</td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      AUU<br/>AUC<br/>AUA <span className="text-yellow-300 font-bold">Ile</span><br/>
+                      <span className="text-green-400 font-bold">AUG Met (start)</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      ACU<br/>ACC<br/>ACA<br/>ACG <span className="text-yellow-300 font-bold">Thr</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      AAU<br/>AAC <span className="text-yellow-300 font-bold">Asn</span><br/>
+                      AAA<br/>AAG <span className="text-yellow-300 font-bold">Lys</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      AGU<br/>AGC <span className="text-yellow-300 font-bold">Ser</span><br/>
+                      AGA<br/>AGG <span className="text-yellow-300 font-bold">Arg</span>
+                    </td>
                   </tr>
+                  <tr><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td></tr>
+                  
+                  {/* G row */}
                   <tr>
-                    <td rowSpan="4" className="border-2 border-purple-400 p-2 text-center bg-purple-700 text-white font-bold">G</td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">GUU<br/>GUC<br/>GUA<br/>GUG} <span className="text-yellow-300">Val</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">GCU<br/>GCC<br/>GCA<br/>GCG} <span className="text-yellow-300">Ala</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">GAU<br/>GAC} <span className="text-yellow-300">Asp</span><br/>GAA<br/>GAG} <span className="text-yellow-300">Glu</span></td>
-                    <td className="border border-purple-400 p-1 bg-gray-800 text-white">GGU<br/>GGC<br/>GGA<br/>GGG} <span className="text-yellow-300">Gly</span></td>
+                    <td rowSpan="4" className="border-2 border-purple-400 p-2 bg-purple-600 text-white font-bold text-lg">G</td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      GUU<br/>GUC<br/>GUA<br/>GUG <span className="text-yellow-300 font-bold">Val</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      GCU<br/>GCC<br/>GCA<br/>GCG <span className="text-yellow-300 font-bold">Ala</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      GAU<br/>GAC <span className="text-yellow-300 font-bold">Asp</span><br/>
+                      GAA<br/>GAG <span className="text-yellow-300 font-bold">Glu</span>
+                    </td>
+                    <td className="border border-purple-400 p-2 bg-gray-800 text-white">
+                      GGU<br/>GGC<br/>GGA<br/>GGG <span className="text-yellow-300 font-bold">Gly</span>
+                    </td>
                   </tr>
+                  <tr><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td><td className="border border-purple-400 p-2 bg-gray-800"></td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-        {/* Ancient Door with Puzzle Locks */}
-        <div className="relative">
-          {/* Door Frame */}
-          <div className="bg-gradient-to-b from-stone-800 via-stone-700 to-stone-900 rounded-3xl p-8 border-8 border-yellow-600 shadow-2xl">
-            {/* Door Surface */}
-            <div className="bg-gradient-to-br from-stone-600 via-stone-700 to-stone-800 rounded-2xl p-6 border-4 border-yellow-500 relative">
+        {/* Ancient Door with Clickable Puzzle Locks */}
+        <div className="relative flex justify-center">
+          {/* Door SVG */}
+          <div className="relative">
+            <svg width="400" height="600" viewBox="0 0 400 600" className="drop-shadow-2xl">
+              {/* Door Frame */}
+              <rect x="20" y="20" width="360" height="560" rx="15" fill="url(#doorFrame)" stroke="#b45309" strokeWidth="4"/>
               
-              {/* Ancient Symbols */}
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-6xl text-yellow-400 animate-pulse">
-                🧬
-              </div>
+              {/* Door Surface */}
+              <rect x="40" y="40" width="320" height="520" rx="10" fill="url(#doorSurface)" stroke="#92400e" strokeWidth="2"/>
               
-              {/* Progress Indicator */}
-              <div className="text-center mb-6">
-                <h2 className="text-3xl font-bold text-yellow-300 mb-2" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-                  PUZZLE LOCKS: {answeredCount}/3
-                </h2>
-                <div className="flex justify-center space-x-4">
-                  {puzzles.map((puzzle, index) => (
-                    <div key={puzzle.id} className={`w-4 h-4 rounded-full border-2 ${
-                      isLockSolved(puzzle.id) ? 'bg-green-400 border-green-300 animate-pulse' : 
-                      responses[puzzle.id] ? 'bg-yellow-400 border-yellow-300' : 
-                      'bg-gray-600 border-gray-500'
-                    }`}></div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Puzzle Locks */}
-              <div className="space-y-8">
-                {puzzles.map((puzzle, index) => (
-                  <div key={puzzle.id} className="relative">
-                    {/* Lock Container */}
-                    <div className={`border-4 rounded-xl p-6 transition-all duration-500 ${
-                      isLockSolved(puzzle.id) ? 'border-green-400 bg-gradient-to-br from-green-900 to-green-800 shadow-green-400/50' :
-                      responses[puzzle.id] ? 'border-yellow-400 bg-gradient-to-br from-yellow-900 to-yellow-800 shadow-yellow-400/50' :
-                      'border-red-400 bg-gradient-to-br from-red-900 to-red-800 shadow-red-400/50'
-                    } shadow-2xl`}>
-                      
-                      {/* Lock Symbol */}
-                      <div className="flex items-start gap-4">
-                        <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold border-4 ${
-                          isLockSolved(puzzle.id) ? 'bg-green-500 border-green-300 text-white' :
-                          responses[puzzle.id] ? 'bg-yellow-500 border-yellow-300 text-black' :
-                          'bg-red-600 border-red-400 text-white'
-                        }`} style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-                          {isLockSolved(puzzle.id) ? '🔓' : responses[puzzle.id] ? '🔶' : '🔒'}
-                        </div>
-                        
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-4 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
-                            <span className="text-yellow-400">LOCK {index + 1}:</span> {puzzle.question}
-                          </h3>
-                          
-                          {/* Answer Options */}
-                          <div className="space-y-3">
-                            {puzzle.options.map((option, optIndex) => (
-                              <label 
-                                key={optIndex}
-                                className="flex items-center p-4 rounded-lg cursor-pointer transition-all border-2 hover:scale-102 transform bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600 hover:border-yellow-400 hover:shadow-lg group"
-                              >
-                                <input
-                                  type="radio"
-                                  name={puzzle.id}
-                                  value={option}
-                                  checked={responses[puzzle.id] === option}
-                                  onChange={(e) => handleChange(e, puzzle.id)}
-                                  className="mr-4 h-5 w-5 text-yellow-500 border-gray-400 focus:ring-yellow-500 focus:ring-2"
-                                />
-                                <span className="text-white font-mono group-hover:text-yellow-300 transition-colors">{option}</span>
-                              </label>
-                            ))}
-                          </div>
-
-                          {/* Hint Button */}
-                          {puzzle.hint && (
-                            <div className="mt-4">
-                              <button
-                                onClick={() => toggleHint(puzzle.id)}
-                                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all transform hover:scale-105 border-2 border-purple-400"
-                                style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
-                              >
-                                {showHint[puzzle.id] ? '⬆ HIDE ANCIENT WISDOM' : '⬇ SEEK ANCIENT WISDOM'}
-                              </button>
-                              {showHint[puzzle.id] && (
-                                <div className="mt-3 bg-gradient-to-r from-purple-900 to-indigo-900 border-2 border-purple-400 rounded-lg p-4">
-                                  <p className="text-purple-200 text-sm font-mono">🔮 {puzzle.hint}</p>
-                                  <p className="text-xs text-purple-400 mt-2 font-mono">Record this wisdom usage on your sacred scrolls.</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Ancient Symbols on Door */}
+              <text x="200" y="80" textAnchor="middle" fill="#fbbf24" fontSize="24" fontFamily="serif">🧬</text>
+              <text x="200" y="110" textAnchor="middle" fill="#fbbf24" fontSize="12" fontFamily="serif">GENETIC TEMPLE</text>
+              
+              {/* Door Panels */}
+              <rect x="60" y="70" width="280" height="100" rx="5" fill="url(#doorPanel)" stroke="#92400e" strokeWidth="1"/>
+              <rect x="60" y="400" width="280" height="140" rx="5" fill="url(#doorPanel)" stroke="#92400e" strokeWidth="1"/>
+              
+              {/* Lock Positions */}
+              {puzzles.map((puzzle, index) => {
+                const lockY = 200 + (index * 60);
+                const isAnswered = responses[puzzle.id];
+                const isCorrect = isLockSolved(puzzle.id);
+                
+                return (
+                  <g key={puzzle.id}>
+                    {/* Lock Base */}
+                    <circle 
+                      cx="200" 
+                      cy={lockY} 
+                      r="25" 
+                      fill={isCorrect ? "#10b981" : isAnswered ? "#f59e0b" : "#dc2626"}
+                      stroke={isCorrect ? "#059669" : isAnswered ? "#d97706" : "#b91c1c"}
+                      strokeWidth="3"
+                      className="cursor-pointer transition-all duration-300 hover:scale-110"
+                      onClick={() => document.getElementById(`lock-${puzzle.id}`).scrollIntoView({ behavior: 'smooth' })}
+                    />
+                    
+                    {/* Lock Icon */}
+                    <text 
+                      x="200" 
+                      y={lockY + 6} 
+                      textAnchor="middle" 
+                      fill="white" 
+                      fontSize="20"
+                      className="cursor-pointer pointer-events-none"
+                    >
+                      {isCorrect ? '🔓' : '🔒'}
+                    </text>
+                    
+                    {/* Lock Number */}
+                    <text 
+                      x="240" 
+                      y={lockY + 5} 
+                      fill="#fbbf24" 
+                      fontSize="14" 
+                      fontFamily="Impact, Arial Black, sans-serif"
+                      className="pointer-events-none"
+                    >
+                      LOCK {index + 1}
+                    </text>
+                  </g>
+                );
+              })}
+              
+              {/* Keyhole (appears when all locks solved) */}
+              {answeredCount === 3 && puzzles.every(p => isLockSolved(p.id)) && (
+                <g className="animate-pulse">
+                  <ellipse cx="200" cy="480" rx="15" ry="20" fill="#fbbf24"/>
+                  <rect x="195" y="490" width="10" height="20" fill="#fbbf24"/>
+                </g>
+              )}
+              
+              {/* Gradients */}
+              <defs>
+                <linearGradient id="doorFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#92400e"/>
+                  <stop offset="50%" stopColor="#b45309"/>
+                  <stop offset="100%" stopColor="#78350f"/>
+                </linearGradient>
+                <linearGradient id="doorSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#57534e"/>
+                  <stop offset="50%" stopColor="#44403c"/>
+                  <stop offset="100%" stopColor="#292524"/>
+                </linearGradient>
+                <linearGradient id="doorPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3c3836"/>
+                  <stop offset="100%" stopColor="#1c1917"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            
+            {/* Door Status Text */}
+            <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center">
+              <p className="text-yellow-300 font-bold text-lg" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                {answeredCount === 3 && puzzles.every(p => isLockSolved(p.id)) ? 
+                  "🗝️ DOOR READY TO OPEN" : 
+                  `🔒 ${3 - Object.values(responses).filter((v, i) => isLockSolved(puzzles[i].id)).length} LOCKS REMAINING`
+                }
+              </p>
             </div>
           </div>
+        </div>
+
+        {/* Puzzle Lock Details */}
+        <div className="mt-16 space-y-8">
+          {puzzles.map((puzzle, index) => (
+            <div key={puzzle.id} id={`lock-${puzzle.id}`} className="relative">
+              {/* Lock Container */}
+              <div className={`border-4 rounded-xl p-6 transition-all duration-500 ${
+                isLockSolved(puzzle.id) ? 'border-green-400 bg-gradient-to-br from-green-900 to-green-800 shadow-green-400/50' :
+                responses[puzzle.id] ? 'border-yellow-400 bg-gradient-to-br from-yellow-900 to-yellow-800 shadow-yellow-400/50' :
+                'border-red-400 bg-gradient-to-br from-red-900 to-red-800 shadow-red-400/50'
+              } shadow-2xl`}>
+                
+                {/* Lock Symbol */}
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold border-4 ${
+                    isLockSolved(puzzle.id) ? 'bg-green-500 border-green-300 text-white' :
+                    responses[puzzle.id] ? 'bg-yellow-500 border-yellow-300 text-black' :
+                    'bg-red-600 border-red-400 text-white'
+                  }`} style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                    {isLockSolved(puzzle.id) ? '🔓' : responses[puzzle.id] ? '🔶' : '🔒'}
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-4 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+                      <span className="text-yellow-400">LOCK {index + 1}:</span> {puzzle.question}
+                    </h3>
+                    
+                    {/* Answer Options */}
+                    <div className="space-y-3">
+                      {puzzle.options.map((option, optIndex) => (
+                        <label 
+                          key={optIndex}
+                          className="flex items-center p-4 rounded-lg cursor-pointer transition-all border-2 hover:scale-102 transform bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600 hover:border-yellow-400 hover:shadow-lg group"
+                        >
+                          <input
+                            type="radio"
+                            name={puzzle.id}
+                            value={option}
+                            checked={responses[puzzle.id] === option}
+                            onChange={(e) => handleChange(e, puzzle.id)}
+                            className="mr-4 h-5 w-5 text-yellow-500 border-gray-400 focus:ring-yellow-500 focus:ring-2"
+                          />
+                          <span className="text-white font-mono group-hover:text-yellow-300 transition-colors">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Hint Button */}
+                    {puzzle.hint && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => toggleHint(puzzle.id)}
+                          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all transform hover:scale-105 border-2 border-purple-400"
+                          style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
+                        >
+                          {showHint[puzzle.id] ? '⬆ HIDE ANCIENT WISDOM' : '⬇ SEEK ANCIENT WISDOM'}
+                        </button>
+                        {showHint[puzzle.id] && (
+                          <div className="mt-3 bg-gradient-to-r from-purple-900 to-indigo-900 border-2 border-purple-400 rounded-lg p-4">
+                            <p className="text-purple-200 text-sm font-mono">🔮 {puzzle.hint}</p>
+                            <p className="text-xs text-purple-400 mt-2 font-mono">Record this wisdom usage on your sacred scrolls.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Error Display */}
