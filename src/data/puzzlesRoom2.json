@@ -1,20 +1,19 @@
 [
   {
     "id": "p1",
-    "question": "What type of dominance is shown in the following pedigree?",
-    "options": ["Codominance", "Complete Dominance", "Incomplete Dominance"],
-    "answer": "Codominance"
+    "question": "Looking at the pedigree for dark vision (Figure 2), what type of inheritance pattern does this trait follow?",
+    "options": [
+      "Autosomal dominant",
+      "Autosomal recessive", 
+      "X-linked recessive",
+      "X-linked dominant"
+    ],
+    "answer": "X-linked recessive"
   },
   {
     "id": "p2",
-    "question": "What is the phenotype of an RB genotype organism?",
-    "options": ["Red", "Blue", "Purple"],
-    "answer": "Purple"
-  },
-  {
-    "id": "p3",
-    "question": "Given the pedigree and X-linked trait, what is individual 9's genotype?",
-    "options": ["XDXd RB", "XdXd BB", "XdY BR"],
-    "answer": "XdXd BB"
-  }
-]
+    "question": "In the same pedigree family, what is individual 9's genotype for dark vision AND scale color?",
+    "options": [
+      "XDXd RB",
+      "XdXd BB", 
+      "XdX
