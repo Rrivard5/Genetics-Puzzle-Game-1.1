@@ -169,14 +169,8 @@ export default function Room1() {
                 <rect x="375" y="575" width="10" height="10" rx="2"/>
               </g>
               
-              {/* Realistic Door Handles - Removed orange dots */}
-              <g>
-                <ellipse cx="190" cy="380" rx="12" ry="8" fill="#4a4a4a" stroke="#2d2d2d" strokeWidth="2"/>
-                <rect x="185" y="375" width="10" height="10" fill="#2d2d2d" rx="2"/>
-                
-                <ellipse cx="310" cy="380" rx="12" ry="8" fill="#4a4a4a" stroke="#2d2d2d" strokeWidth="2"/>
-                <rect x="305" y="375" width="10" height="10" fill="#2d2d2d" rx="2"/>
-              </g>
+              {/* Realistic Door Handles - Removed completely */}
+              {/* Handles removed for cleaner look */}
               
               {/* Subtle DNA Helix Etchings */}
               <g opacity="0.3" fill="#10b981" stroke="#047857" strokeWidth="1.5">
