@@ -50,18 +50,22 @@ export const GameProvider = ({ children }) => {
 
   // Save progress to localStorage whenever state changes
   useEffect(() => {
-    const progressData = {
-      roomUnlocked,
-      finalLetter,
-      currentProgress,
-      attemptTracking,
-      roomTimers
+    if (studentInfo) { // Only save if we have student info
+      const progressData = {
+        roomUnlocked,
+        finalLetter,
+        currentProgress,
+        attemptTracking,
+        roomTimers
+      }
+      localStorage.setItem('genetics-escape-progress', JSON.stringify(progressData))
     }
-    localStorage.setItem('genetics-escape-progress', JSON.stringify(progressData))
-  }, [roomUnlocked, finalLetter, currentProgress, attemptTracking, roomTimers])
+  }, [roomUnlocked, finalLetter, currentProgress, attemptTracking, roomTimers, studentInfo])
 
   // Track question attempts
   const trackAttempt = (roomId, questionId, answer, isCorrect) => {
+    if (!studentInfo) return // Don't track if no student info
+
     const timestamp = new Date().toISOString()
     const attemptKey = `${roomId}-${questionId}`
     
@@ -142,9 +146,9 @@ export const GameProvider = ({ children }) => {
     setCurrentProgress(0)
     setAttemptTracking({})
     setRoomTimers({})
+    setStudentInfo(null)
     localStorage.removeItem('genetics-escape-progress')
     localStorage.removeItem('current-student-info')
-    setStudentInfo(null)
   }
 
   return (
