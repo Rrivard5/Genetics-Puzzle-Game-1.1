@@ -25,9 +25,24 @@ export default function Room1() {
   // Redirect to student info if no student info exists
   useEffect(() => {
     if (!studentInfo) {
-      navigate('/student-info')
+      const savedStudentInfo = localStorage.getItem('current-student-info');
+      if (!savedStudentInfo) {
+        window.location.href = '/student-info';
+      }
     }
-  }, [studentInfo, navigate])
+  }, [studentInfo]);
+
+  // Show loading if no student info
+  if (!studentInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (e, id) => {
     const selectedAnswer = e.target.value
