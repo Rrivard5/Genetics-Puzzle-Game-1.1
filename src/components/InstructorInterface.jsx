@@ -384,9 +384,21 @@ const InstructorInterface = () => {
             />
             <button
               onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              disabled={isLoggingIn}
+              className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                isLoggingIn
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
-              Login
+              {isLoggingIn ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Logging in...
+                </span>
+              ) : (
+                'Login'
+              )}
             </button>
           </div>
           <div className="mt-6 text-center text-sm text-gray-500">
@@ -405,7 +417,7 @@ const InstructorInterface = () => {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">Genetics Escape Room - Instructor Dashboard</h1>
             <button
-              onClick={() => setIsAuthenticated(false)}
+              onClick={handleLogout}
               className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
             >
               Logout
