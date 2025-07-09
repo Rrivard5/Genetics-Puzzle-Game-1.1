@@ -6,10 +6,11 @@ export default function StudentInfo() {
   const [studentData, setStudentData] = useState({
     name: '',
     semester: '',
-    year: '',
+    year: new Date().getFullYear(),
     groupNumber: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { setStudentInfo } = useGame();
 
@@ -24,13 +25,13 @@ export default function StudentInfo() {
       newErrors.semester = 'Semester is required';
     }
     
-    if (!studentData.year.trim()) {
+    if (!studentData.year.toString().trim()) {
       newErrors.year = 'Year is required';
     } else if (isNaN(studentData.year) || studentData.year < 2020 || studentData.year > 2030) {
       newErrors.year = 'Please enter a valid year (2020-2030)';
     }
     
-    if (!studentData.groupNumber.trim()) {
+    if (!studentData.groupNumber.toString().trim()) {
       newErrors.groupNumber = 'Group number is required';
     } else if (isNaN(studentData.groupNumber) || studentData.groupNumber < 1 || studentData.groupNumber > 50) {
       newErrors.groupNumber = 'Please enter a valid group number (1-50)';
@@ -44,20 +45,29 @@ export default function StudentInfo() {
     e.preventDefault();
     
     if (validateForm()) {
-      // Save student info to context and localStorage
+      setIsSubmitting(true);
+      
+      // Create new session (always a fresh start)
       const studentInfo = {
         ...studentData,
         sessionId: Date.now(), // Unique session ID
         startTime: new Date().toISOString()
       };
       
+      // Clear any previous game data
+      localStorage.removeItem('genetics-escape-progress');
+      localStorage.removeItem('current-student-info');
+      
+      // Set new student info
       setStudentInfo(studentInfo);
       
-      // Also save to localStorage for persistence
+      // Save to localStorage
       localStorage.setItem('current-student-info', JSON.stringify(studentInfo));
       
-      // Navigate to Room 1
-      navigate('/room1');
+      // Small delay to prevent blank page issue
+      setTimeout(() => {
+        navigate('/room1');
+      }, 100);
     }
   };
 
@@ -104,6 +114,7 @@ export default function StudentInfo() {
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter your full name"
+              disabled={isSubmitting}
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
@@ -120,12 +131,12 @@ export default function StudentInfo() {
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.semester ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={isSubmitting}
               >
                 <option value="">Select semester</option>
                 <option value="Spring">Spring</option>
-                <option value="Summer">Summer</option>
                 <option value="Fall">Fall</option>
-                <option value="Winter">Winter</option>
+                <option value="Summer">Summer</option>
               </select>
               {errors.semester && <p className="mt-1 text-sm text-red-600">{errors.semester}</p>}
             </div>
@@ -145,6 +156,7 @@ export default function StudentInfo() {
                 placeholder="2024"
                 min="2020"
                 max="2030"
+                disabled={isSubmitting}
               />
               {errors.year && <p className="mt-1 text-sm text-red-600">{errors.year}</p>}
             </div>
@@ -165,6 +177,7 @@ export default function StudentInfo() {
               placeholder="Enter your group number"
               min="1"
               max="50"
+              disabled={isSubmitting}
             />
             {errors.groupNumber && <p className="mt-1 text-sm text-red-600">{errors.groupNumber}</p>}
           </div>
@@ -172,16 +185,28 @@ export default function StudentInfo() {
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              disabled={isSubmitting}
+              className={`w-full py-4 rounded-lg font-semibold text-lg transition-all transform shadow-lg ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:-translate-y-0.5 hover:shadow-xl text-white'
+              }`}
             >
-              🚀 Start Genetics Adventure
+              {isSubmitting ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Starting Adventure...
+                </span>
+              ) : (
+                '🚀 Start Genetics Adventure'
+              )}
             </button>
           </div>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            All fields are required. Your progress will be tracked throughout the game.
+            All fields are required. Each session is tracked separately.
           </p>
         </div>
       </div>
