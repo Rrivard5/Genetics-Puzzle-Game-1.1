@@ -420,11 +420,10 @@ const InstructorInterface = () => {
               { id: 'dashboard', name: 'Student Progress', icon: '📊' },
               { id: 'detailed', name: 'Detailed Tracking', icon: '📋' },
               { id: 'feedback', name: 'Feedback Management', icon: '💬' },
-              { id: 'settings', name: 'Game Settings', icon: '⚙️' },
-              { id: 'room1', name: 'Room 1 Puzzles', icon: '🧩' },
-              { id: 'room2', name: 'Room 2 Puzzles', icon: '🔬' },
-              { id: 'room3', name: 'Room 3 Puzzles', icon: '🎲' },
-              { id: 'room4', name: 'Room 4 Puzzles', icon: '🌍' }
+              { id: 'room1', name: 'Room 1 Settings', icon: '🧩' },
+              { id: 'room2', name: 'Room 2 Settings', icon: '🔬' },
+              { id: 'room3', name: 'Room 3 Settings', icon: '🎲' },
+              { id: 'room4', name: 'Room 4 Settings', icon: '🌍' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -446,10 +445,10 @@ const InstructorInterface = () => {
         {/* Group Management Notice */}
         {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-800 mb-2">📚 Group-Based Question Management</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">📚 Group-Based Content Management</h3>
             <p className="text-blue-700 text-sm">
-              Create different question sets for each group. Students will automatically receive questions 
-              based on their group number entered during registration.
+              Create different content for each group (1-15). Students will automatically receive content 
+              based on their group number entered during registration. Configure puzzles, images, and settings for each group.
             </p>
           </div>
         )}
