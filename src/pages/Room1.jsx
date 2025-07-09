@@ -25,6 +25,20 @@ export default function Room1() {
 
   const handleLockClick = (puzzleId) => {
     setActiveLock(activeLock === puzzleId ? null : puzzleId)
+    
+    // Scroll to the puzzle section when a lock is clicked
+    if (activeLock !== puzzleId) {
+      setTimeout(() => {
+        const puzzleElement = document.getElementById(`puzzle-${puzzleId}`)
+        if (puzzleElement) {
+          puzzleElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start',
+            inline: 'nearest'
+          })
+        }
+      }, 100)
+    }
   }
 
   const handleSubmit = async () => {
@@ -106,7 +120,7 @@ export default function Room1() {
         )}
 
         {/* Ancient Temple Door - Inspired by realistic temple architecture */}
-        <div className="relative flex justify-center mb-12">
+        <div className="relative flex justify-center mb-12 door-container">
           <div className="relative">
             <svg width="500" height="700" viewBox="0 0 500 700" className="drop-shadow-2xl">
               {/* Outer Temple Frame */}
@@ -132,29 +146,27 @@ export default function Room1() {
               {/* Central Vertical Divide */}
               <line x1="250" y1="100" x2="250" y2="620" stroke="#374151" strokeWidth="4"/>
               
-              {/* Realistic Door Panels with Carved Details */}
+              {/* Realistic Door Panels with Carved Details - Removed distracting circles */}
               <g opacity="0.4" stroke="#4a5568" strokeWidth="2" fill="none">
                 {/* Left door panel carvings */}
                 <rect x="100" y="220" width="130" height="180" rx="8"/>
                 <rect x="110" y="230" width="110" height="160" rx="6"/>
-                <circle cx="165" cy="310" r="25"/>
                 <path d="M145 310 Q165 290, 185 310" strokeWidth="3"/>
                 
                 {/* Right door panel carvings */}
                 <rect x="270" y="220" width="130" height="180" rx="8"/>
                 <rect x="280" y="230" width="110" height="160" rx="6"/>
-                <circle cx="335" cy="310" r="25"/>
                 <path d="M315 310 Q335 290, 355 310" strokeWidth="3"/>
                 
                 {/* Lower panels */}
                 <rect x="100" y="420" width="130" height="140" rx="8"/>
                 <rect x="270" y="420" width="130" height="140" rx="8"/>
                 
-                {/* Decorative corner elements */}
-                <circle cx="120" cy="240" r="8"/>
-                <circle cx="380" cy="240" r="8"/>
-                <circle cx="120" cy="580" r="8"/>
-                <circle cx="380" cy="580" r="8"/>
+                {/* Decorative corner elements - simplified */}
+                <rect x="115" y="235" width="10" height="10" rx="2"/>
+                <rect x="375" y="235" width="10" height="10" rx="2"/>
+                <rect x="115" y="575" width="10" height="10" rx="2"/>
+                <rect x="375" y="575" width="10" height="10" rx="2"/>
               </g>
               
               {/* Realistic Door Handles - Removed orange dots */}
@@ -307,7 +319,7 @@ export default function Room1() {
 
         {/* Active Lock Puzzle Display */}
         {activeLock && (
-          <div className="mt-16">
+          <div className="mt-16" id={`puzzle-${activeLock}`}>
             {puzzles.filter(p => p.id === activeLock).map((puzzle, index) => {
               const puzzleIndex = puzzles.findIndex(p => p.id === puzzle.id);
               return (
@@ -319,16 +331,29 @@ export default function Room1() {
                     'border-stone-400 bg-gradient-to-br from-stone-900 to-stone-800 shadow-stone-400/50'
                   } shadow-2xl`}>
                     
-                    {/* Close Button */}
+                    {/* Return to Door Button */}
                     <button
-                      onClick={() => setActiveLock(null)}
-                      className="absolute top-4 right-4 text-white hover:text-amber-400 text-2xl transition-colors"
+                      onClick={() => {
+                        setActiveLock(null)
+                        // Scroll back to door
+                        setTimeout(() => {
+                          const doorElement = document.querySelector('.door-container')
+                          if (doorElement) {
+                            doorElement.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'center',
+                              inline: 'nearest'
+                            })
+                          }
+                        }, 100)
+                      }}
+                      className="absolute top-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
                     >
-                      ✕
+                      ⬆️ Return to Door
                     </button>
                     
                     {/* Lock Symbol */}
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-4 mt-8">
                       <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold border-4 ${
                         isLockSolved(puzzle.id) ? 'bg-emerald-500 border-emerald-300 text-white' :
                         responses[puzzle.id] ? 'bg-amber-500 border-amber-300 text-black' :
@@ -339,7 +364,7 @@ export default function Room1() {
                       
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-white mb-4 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
-                          <span className="text-amber-400">MYSTICAL LOCK {puzzleIndex + 1}:</span> {puzzle.question}
+                          <span className="text-amber-400">SECURITY LOCK {puzzleIndex + 1}:</span> {puzzle.question}
                         </h3>
                         
                         {/* Answer Options */}
@@ -370,12 +395,12 @@ export default function Room1() {
                               className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all transform hover:scale-105 border-2 border-purple-400"
                               style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
                             >
-                              {showHint[puzzle.id] ? '⬆ HIDE ANCIENT WISDOM' : '⬇ SEEK ANCIENT WISDOM'}
+                              {showHint[puzzle.id] ? '⬆ HIDE RESEARCH DATA' : '⬇ ACCESS RESEARCH DATA'}
                             </button>
                             {showHint[puzzle.id] && (
                               <div className="mt-3 bg-gradient-to-r from-purple-900 to-indigo-900 border-2 border-purple-400 rounded-lg p-4">
-                                <p className="text-purple-200 text-sm font-mono">🔮 {puzzle.hint}</p>
-                                <p className="text-xs text-purple-400 mt-2 font-mono">Record this wisdom usage on your sacred scrolls.</p>
+                                <p className="text-purple-200 text-sm font-mono">🔬 {puzzle.hint}</p>
+                                <p className="text-xs text-purple-400 mt-2 font-mono">Log this data access in your research notes.</p>
                               </div>
                             )}
                           </div>
