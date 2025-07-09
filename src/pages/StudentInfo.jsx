@@ -58,16 +58,16 @@ export default function StudentInfo() {
       localStorage.removeItem('genetics-escape-progress');
       localStorage.removeItem('current-student-info');
       
-      // Set new student info
-      setStudentInfo(studentInfo);
-      
-      // Save to localStorage
+      // Save to localStorage first
       localStorage.setItem('current-student-info', JSON.stringify(studentInfo));
       
-      // Small delay to prevent blank page issue
+      // Set in context
+      setStudentInfo(studentInfo);
+      
+      // Navigate using window.location to ensure proper page load
       setTimeout(() => {
-        navigate('/room1');
-      }, 100);
+        window.location.href = '/room1';
+      }, 500);
     }
   };
 
