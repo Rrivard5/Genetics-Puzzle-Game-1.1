@@ -2,7 +2,7 @@ import React from 'react';
 
 const CodonChart = () => (
   <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg border-2 border-purple-300 shadow-xl max-w-7xl mx-auto">
-    <svg viewBox="0 0 900 700" className="w-full h-auto min-h-[600px] max-h-[800px]">
+    <svg viewBox="0 0 900 780" className="w-full h-auto min-h-[600px] max-h-[800px]">
       {/* Title */}
       <text x="450" y="40" textAnchor="middle" fill="#e879f9" fontSize="28" fontWeight="bold">
         Genetic Code Chart
@@ -230,9 +230,9 @@ const CodonChart = () => (
           </pattern>
         </defs>
         
-        {/* Legend - Updated for colorblind accessibility */}
-        <g transform="translate(0, 520)">
-          <rect x="0" y="0" width="800" height="120" fill="rgba(0,0,0,0.5)" rx="10"/>
+        {/* Legend - Moved outside main chart area */}
+        <g transform="translate(0, 640)">
+          <rect x="0" y="0" width="800" height="120" fill="rgba(0,0,0,0.7)" rx="10"/>
           <text x="20" y="25" fill="#e879f9" fontSize="16" fontWeight="bold">Legend:</text>
           
           {/* Start codon example */}
