@@ -2,10 +2,14 @@ import { Link } from 'react-router-dom'
 import { useGame } from '../context/GameStateContext'
 
 export default function Home() {
-  const { resetGame, roomUnlocked, studentInfo } = useGame()
+  const { resetGame } = useGame()
   
-  const hasProgress = Object.values(roomUnlocked).some(unlocked => unlocked)
-  const hasStudentInfo = studentInfo !== null
+  // Always reset when returning to home page
+  const handleStartNewGame = () => {
+    resetGame()
+    // Navigate to student info for fresh start
+    window.location.href = '/student-info'
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
@@ -53,50 +57,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Student Info Display */}
-        {hasStudentInfo && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <span className="text-2xl mr-3">👋</span>
-              <h2 className="text-xl font-bold text-green-800">Welcome back, {studentInfo.name}!</h2>
-            </div>
-            <div className="text-green-700 text-sm">
-              <p>{studentInfo.semester} {studentInfo.year} • Group {studentInfo.groupNumber}</p>
-              <p className="mt-2">Your progress is being tracked. Continue your adventure below!</p>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
+        {/* Action Button */}
         <div className="space-y-4">
-          {hasStudentInfo ? (
-            <Link
-              to="/room1"
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <span className="mr-2">🚀</span>
-              {hasProgress ? 'Continue Adventure' : 'Begin Adventure'}
-            </Link>
-          ) : (
-            <Link
-              to="/student-info"
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <span className="mr-2">📝</span>
-              Enter Student Information
-            </Link>
-          )}
-          
-          {hasProgress && (
-            <div className="mt-4">
-              <button
-                onClick={resetGame}
-                className="text-gray-600 hover:text-gray-800 underline transition-colors"
-              >
-                Reset Progress & Start Over
-              </button>
-            </div>
-          )}
+          <button
+            onClick={handleStartNewGame}
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-xl text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+          >
+            <span className="mr-2">🚀</span>
+            Start New Adventure
+          </button>
         </div>
 
         {/* Instructions */}
@@ -106,7 +75,7 @@ export default function Home() {
             <li>• Enter your student information to begin</li>
             <li>• Complete each room by answering all genetics questions correctly</li>
             <li>• Each room unlocks the next one upon completion</li>
-            <li>• Your progress and attempts are automatically tracked</li>
+            <li>• Each play session is tracked separately</li>
             <li>• Collect the final letter to help your team succeed!</li>
           </ul>
         </div>
