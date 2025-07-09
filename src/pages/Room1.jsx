@@ -105,7 +105,7 @@ export default function Room1() {
         {showGeneticCode && (
           <div className="mb-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-black border-4 border-purple-400 rounded-xl p-6 shadow-2xl">
             <h3 className="text-center text-2xl font-bold text-purple-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-              🧬 CODON CHART 🧬
+              CODON CHART
             </h3>
             <div className="flex justify-center w-full">
               <div className="w-full max-w-6xl">
