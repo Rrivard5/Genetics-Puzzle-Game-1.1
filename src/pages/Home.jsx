@@ -1,14 +1,15 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useGame } from '../context/GameStateContext'
 
 export default function Home() {
   const { resetGame } = useGame()
+  const navigate = useNavigate()
   
   // Always reset when returning to home page
   const handleStartNewGame = () => {
     resetGame()
     // Navigate to student info for fresh start
-    window.location.href = '/student-info'
+    navigate('/student-info')
   }
 
   return (
@@ -66,6 +67,15 @@ export default function Home() {
             <span className="mr-2">🚀</span>
             Start New Adventure
           </button>
+          
+          <div className="mt-4">
+            <Link
+              to="/instructor"
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Instructor Portal
+            </Link>
+          </div>
         </div>
 
         {/* Instructions */}
