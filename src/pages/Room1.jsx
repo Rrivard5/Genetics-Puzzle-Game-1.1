@@ -118,9 +118,16 @@ export default function Room1() {
               {/* Door Panels - More realistic proportions */}
               <rect x="80" y="100" width="340" height="520" rx="15" fill="url(#doorSurface)"/>
               
-              {/* Ornate Header Section */}
+              {/* Ornate Header Section - Removed text label */}
               <rect x="90" y="110" width="320" height="80" rx="10" fill="url(#headerCarving)" stroke="#4a5568" strokeWidth="2"/>
-              <text x="250" y="155" textAnchor="middle" fill="#10b981" fontSize="18" fontFamily="serif" fontWeight="bold">TEMPLE OF GENESIS</text>
+              
+              {/* Subtle carved pattern in header instead of text */}
+              <g opacity="0.3" stroke="#4a5568" strokeWidth="1.5" fill="none">
+                <circle cx="250" cy="150" r="20"/>
+                <circle cx="250" cy="150" r="15"/>
+                <line x1="230" y1="150" x2="270" y2="150"/>
+                <line x1="250" y1="130" x2="250" y2="170"/>
+              </g>
               
               {/* Central Vertical Divide */}
               <line x1="250" y1="100" x2="250" y2="620" stroke="#374151" strokeWidth="4"/>
@@ -150,13 +157,13 @@ export default function Room1() {
                 <circle cx="380" cy="580" r="8"/>
               </g>
               
-              {/* Realistic Door Handles */}
+              {/* Realistic Door Handles - Removed orange dots */}
               <g>
-                <ellipse cx="190" cy="380" rx="12" ry="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
-                <rect x="185" y="375" width="10" height="10" fill="#8b5a2b" rx="2"/>
+                <ellipse cx="190" cy="380" rx="12" ry="8" fill="#4a4a4a" stroke="#2d2d2d" strokeWidth="2"/>
+                <rect x="185" y="375" width="10" height="10" fill="#2d2d2d" rx="2"/>
                 
-                <ellipse cx="310" cy="380" rx="12" ry="8" fill="#b45309" stroke="#8b5a2b" strokeWidth="2"/>
-                <rect x="305" y="375" width="10" height="10" fill="#8b5a2b" rx="2"/>
+                <ellipse cx="310" cy="380" rx="12" ry="8" fill="#4a4a4a" stroke="#2d2d2d" strokeWidth="2"/>
+                <rect x="305" y="375" width="10" height="10" fill="#2d2d2d" rx="2"/>
               </g>
               
               {/* Subtle DNA Helix Etchings */}
@@ -203,7 +210,7 @@ export default function Room1() {
                       fill={isCorrect ? "url(#solvedGlow)" : isAnswered ? "url(#partialGlow)" : "url(#lockedGlow)"}
                       stroke={isCorrect ? "#059669" : isAnswered ? "#d97706" : "#52525b"}
                       strokeWidth="2"
-                      className="cursor-pointer transition-all duration-300 hover:scale-110"
+                      className="cursor-pointer transition-all duration-200"
                       onClick={() => handleLockClick(puzzle.id)}
                     />
                     
@@ -289,7 +296,7 @@ export default function Room1() {
             <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
               <p className="text-amber-300 font-bold text-lg" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
                 {solvedCount === 3 ? 
-                  "🗝️ ANCIENT DOOR UNSEALED" : 
+                  "🗝️ SECURITY DOOR UNLOCKED" : 
                   `🔒 ${3 - solvedCount} LOCKS REMAINING`
                 }
               </p>
@@ -412,16 +419,16 @@ export default function Room1() {
                 ANCIENT MECHANISMS ACTIVATING...
               </span>
             ) : solvedCount === 3 ? (
-              '🚪 UNSEAL THE TEMPLE DOOR'
+              '🚪 ACTIVATE DOOR SEQUENCE'
             ) : (
-              `🔒 SOLVE ${3 - solvedCount} MORE MYSTICAL LOCKS`
+              `🔒 SOLVE ${3 - solvedCount} MORE SECURITY LOCKS`
             )}
           </button>
         </div>
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-400 font-mono text-sm">
-          "Only those who understand the ancient language of life may pass..."
+          "Only those who understand the language of genetics may proceed..."
         </div>
       </div>
     </div>
