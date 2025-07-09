@@ -31,6 +31,10 @@ const InstructorInterface = () => {
     if (password === 'genetics2024') {
       setIsAuthenticated(true);
       setPassword('');
+      // Small delay to prevent blank page
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     } else {
       alert('Incorrect password');
     }
