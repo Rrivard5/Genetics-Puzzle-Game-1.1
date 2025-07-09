@@ -15,10 +15,30 @@ export default function Room1() {
   const [highlightedNucleotide, setHighlightedNucleotide] = useState("G")
   const [highlightedPosition, setHighlightedPosition] = useState(11) // Position of highlighted G
   const navigate = useNavigate()
-  const { setRoomUnlocked, setCurrentProgress } = useGame()
+  const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
+
+  // Start room timer when component mounts
+  useEffect(() => {
+    startRoomTimer('room1')
+  }, [])
+
+  // Redirect to student info if no student info exists
+  useEffect(() => {
+    if (!studentInfo) {
+      navigate('/student-info')
+    }
+  }, [studentInfo, navigate])
 
   const handleChange = (e, id) => {
-    setResponses({ ...responses, [id]: e.target.value })
+    const selectedAnswer = e.target.value
+    const puzzle = puzzles.find(p => p.id === id)
+    const isCorrect = puzzle.answer === selectedAnswer
+    
+    setResponses({ ...responses, [id]: selectedAnswer })
+    
+    // Track the attempt
+    trackAttempt('room1', id, selectedAnswer, isCorrect)
+    
     if (error) setError(null)
   }
 
@@ -59,6 +79,7 @@ export default function Room1() {
     if (allCorrect) {
       setRoomUnlocked(prev => ({ ...prev, room1: true }))
       setCurrentProgress(25)
+      completeRoom('room1')
       navigate('/room2')
     } else {
       setError('ANCIENT LOCKS REMAIN SEALED. THE SPIRITS REJECT YOUR ANSWERS. SEEK THE TRUTH IN THE GENETIC CODEX.')
