@@ -6,11 +6,12 @@ const InstructorInterface = () => {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [puzzles, setPuzzles] = useState({
-    room1: [],
-    room2: [],
-    room3: [],
-    room4: []
+    room1: { groups: {} },
+    room2: { groups: {} },
+    room3: { groups: {} },
+    room4: { groups: {} }
   });
+  const [selectedGroup, setSelectedGroup] = useState(1);
   const [gameSettings, setGameSettings] = useState({
     wildTypeSequence: "3'CGACGATACGGAGGGGTCACTCCT5'",
     highlightedNucleotide: "G",
@@ -72,8 +73,10 @@ const InstructorInterface = () => {
     alert('Feedback settings saved successfully!');
   };
 
-  const addFeedbackRule = (room, puzzleId, wrongAnswer) => {
-    const key = `${room}_${puzzleId}_${wrongAnswer.toLowerCase()}`;
+  const addFeedbackRule = (room, puzzleId, wrongAnswer, groupNumber = null) => {
+    const key = groupNumber 
+      ? `${room}_${puzzleId}_${wrongAnswer.toLowerCase()}_group${groupNumber}`
+      : `${room}_${puzzleId}_${wrongAnswer.toLowerCase()}`;
     const newFeedback = prompt('Enter feedback message for this wrong answer:');
     if (newFeedback) {
       setFeedbackSettings(prev => ({
@@ -98,79 +101,40 @@ const InstructorInterface = () => {
     if (savedPuzzles) {
       setPuzzles(JSON.parse(savedPuzzles));
     } else {
-      setPuzzles({
-        room1: [
-          {
-            id: "p1",
-            question: "What type of mutation results from changing the highlighted G to A in the DNA sequence?",
-            answer: "Point mutation from G to A",
-            hint: "Look at the color coding - the mutation type is determined by the color of the highlighted nucleotide."
-          },
-          {
-            id: "p2",
-            question: "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
-            answer: "RPQ",
-            hint: "Use the codon wheel to translate the mRNA sequence after the mutation occurs."
-          },
-          {
-            id: "p3", 
-            question: "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
-            answer: "CPE → RPQ",
-            hint: "Compare the original sequence translation with the mutated sequence translation."
+      // Initialize with default structure
+      const defaultPuzzles = {
+        room1: {
+          groups: {
+            1: [
+              {
+                id: "p1",
+                question: "What type of mutation results from changing the highlighted G to A in the DNA sequence?",
+                type: "text",
+                answer: "Point mutation from G to A",
+                options: []
+              },
+              {
+                id: "p2",
+                question: "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
+                type: "text",
+                answer: "RPQ",
+                options: []
+              },
+              {
+                id: "p3", 
+                question: "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
+                type: "text",
+                answer: "CPE → RPQ",
+                options: []
+              }
+            ]
           }
-        ],
-        room2: [
-          {
-            id: "p1",
-            question: "Looking at the pedigree for dark vision (Figure 2), what type of inheritance pattern does this trait follow?",
-            answer: "X-linked recessive"
-          },
-          {
-            id: "p2",
-            question: "In the same pedigree family, what is individual 9's genotype for dark vision AND scale color?",
-            answer: "XdXd BB"
-          },
-          {
-            id: "p3",
-            question: "Based on the inheritance patterns shown, if individual 9 had children with a normal vision male, what percentage of their daughters would have dark vision?",
-            answer: "0%"
-          }
-        ],
-        room3: [
-          {
-            id: "p1",
-            question: "A female (BY Dd) and male (BR d) mate. What is the likelihood that one of their female offspring who does not have dark vision will have blue OR red scales?",
-            answer: "1/2"
-          },
-          {
-            id: "p2",
-            question: "In the same cross (BY Dd × BR d), what is the probability of getting a male offspring with orange scales and dark vision?",
-            answer: "1/4"
-          },
-          {
-            id: "p3",
-            question: "If two loci are 33 centimorgans apart, what is the recombination frequency between them?",
-            answer: "33%"
-          }
-        ],
-        room4: [
-          {
-            id: "p1",
-            question: "A population of aliens is at Hardy-Weinberg equilibrium. The frequency of the dominant allele for wings is 0.6. What is the frequency of homozygous recessive genotypes in this population?",
-            answer: "0.16"
-          },
-          {
-            id: "p2",
-            question: "If a population is NOT in Hardy-Weinberg equilibrium, which of the following factors could be responsible?",
-            answer: "All of the above"
-          },
-          {
-            id: "p3",
-            question: "In RNA processing, which segments are removed from the pre-mRNA to create the final mature mRNA?",
-            answer: "Introns"
-          }
-        ]
-      });
+        },
+        room2: { groups: {} },
+        room3: { groups: {} },
+        room4: { groups: {} }
+      };
+      setPuzzles(defaultPuzzles);
     }
   };
 
@@ -185,9 +149,9 @@ const InstructorInterface = () => {
           semester: 'Fall', 
           year: 2024, 
           groupNumber: 1,
-          room1: { percentage: 100, attempts: { p1: [{ answer: 'Point mutation from G to A', isCorrect: true, timestamp: '2024-07-08T14:30:00Z' }], p2: [{ answer: 'RPQ', isCorrect: true, timestamp: '2024-07-08T14:31:00Z' }], p3: [{ answer: 'CPE → RPQ', isCorrect: true, timestamp: '2024-07-08T14:32:00Z' }] }},
-          room2: { percentage: 75, attempts: { p1: [{ answer: 'X-linked recessive', isCorrect: true, timestamp: '2024-07-08T14:35:00Z' }], p2: [{ answer: 'XdXd BB', isCorrect: true, timestamp: '2024-07-08T14:36:00Z' }], p3: [{ answer: '25%', isCorrect: false, timestamp: '2024-07-08T14:37:00Z' }] }},
-          room3: { percentage: 50, attempts: { p1: [{ answer: '1/2', isCorrect: true, timestamp: '2024-07-08T14:40:00Z' }], p2: [{ answer: '1/8', isCorrect: false, timestamp: '2024-07-08T14:41:00Z' }], p3: [{ answer: '16.5%', isCorrect: false, timestamp: '2024-07-08T14:42:00Z' }] }},
+          room1: { percentage: 100, attempts: { p1: [{ answer: 'Point mutation from G to A', isCorrect: true, timestamp: '2024-07-08T14:30:00Z' }] }},
+          room2: { percentage: 75, attempts: { p1: [{ answer: 'X-linked recessive', isCorrect: true, timestamp: '2024-07-08T14:35:00Z' }] }},
+          room3: { percentage: 50, attempts: { p1: [{ answer: '1/2', isCorrect: true, timestamp: '2024-07-08T14:40:00Z' }] }},
           room4: { percentage: 0, attempts: {} },
           lastActivity: '2024-07-08T14:30:00Z'
         }
@@ -201,32 +165,7 @@ const InstructorInterface = () => {
     if (savedData) {
       setDetailedStudentData(JSON.parse(savedData));
     } else {
-      const detailedData = [];
-      studentProgress.forEach(student => {
-        ['room1', 'room2', 'room3', 'room4'].forEach(roomId => {
-          const roomData = student[roomId];
-          if (roomData && roomData.attempts) {
-            Object.entries(roomData.attempts).forEach(([questionId, attempts]) => {
-              attempts.forEach((attempt, index) => {
-                detailedData.push({
-                  sessionId: `session_${student.name.replace(' ', '_')}_${Date.now()}`,
-                  name: student.name,
-                  semester: student.semester,
-                  year: student.year,
-                  groupNumber: student.groupNumber,
-                  roomId,
-                  questionId,
-                  answer: attempt.answer,
-                  isCorrect: attempt.isCorrect,
-                  timestamp: attempt.timestamp,
-                  attemptNumber: index + 1
-                });
-              });
-            });
-          }
-        });
-      });
-      setDetailedStudentData(detailedData);
+      setDetailedStudentData([]);
     }
   };
 
@@ -273,33 +212,106 @@ const InstructorInterface = () => {
     URL.revokeObjectURL(url);
   };
 
-  const addNewPuzzle = (room) => {
+  const addNewPuzzle = (room, groupNumber) => {
+    const existingPuzzles = puzzles[room].groups[groupNumber] || [];
     const newPuzzle = {
-      id: `p${puzzles[room].length + 1}`,
+      id: `p${existingPuzzles.length + 1}`,
       question: 'New question here...',
+      type: 'text',
       answer: 'Correct answer here...',
-      hint: 'Hint for this question...'
+      options: []
     };
     setPuzzles(prev => ({
       ...prev,
-      [room]: [...prev[room], newPuzzle]
+      [room]: {
+        ...prev[room],
+        groups: {
+          ...prev[room].groups,
+          [groupNumber]: [...existingPuzzles, newPuzzle]
+        }
+      }
     }));
   };
 
-  const updatePuzzle = (room, puzzleId, updatedPuzzle) => {
+  const updatePuzzle = (room, groupNumber, puzzleId, updatedPuzzle) => {
     setPuzzles(prev => ({
       ...prev,
-      [room]: prev[room].map(p => p.id === puzzleId ? updatedPuzzle : p)
+      [room]: {
+        ...prev[room],
+        groups: {
+          ...prev[room].groups,
+          [groupNumber]: prev[room].groups[groupNumber].map(p => 
+            p.id === puzzleId ? updatedPuzzle : p
+          )
+        }
+      }
     }));
   };
 
-  const deletePuzzle = (room, puzzleId) => {
+  const deletePuzzle = (room, groupNumber, puzzleId) => {
     if (confirm('Are you sure you want to delete this puzzle?')) {
       setPuzzles(prev => ({
         ...prev,
-        [room]: prev[room].filter(p => p.id !== puzzleId)
+        [room]: {
+          ...prev[room],
+          groups: {
+            ...prev[room].groups,
+            [groupNumber]: prev[room].groups[groupNumber].filter(p => p.id !== puzzleId)
+          }
+        }
       }));
     }
+  };
+
+  const addNewGroup = (room) => {
+    const existingGroups = Object.keys(puzzles[room].groups).map(Number);
+    const newGroupNumber = existingGroups.length > 0 ? Math.max(...existingGroups) + 1 : 1;
+    setPuzzles(prev => ({
+      ...prev,
+      [room]: {
+        ...prev[room],
+        groups: {
+          ...prev[room].groups,
+          [newGroupNumber]: []
+        }
+      }
+    }));
+    setSelectedGroup(newGroupNumber);
+  };
+
+  const copyGroupQuestions = (room, fromGroup, toGroup) => {
+    const questionsToSelect = puzzles[room].groups[fromGroup] || [];
+    const questionsToCopy = questionsToSelect.map(q => ({ ...q }));
+    
+    setPuzzles(prev => ({
+      ...prev,
+      [room]: {
+        ...prev[room],
+        groups: {
+          ...prev[room].groups,
+          [toGroup]: questionsToCopy
+        }
+      }
+    }));
+  };
+
+  const addOptionToPuzzle = (room, groupNumber, puzzleId) => {
+    const puzzle = puzzles[room].groups[groupNumber].find(p => p.id === puzzleId);
+    const newOptions = [...puzzle.options, 'New option'];
+    updatePuzzle(room, groupNumber, puzzleId, { ...puzzle, options: newOptions });
+  };
+
+  const removeOptionFromPuzzle = (room, groupNumber, puzzleId, optionIndex) => {
+    const puzzle = puzzles[room].groups[groupNumber].find(p => p.id === puzzleId);
+    const newOptions = puzzle.options.filter((_, index) => index !== optionIndex);
+    updatePuzzle(room, groupNumber, puzzleId, { ...puzzle, options: newOptions });
+  };
+
+  const updatePuzzleOption = (room, groupNumber, puzzleId, optionIndex, newValue) => {
+    const puzzle = puzzles[room].groups[groupNumber].find(p => p.id === puzzleId);
+    const newOptions = [...puzzle.options];
+    newOptions[optionIndex] = newValue;
+    updatePuzzle(room, groupNumber, puzzleId, { ...puzzle, options: newOptions });
   };
 
   if (!isAuthenticated) {
@@ -395,6 +407,17 @@ const InstructorInterface = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Group Management Notice */}
+        {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-semibold text-blue-800 mb-2">📚 Group-Based Question Management</h3>
+            <p className="text-blue-700 text-sm">
+              Create different question sets for each group. Students will automatically receive questions 
+              based on their group number entered during registration.
+            </p>
+          </div>
+        )}
+
         {/* Feedback Management Tab */}
         {activeTab === 'feedback' && (
           <div>
@@ -411,8 +434,8 @@ const InstructorInterface = () => {
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Custom Feedback Rules</h3>
               <p className="text-gray-600 mb-4">
-                Create custom feedback messages for specific wrong answers. When a student enters a wrong answer,
-                they'll see your custom message instead of the default feedback.
+                Create custom feedback messages for specific wrong answers. You can create feedback for 
+                specific groups or general feedback that applies to all groups.
               </p>
               
               <div className="space-y-4">
@@ -425,48 +448,25 @@ const InstructorInterface = () => {
                                               'Population Genetics'}
                     </h4>
                     
-                    {puzzles[room]?.map(puzzle => (
-                      <div key={puzzle.id} className="ml-4 mb-3 p-3 bg-gray-50 rounded">
-                        <p className="font-medium text-sm text-gray-700 mb-2">
-                          {puzzle.id.toUpperCase()}: {puzzle.question}
-                        </p>
-                        <p className="text-xs text-green-600 mb-2">Correct Answer: {puzzle.answer}</p>
-                        
-                        {/* Show existing feedback rules for this question */}
-                        {Object.entries(feedbackSettings)
-                          .filter(([key]) => key.startsWith(`${room}_${puzzle.id}_`))
-                          .map(([key, feedback]) => {
-                            const wrongAnswer = key.split('_').slice(2).join('_');
-                            return (
-                              <div key={key} className="flex items-center justify-between bg-white p-2 rounded mb-1">
-                                <div className="flex-1">
-                                  <span className="text-xs font-mono text-red-600">{wrongAnswer}</span>
-                                  <p className="text-xs text-gray-600">{feedback}</p>
-                                </div>
-                                <button
-                                  onClick={() => deleteFeedbackRule(key)}
-                                  className="text-red-500 hover:text-red-700 text-xs ml-2"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            );
-                          })
-                        }
-                        
-                        <button
-                          onClick={() => {
-                            const wrongAnswer = prompt('Enter the wrong answer you want to create feedback for:');
-                            if (wrongAnswer) {
-                              addFeedbackRule(room, puzzle.id, wrongAnswer);
-                            }
-                          }}
-                          className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
-                        >
-                          + Add Feedback Rule
-                        </button>
-                      </div>
-                    ))}
+                    {/* Show feedback rules */}
+                    <div className="space-y-2">
+                      {Object.entries(feedbackSettings)
+                        .filter(([key]) => key.startsWith(room))
+                        .map(([key, feedback]) => (
+                          <div key={key} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div className="flex-1">
+                              <span className="text-xs font-mono text-gray-600">{key}</span>
+                              <p className="text-sm text-gray-700">{feedback}</p>
+                            </div>
+                            <button
+                              onClick={() => deleteFeedbackRule(key)}
+                              className="text-red-500 hover:text-red-700 text-xs ml-2"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -600,9 +600,6 @@ const InstructorInterface = () => {
                           </div>
                           <span className="text-sm text-gray-500">{student.room1.percentage}%</span>
                         </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room1.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
-                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -613,9 +610,6 @@ const InstructorInterface = () => {
                             ></div>
                           </div>
                           <span className="text-sm text-gray-500">{student.room2.percentage}%</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room2.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -628,9 +622,6 @@ const InstructorInterface = () => {
                           </div>
                           <span className="text-sm text-gray-500">{student.room3.percentage}%</span>
                         </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room3.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
-                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -641,9 +632,6 @@ const InstructorInterface = () => {
                             ></div>
                           </div>
                           <span className="text-sm text-gray-500">{student.room4.percentage}%</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room4.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -742,10 +730,10 @@ const InstructorInterface = () => {
               </h2>
               <div className="space-x-2">
                 <button
-                  onClick={() => addNewPuzzle(activeTab)}
+                  onClick={() => addNewGroup(activeTab)}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  + Add Puzzle
+                  + Add Group
                 </button>
                 <button
                   onClick={savePuzzles}
@@ -762,97 +750,194 @@ const InstructorInterface = () => {
               </div>
             </div>
 
-            <div className="space-y-6">
-              {puzzles[activeTab]?.map((puzzle, index) => (
-                <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Puzzle {index + 1}</h3>
-                    <button
-                      onClick={() => deletePuzzle(activeTab, puzzle.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
+            {/* Group Selection */}
+            <div className="mb-6 bg-white rounded-lg shadow p-4">
+              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit:</h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(puzzles[activeTab].groups).map(groupNum => (
+                  <button
+                    key={groupNum}
+                    onClick={() => setSelectedGroup(parseInt(groupNum))}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      selectedGroup === parseInt(groupNum)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Group {groupNum}
+                  </button>
+                ))}
+              </div>
+              
+              {selectedGroup && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => addNewPuzzle(activeTab, selectedGroup)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    + Add Puzzle to Group {selectedGroup}
+                  </button>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                      <textarea
-                        value={puzzle.question}
-                        onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, question: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                      />
-                    </div>
+                  <select
+                    onChange={(e) => {
+                      const fromGroup = parseInt(e.target.value);
+                      if (fromGroup && fromGroup !== selectedGroup) {
+                        copyGroupQuestions(activeTab, fromGroup, selectedGroup);
+                      }
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Copy from another group...</option>
+                    {Object.keys(puzzles[activeTab].groups)
+                      .filter(num => parseInt(num) !== selectedGroup)
+                      .map(groupNum => (
+                        <option key={groupNum} value={groupNum}>
+                          Copy from Group {groupNum}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-                      <input
-                        value={puzzle.answer}
-                        onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, answer: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter the correct answer"
-                      />
-                    </div>
-
-                    {puzzle.hint && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Hint (Optional)</label>
-                        <input
-                          value={puzzle.hint}
-                          onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, hint: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    )}
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-700 mb-2">Custom Feedback for Wrong Answers</h4>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Add specific feedback messages for common wrong answers to help guide students.
-                      </p>
-                      
-                      {/* Show existing feedback rules */}
-                      <div className="space-y-2 mb-3">
-                        {Object.entries(feedbackSettings)
-                          .filter(([key]) => key.startsWith(`${activeTab}_${puzzle.id}_`))
-                          .map(([key, feedback]) => {
-                            const wrongAnswer = key.split('_').slice(2).join('_');
-                            return (
-                              <div key={key} className="flex items-center justify-between bg-white p-3 rounded border">
-                                <div className="flex-1">
-                                  <div className="font-mono text-sm text-red-600">"{wrongAnswer}"</div>
-                                  <div className="text-sm text-gray-600 mt-1">{feedback}</div>
-                                </div>
-                                <button
-                                  onClick={() => deleteFeedbackRule(key)}
-                                  className="text-red-500 hover:text-red-700 text-sm ml-2"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            );
-                          })
-                        }
-                      </div>
-                      
+            {/* Puzzles for Selected Group */}
+            {selectedGroup && puzzles[activeTab].groups[selectedGroup] && (
+              <div className="space-y-6">
+                {puzzles[activeTab].groups[selectedGroup].map((puzzle, index) => (
+                  <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Group {selectedGroup} - Puzzle {index + 1}
+                      </h3>
                       <button
-                        onClick={() => {
-                          const wrongAnswer = prompt('Enter the wrong answer you want to create feedback for:');
-                          if (wrongAnswer) {
-                            addFeedbackRule(activeTab, puzzle.id, wrongAnswer);
-                          }
-                        }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+                        onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
+                        className="text-red-600 hover:text-red-800 text-sm"
                       >
-                        + Add Feedback Rule
+                        Delete
                       </button>
                     </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
+                        <textarea
+                          value={puzzle.question}
+                          onChange={(e) => updatePuzzle(activeTab, selectedGroup, puzzle.id, { ...puzzle, question: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
+                        <select
+                          value={puzzle.type}
+                          onChange={(e) => {
+                            const newType = e.target.value;
+                            const updatedPuzzle = { ...puzzle, type: newType };
+                            if (newType === 'multiple_choice' && (!puzzle.options || puzzle.options.length === 0)) {
+                              updatedPuzzle.options = ['Option A', 'Option B', 'Option C', 'Option D'];
+                            }
+                            updatePuzzle(activeTab, selectedGroup, puzzle.id, updatedPuzzle);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="text">Text Input (Open-ended)</option>
+                          <option value="multiple_choice">Multiple Choice</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
+                        <input
+                          value={puzzle.answer}
+                          onChange={(e) => updatePuzzle(activeTab, selectedGroup, puzzle.id, { ...puzzle, answer: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter the correct answer"
+                        />
+                      </div>
+
+                      {puzzle.type === 'multiple_choice' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
+                          {puzzle.options.map((option, optIndex) => (
+                            <div key={optIndex} className="flex items-center space-x-2 mb-2">
+                              <input
+                                type="radio"
+                                name={`answer-${puzzle.id}`}
+                                checked={puzzle.answer === option}
+                                onChange={() => updatePuzzle(activeTab, selectedGroup, puzzle.id, { ...puzzle, answer: option })}
+                                className="text-blue-600"
+                              />
+                              <input
+                                value={option}
+                                onChange={(e) => updatePuzzleOption(activeTab, selectedGroup, puzzle.id, optIndex, e.target.value)}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                              <button
+                                onClick={() => removeOptionFromPuzzle(activeTab, selectedGroup, puzzle.id, optIndex)}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => addOptionToPuzzle(activeTab, selectedGroup, puzzle.id)}
+                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                          >
+                            + Add Option
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-gray-700 mb-2">Custom Feedback for Wrong Answers</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Add specific feedback messages for common wrong answers to help guide students.
+                        </p>
+                        
+                        {/* Show existing feedback rules */}
+                        <div className="space-y-2 mb-3">
+                          {Object.entries(feedbackSettings)
+                            .filter(([key]) => key.startsWith(`${activeTab}_${puzzle.id}_`))
+                            .map(([key, feedback]) => {
+                              const wrongAnswer = key.split('_').slice(2).join('_');
+                              return (
+                                <div key={key} className="flex items-center justify-between bg-white p-3 rounded border">
+                                  <div className="flex-1">
+                                    <div className="font-mono text-sm text-red-600">"{wrongAnswer}"</div>
+                                    <div className="text-sm text-gray-600 mt-1">{feedback}</div>
+                                  </div>
+                                  <button
+                                    onClick={() => deleteFeedbackRule(key)}
+                                    className="text-red-500 hover:text-red-700 text-sm ml-2"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              );
+                            })
+                          }
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            const wrongAnswer = prompt('Enter the wrong answer you want to create feedback for:');
+                            if (wrongAnswer) {
+                              addFeedbackRule(activeTab, puzzle.id, wrongAnswer, selectedGroup);
+                            }
+                          }}
+                          className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+                        >
+                          + Add Feedback Rule
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
