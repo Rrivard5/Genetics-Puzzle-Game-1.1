@@ -20,6 +20,7 @@ const InstructorInterface = () => {
   const [studentProgress, setStudentProgress] = useState([]);
   const [detailedStudentData, setDetailedStudentData] = useState([]);
   const [feedbackSettings, setFeedbackSettings] = useState({});
+  const [pedigreeImages, setPedigreeImages] = useState({});
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -28,6 +29,7 @@ const InstructorInterface = () => {
       loadStudentProgress();
       loadDetailedStudentData();
       loadFeedbackSettings();
+      loadPedigreeImages();
     }
   }, [isAuthenticated]);
 
@@ -71,6 +73,40 @@ const InstructorInterface = () => {
   const saveFeedbackSettings = () => {
     localStorage.setItem('instructor-feedback', JSON.stringify(feedbackSettings));
     alert('Feedback settings saved successfully!');
+  };
+
+  const loadPedigreeImages = () => {
+    const savedImages = localStorage.getItem('instructor-pedigree-images');
+    if (savedImages) {
+      setPedigreeImages(JSON.parse(savedImages));
+    }
+  };
+
+  const savePedigreeImages = () => {
+    localStorage.setItem('instructor-pedigree-images', JSON.stringify(pedigreeImages));
+    alert('Pedigree images saved successfully!');
+  };
+
+  const handlePedigreeUpload = (event, groupNumber) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPedigreeImages(prev => ({
+          ...prev,
+          [`group${groupNumber}`]: e.target.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePedigreeImage = (groupNumber) => {
+    setPedigreeImages(prev => {
+      const updated = { ...prev };
+      delete updated[`group${groupNumber}`];
+      return updated;
+    });
   };
 
   const addFeedbackRule = (room, puzzleId, wrongAnswer, groupNumber = null) => {
@@ -539,6 +575,62 @@ const InstructorInterface = () => {
                       {gameSettings.wildTypeSequence.substring(gameSettings.highlightedPosition + 1)}
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Pedigree Image Management */}
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Pedigree Image Management</h2>
+              <div className="bg-white rounded-lg shadow p-6">
+                <p className="text-gray-600 mb-4">
+                  Upload pedigree images for each group to use in Room 2. Images will be displayed to students 
+                  based on their group number during the pedigree analysis puzzles.
+                </p>
+                
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map(groupNum => (
+                    <div key={groupNum} className="border rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-700 mb-3">Group {groupNum} Pedigree</h3>
+                      
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePedigreeUpload(e, groupNum)}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        
+                        {pedigreeImages[`group${groupNum}`] && (
+                          <button
+                            onClick={() => removePedigreeImage(groupNum)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      
+                      {pedigreeImages[`group${groupNum}`] && (
+                        <div className="mt-3">
+                          <img 
+                            src={pedigreeImages[`group${groupNum}`]} 
+                            alt={`Group ${groupNum} Pedigree`}
+                            className="max-w-xs max-h-32 rounded border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="pt-4">
+                  <button
+                    onClick={savePedigreeImages}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Save Pedigree Images
+                  </button>
                 </div>
               </div>
             </div>
