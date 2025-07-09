@@ -64,9 +64,10 @@ export default function StudentInfo() {
       // Set in context
       setStudentInfo(studentInfo);
       
-      // Navigate using window.location to ensure proper page load
+      // Navigate to Room1
       setTimeout(() => {
-        window.location.href = '/room1';
+        setIsSubmitting(false);
+        navigate('/room1');
       }, 500);
     }
   };
