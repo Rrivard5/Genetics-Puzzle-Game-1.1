@@ -18,19 +18,19 @@ const InstructorInterface = () => {
   });
   const [studentProgress, setStudentProgress] = useState([]);
   const [detailedStudentData, setDetailedStudentData] = useState([]);
+  const [feedbackSettings, setFeedbackSettings] = useState({});
 
-  // Load existing puzzles on mount
   useEffect(() => {
     if (isAuthenticated) {
       loadPuzzles();
       loadGameSettings();
       loadStudentProgress();
       loadDetailedStudentData();
+      loadFeedbackSettings();
     }
   }, [isAuthenticated]);
 
   const handleLogin = () => {
-    // Simple password check - in production, use proper authentication
     if (password === 'genetics2024') {
       setIsLoggingIn(true);
       setTimeout(() => {
@@ -60,48 +60,61 @@ const InstructorInterface = () => {
     alert('Game settings saved successfully!');
   };
 
+  const loadFeedbackSettings = () => {
+    const savedFeedback = localStorage.getItem('instructor-feedback');
+    if (savedFeedback) {
+      setFeedbackSettings(JSON.parse(savedFeedback));
+    }
+  };
+
+  const saveFeedbackSettings = () => {
+    localStorage.setItem('instructor-feedback', JSON.stringify(feedbackSettings));
+    alert('Feedback settings saved successfully!');
+  };
+
+  const addFeedbackRule = (room, puzzleId, wrongAnswer) => {
+    const key = `${room}_${puzzleId}_${wrongAnswer.toLowerCase()}`;
+    const newFeedback = prompt('Enter feedback message for this wrong answer:');
+    if (newFeedback) {
+      setFeedbackSettings(prev => ({
+        ...prev,
+        [key]: newFeedback
+      }));
+    }
+  };
+
+  const deleteFeedbackRule = (key) => {
+    if (confirm('Are you sure you want to delete this feedback rule?')) {
+      setFeedbackSettings(prev => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
+    }
+  };
+
   const loadPuzzles = () => {
-    // Load puzzles from localStorage or use defaults
     const savedPuzzles = localStorage.getItem('instructor-puzzles');
     if (savedPuzzles) {
       setPuzzles(JSON.parse(savedPuzzles));
     } else {
-      // Default puzzles
       setPuzzles({
         room1: [
           {
             id: "p1",
             question: "What type of mutation results from changing the highlighted G to A in the DNA sequence?",
-            options: [
-              "Point mutation from G to A",
-              "Point mutation from G to C", 
-              "Point mutation from G to T",
-              "Insertion mutation"
-            ],
             answer: "Point mutation from G to A",
             hint: "Look at the color coding - the mutation type is determined by the color of the highlighted nucleotide."
           },
           {
             id: "p2",
             question: "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
-            options: [
-              "RPQ",
-              "RSE", 
-              "SPE",
-              "SPQ"
-            ],
             answer: "RPQ",
             hint: "Use the codon wheel to translate the mRNA sequence after the mutation occurs."
           },
           {
             id: "p3", 
             question: "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
-            options: [
-              "CPE → RPQ",
-              "PPE → RSE",
-              "PPQ → SPE", 
-              "RPE → SPQ"
-            ],
             answer: "CPE → RPQ",
             hint: "Compare the original sequence translation with the mutated sequence translation."
           }
@@ -110,34 +123,16 @@ const InstructorInterface = () => {
           {
             id: "p1",
             question: "Looking at the pedigree for dark vision (Figure 2), what type of inheritance pattern does this trait follow?",
-            options: [
-              "Autosomal dominant",
-              "Autosomal recessive", 
-              "X-linked recessive",
-              "X-linked dominant"
-            ],
             answer: "X-linked recessive"
           },
           {
             id: "p2",
             question: "In the same pedigree family, what is individual 9's genotype for dark vision AND scale color?",
-            options: [
-              "XDXd RB",
-              "XdXd BB", 
-              "XdXd RB",
-              "XDXd BB"
-            ],
             answer: "XdXd BB"
           },
           {
             id: "p3",
             question: "Based on the inheritance patterns shown, if individual 9 had children with a normal vision male, what percentage of their daughters would have dark vision?",
-            options: [
-              "0%",
-              "25%", 
-              "50%",
-              "100%"
-            ],
             answer: "0%"
           }
         ],
@@ -145,34 +140,16 @@ const InstructorInterface = () => {
           {
             id: "p1",
             question: "A female (BY Dd) and male (BR d) mate. What is the likelihood that one of their female offspring who does not have dark vision will have blue OR red scales?",
-            options: [
-              "1/8",
-              "1/4",
-              "1/2", 
-              "3/4"
-            ],
             answer: "1/2"
           },
           {
             id: "p2",
             question: "In the same cross (BY Dd × BR d), what is the probability of getting a male offspring with orange scales and dark vision?",
-            options: [
-              "1/8",
-              "1/4",
-              "1/2",
-              "0"
-            ],
             answer: "1/4"
           },
           {
             id: "p3",
             question: "If two loci are 33 centimorgans apart, what is the recombination frequency between them?",
-            options: [
-              "0%",
-              "16.5%",
-              "33%",
-              "50%"
-            ],
             answer: "33%"
           }
         ],
@@ -180,34 +157,16 @@ const InstructorInterface = () => {
           {
             id: "p1",
             question: "A population of aliens is at Hardy-Weinberg equilibrium. The frequency of the dominant allele for wings is 0.6. What is the frequency of homozygous recessive genotypes in this population?",
-            options: [
-              "0.04",
-              "0.16",
-              "0.36",
-              "0.64"
-            ],
             answer: "0.16"
           },
           {
             id: "p2",
             question: "If a population is NOT in Hardy-Weinberg equilibrium, which of the following factors could be responsible?",
-            options: [
-              "Natural selection",
-              "Gene flow (migration)",
-              "Genetic drift",
-              "All of the above"
-            ],
             answer: "All of the above"
           },
           {
             id: "p3",
             question: "In RNA processing, which segments are removed from the pre-mRNA to create the final mature mRNA?",
-            options: [
-              "Exons",
-              "Introns",
-              "Both exons and introns",
-              "Neither exons nor introns"
-            ],
             answer: "Introns"
           }
         ]
@@ -216,12 +175,10 @@ const InstructorInterface = () => {
   };
 
   const loadStudentProgress = () => {
-    // Load from localStorage or use mock data
     const savedProgress = localStorage.getItem('instructor-student-progress');
     if (savedProgress) {
       setStudentProgress(JSON.parse(savedProgress));
     } else {
-      // Mock progress data
       const mockProgress = [
         { 
           name: 'Alex Johnson', 
@@ -233,17 +190,6 @@ const InstructorInterface = () => {
           room3: { percentage: 50, attempts: { p1: [{ answer: '1/2', isCorrect: true, timestamp: '2024-07-08T14:40:00Z' }], p2: [{ answer: '1/8', isCorrect: false, timestamp: '2024-07-08T14:41:00Z' }], p3: [{ answer: '16.5%', isCorrect: false, timestamp: '2024-07-08T14:42:00Z' }] }},
           room4: { percentage: 0, attempts: {} },
           lastActivity: '2024-07-08T14:30:00Z'
-        },
-        { 
-          name: 'Sarah Kim', 
-          semester: 'Fall', 
-          year: 2024, 
-          groupNumber: 2,
-          room1: { percentage: 100, attempts: { p1: [{ answer: 'Point mutation from G to A', isCorrect: true, timestamp: '2024-07-08T15:00:00Z' }], p2: [{ answer: 'RPQ', isCorrect: true, timestamp: '2024-07-08T15:01:00Z' }], p3: [{ answer: 'CPE → RPQ', isCorrect: true, timestamp: '2024-07-08T15:02:00Z' }] }},
-          room2: { percentage: 100, attempts: { p1: [{ answer: 'X-linked recessive', isCorrect: true, timestamp: '2024-07-08T15:05:00Z' }], p2: [{ answer: 'XdXd BB', isCorrect: true, timestamp: '2024-07-08T15:06:00Z' }], p3: [{ answer: '0%', isCorrect: true, timestamp: '2024-07-08T15:07:00Z' }] }},
-          room3: { percentage: 100, attempts: { p1: [{ answer: '1/2', isCorrect: true, timestamp: '2024-07-08T15:10:00Z' }], p2: [{ answer: '1/4', isCorrect: true, timestamp: '2024-07-08T15:11:00Z' }], p3: [{ answer: '33%', isCorrect: true, timestamp: '2024-07-08T15:12:00Z' }] }},
-          room4: { percentage: 33, attempts: { p1: [{ answer: '0.16', isCorrect: true, timestamp: '2024-07-08T15:15:00Z' }], p2: [{ answer: 'Natural selection', isCorrect: false, timestamp: '2024-07-08T15:16:00Z' }], p3: [{ answer: 'Exons', isCorrect: false, timestamp: '2024-07-08T15:17:00Z' }] }},
-          lastActivity: '2024-07-08T15:15:00Z'
         }
       ];
       setStudentProgress(mockProgress);
@@ -251,12 +197,10 @@ const InstructorInterface = () => {
   };
 
   const loadDetailedStudentData = () => {
-    // Load from localStorage or generate from student progress
     const savedData = localStorage.getItem('instructor-student-data');
     if (savedData) {
       setDetailedStudentData(JSON.parse(savedData));
     } else {
-      // Generate detailed data from student progress
       const detailedData = [];
       studentProgress.forEach(student => {
         ['room1', 'room2', 'room3', 'room4'].forEach(roomId => {
@@ -302,106 +246,24 @@ const InstructorInterface = () => {
   };
 
   const exportToExcel = () => {
-    // Create Excel-compatible CSV data
     const csvData = [];
-    
-    // Add headers
     csvData.push([
-      'Student Name',
-      'Semester',
-      'Year', 
-      'Group Number',
-      'Session ID',
-      'Room',
-      'Question',
-      'Answer Given',
-      'Correct (Y/N)',
-      'Attempt Number',
-      'Timestamp',
-      'Total Attempts for Question'
+      'Student Name', 'Semester', 'Year', 'Group Number', 'Session ID', 'Room',
+      'Question', 'Answer Given', 'Correct (Y/N)', 'Attempt Number', 'Timestamp'
     ]);
     
-    // Add student data
     detailedStudentData.forEach(record => {
-      const totalAttempts = detailedStudentData.filter(r => 
-        r.sessionId === record.sessionId && 
-        r.roomId === record.roomId && 
-        r.questionId === record.questionId
-      ).length;
-      
       csvData.push([
-        record.name,
-        record.semester,
-        record.year,
-        record.groupNumber,
-        record.sessionId,
-        record.roomId,
-        record.questionId,
-        record.answer,
-        record.isCorrect ? 'Y' : 'N',
-        record.attemptNumber,
-        new Date(record.timestamp).toLocaleString(),
-        totalAttempts
+        record.name, record.semester, record.year, record.groupNumber, record.sessionId,
+        record.roomId, record.questionId, record.answer, record.isCorrect ? 'Y' : 'N',
+        record.attemptNumber, new Date(record.timestamp).toLocaleString()
       ]);
     });
     
-    // Create summary sheet data
-    const summaryData = [];
-    summaryData.push(['SUMMARY REPORT']);
-    summaryData.push([]);
-    summaryData.push([
-      'Student Name',
-      'Semester',
-      'Year',
-      'Group Number',
-      'Room 1 Progress',
-      'Room 1 Attempts',
-      'Room 2 Progress', 
-      'Room 2 Attempts',
-      'Room 3 Progress',
-      'Room 3 Attempts',
-      'Room 4 Progress',
-      'Room 4 Attempts',
-      'Last Activity'
-    ]);
-    
-    studentProgress.forEach(student => {
-      const getTotalAttempts = (roomId) => {
-        return Object.values(student[roomId].attempts).reduce((total, attempts) => total + attempts.length, 0);
-      };
-      
-      summaryData.push([
-        student.name,
-        student.semester,
-        student.year,
-        student.groupNumber,
-        `${student.room1.percentage}%`,
-        getTotalAttempts('room1'),
-        `${student.room2.percentage}%`,
-        getTotalAttempts('room2'),
-        `${student.room3.percentage}%`,
-        getTotalAttempts('room3'),
-        `${student.room4.percentage}%`,
-        getTotalAttempts('room4'),
-        new Date(student.lastActivity).toLocaleString()
-      ]);
-    });
-    
-    // Combine both datasets
-    const combinedData = [
-      ...summaryData,
-      [],
-      ['DETAILED ATTEMPT LOG'],
-      [],
-      ...csvData
-    ];
-    
-    // Convert to CSV
-    const csvContent = combinedData.map(row => 
+    const csvContent = csvData.map(row => 
       row.map(cell => `"${cell}"`).join(',')
     ).join('\n');
     
-    // Create and download file
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -415,8 +277,7 @@ const InstructorInterface = () => {
     const newPuzzle = {
       id: `p${puzzles[room].length + 1}`,
       question: 'New question here...',
-      options: ['Option A', 'Option B', 'Option C', 'Option D'],
-      answer: 'Option A',
+      answer: 'Correct answer here...',
       hint: 'Hint for this question...'
     };
     setPuzzles(prev => ({
@@ -510,6 +371,7 @@ const InstructorInterface = () => {
             {[
               { id: 'dashboard', name: 'Student Progress', icon: '📊' },
               { id: 'detailed', name: 'Detailed Tracking', icon: '📋' },
+              { id: 'feedback', name: 'Feedback Management', icon: '💬' },
               { id: 'settings', name: 'Game Settings', icon: '⚙️' },
               { id: 'room1', name: 'Room 1 Puzzles', icon: '🧩' },
               { id: 'room2', name: 'Room 2 Puzzles', icon: '🔬' },
@@ -533,6 +395,85 @@ const InstructorInterface = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Feedback Management Tab */}
+        {activeTab === 'feedback' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Feedback Management</h2>
+              <button
+                onClick={saveFeedbackSettings}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Save Feedback Settings
+              </button>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Custom Feedback Rules</h3>
+              <p className="text-gray-600 mb-4">
+                Create custom feedback messages for specific wrong answers. When a student enters a wrong answer,
+                they'll see your custom message instead of the default feedback.
+              </p>
+              
+              <div className="space-y-4">
+                {['room1', 'room2', 'room3', 'room4'].map(room => (
+                  <div key={room} className="border rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-700 mb-2">
+                      {room.toUpperCase()} - {room === 'room1' ? 'Molecular Genetics' : 
+                                              room === 'room2' ? 'Pedigree Analysis' :
+                                              room === 'room3' ? 'Probability Genetics' :
+                                              'Population Genetics'}
+                    </h4>
+                    
+                    {puzzles[room]?.map(puzzle => (
+                      <div key={puzzle.id} className="ml-4 mb-3 p-3 bg-gray-50 rounded">
+                        <p className="font-medium text-sm text-gray-700 mb-2">
+                          {puzzle.id.toUpperCase()}: {puzzle.question}
+                        </p>
+                        <p className="text-xs text-green-600 mb-2">Correct Answer: {puzzle.answer}</p>
+                        
+                        {/* Show existing feedback rules for this question */}
+                        {Object.entries(feedbackSettings)
+                          .filter(([key]) => key.startsWith(`${room}_${puzzle.id}_`))
+                          .map(([key, feedback]) => {
+                            const wrongAnswer = key.split('_').slice(2).join('_');
+                            return (
+                              <div key={key} className="flex items-center justify-between bg-white p-2 rounded mb-1">
+                                <div className="flex-1">
+                                  <span className="text-xs font-mono text-red-600">{wrongAnswer}</span>
+                                  <p className="text-xs text-gray-600">{feedback}</p>
+                                </div>
+                                <button
+                                  onClick={() => deleteFeedbackRule(key)}
+                                  className="text-red-500 hover:text-red-700 text-xs ml-2"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            );
+                          })
+                        }
+                        
+                        <button
+                          onClick={() => {
+                            const wrongAnswer = prompt('Enter the wrong answer you want to create feedback for:');
+                            if (wrongAnswer) {
+                              addFeedbackRule(room, puzzle.id, wrongAnswer);
+                            }
+                          }}
+                          className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"
+                        >
+                          + Add Feedback Rule
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Game Settings Tab */}
         {activeTab === 'settings' && (
           <div>
@@ -682,212 +623,4 @@ const InstructorInterface = () => {
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
                               className="bg-orange-600 h-2 rounded-full" 
-                              style={{ width: `${student.room3.percentage}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-gray-500">{student.room3.percentage}%</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room3.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-purple-600 h-2 rounded-full" 
-                              style={{ width: `${student.room4.percentage}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-gray-500">{student.room4.percentage}%</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room4.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(student.lastActivity).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Detailed Tracking Tab */}
-        {activeTab === 'detailed' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Detailed Answer Tracking</h2>
-              <button
-                onClick={() => loadDetailedStudentData()}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                🔄 Refresh Data
-              </button>
-            </div>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Student
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Room/Question
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Answer Given
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Result
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Attempt #
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Timestamp
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {detailedStudentData.slice(-50).reverse().map((record, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{record.name}</div>
-                        <div className="text-sm text-gray-500">Group {record.groupNumber}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{record.roomId}</div>
-                        <div className="text-sm text-gray-500">{record.questionId}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">{record.answer}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          record.isCorrect 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {record.isCorrect ? 'Correct' : 'Incorrect'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        #{record.attemptNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(record.timestamp).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-4 text-sm text-gray-600 text-center">
-              Showing last 50 attempts. Export to Excel for complete data.
-            </div>
-          </div>
-        )}
-
-        {/* Puzzle Management */}
-        {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Puzzles
-              </h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => addNewPuzzle(activeTab)}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  + Add Puzzle
-                </button>
-                <button
-                  onClick={savePuzzles}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={exportPuzzles}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Export Puzzles
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {puzzles[activeTab]?.map((puzzle, index) => (
-                <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Puzzle {index + 1}</h3>
-                    <button
-                      onClick={() => deletePuzzle(activeTab, puzzle.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                      <textarea
-                        value={puzzle.question}
-                        onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, question: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
-                      {puzzle.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex items-center space-x-2 mb-2">
-                          <input
-                            type="radio"
-                            name={`answer-${puzzle.id}`}
-                            checked={puzzle.answer === option}
-                            onChange={() => updatePuzzle(activeTab, puzzle.id, { ...puzzle, answer: option })}
-                            className="text-blue-600"
-                          />
-                          <input
-                            value={option}
-                            onChange={(e) => {
-                              const newOptions = [...puzzle.options];
-                              newOptions[optIndex] = e.target.value;
-                              updatePuzzle(activeTab, puzzle.id, { ...puzzle, options: newOptions });
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {puzzle.hint && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Hint (Optional)</label>
-                        <input
-                          value={puzzle.hint}
-                          onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, hint: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default InstructorInterface;
+                              style={{ width: `${student
