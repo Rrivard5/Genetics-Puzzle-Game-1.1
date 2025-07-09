@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 const InstructorInterface = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [puzzles, setPuzzles] = useState({
@@ -16,6 +17,7 @@ const InstructorInterface = () => {
     highlightedPosition: 11
   });
   const [studentProgress, setStudentProgress] = useState([]);
+  const [detailedStudentData, setDetailedStudentData] = useState([]);
 
   // Load existing puzzles on mount
   useEffect(() => {
@@ -23,21 +25,27 @@ const InstructorInterface = () => {
       loadPuzzles();
       loadGameSettings();
       loadStudentProgress();
+      loadDetailedStudentData();
     }
   }, [isAuthenticated]);
 
   const handleLogin = () => {
     // Simple password check - in production, use proper authentication
     if (password === 'genetics2024') {
-      setIsAuthenticated(true);
-      setPassword('');
-      // Small delay to prevent blank page
+      setIsLoggingIn(true);
       setTimeout(() => {
-        window.location.reload();
-      }, 100);
+        setIsAuthenticated(true);
+        setPassword('');
+        setIsLoggingIn(false);
+      }, 1000);
     } else {
       alert('Incorrect password');
     }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setActiveTab('dashboard');
   };
 
   const loadGameSettings = () => {
@@ -208,20 +216,89 @@ const InstructorInterface = () => {
   };
 
   const loadStudentProgress = () => {
-    // Simulate student progress data
-    const mockProgress = [
-      { name: 'Alex Johnson', room1: 100, room2: 75, room3: 50, room4: 0, lastActivity: '2024-07-08 14:30' },
-      { name: 'Sarah Kim', room1: 100, room2: 100, room3: 100, room4: 33, lastActivity: '2024-07-08 15:15' },
-      { name: 'Mike Chen', room1: 100, room2: 100, room3: 0, room4: 0, lastActivity: '2024-07-08 13:45' },
-      { name: 'Emma Davis', room1: 100, room2: 33, room3: 0, room4: 0, lastActivity: '2024-07-08 14:00' },
-      { name: 'James Wilson', room1: 67, room2: 0, room3: 0, room4: 0, lastActivity: '2024-07-08 13:20' }
-    ];
-    setStudentProgress(mockProgress);
+    // Load from localStorage or use mock data
+    const savedProgress = localStorage.getItem('instructor-student-progress');
+    if (savedProgress) {
+      setStudentProgress(JSON.parse(savedProgress));
+    } else {
+      // Mock progress data
+      const mockProgress = [
+        { 
+          name: 'Alex Johnson', 
+          semester: 'Fall', 
+          year: 2024, 
+          groupNumber: 1,
+          room1: { percentage: 100, attempts: { p1: [{ answer: 'Point mutation from G to A', isCorrect: true, timestamp: '2024-07-08T14:30:00Z' }], p2: [{ answer: 'RPQ', isCorrect: true, timestamp: '2024-07-08T14:31:00Z' }], p3: [{ answer: 'CPE → RPQ', isCorrect: true, timestamp: '2024-07-08T14:32:00Z' }] }},
+          room2: { percentage: 75, attempts: { p1: [{ answer: 'X-linked recessive', isCorrect: true, timestamp: '2024-07-08T14:35:00Z' }], p2: [{ answer: 'XdXd BB', isCorrect: true, timestamp: '2024-07-08T14:36:00Z' }], p3: [{ answer: '25%', isCorrect: false, timestamp: '2024-07-08T14:37:00Z' }] }},
+          room3: { percentage: 50, attempts: { p1: [{ answer: '1/2', isCorrect: true, timestamp: '2024-07-08T14:40:00Z' }], p2: [{ answer: '1/8', isCorrect: false, timestamp: '2024-07-08T14:41:00Z' }], p3: [{ answer: '16.5%', isCorrect: false, timestamp: '2024-07-08T14:42:00Z' }] }},
+          room4: { percentage: 0, attempts: {} },
+          lastActivity: '2024-07-08T14:30:00Z'
+        },
+        { 
+          name: 'Sarah Kim', 
+          semester: 'Fall', 
+          year: 2024, 
+          groupNumber: 2,
+          room1: { percentage: 100, attempts: { p1: [{ answer: 'Point mutation from G to A', isCorrect: true, timestamp: '2024-07-08T15:00:00Z' }], p2: [{ answer: 'RPQ', isCorrect: true, timestamp: '2024-07-08T15:01:00Z' }], p3: [{ answer: 'CPE → RPQ', isCorrect: true, timestamp: '2024-07-08T15:02:00Z' }] }},
+          room2: { percentage: 100, attempts: { p1: [{ answer: 'X-linked recessive', isCorrect: true, timestamp: '2024-07-08T15:05:00Z' }], p2: [{ answer: 'XdXd BB', isCorrect: true, timestamp: '2024-07-08T15:06:00Z' }], p3: [{ answer: '0%', isCorrect: true, timestamp: '2024-07-08T15:07:00Z' }] }},
+          room3: { percentage: 100, attempts: { p1: [{ answer: '1/2', isCorrect: true, timestamp: '2024-07-08T15:10:00Z' }], p2: [{ answer: '1/4', isCorrect: true, timestamp: '2024-07-08T15:11:00Z' }], p3: [{ answer: '33%', isCorrect: true, timestamp: '2024-07-08T15:12:00Z' }] }},
+          room4: { percentage: 33, attempts: { p1: [{ answer: '0.16', isCorrect: true, timestamp: '2024-07-08T15:15:00Z' }], p2: [{ answer: 'Natural selection', isCorrect: false, timestamp: '2024-07-08T15:16:00Z' }], p3: [{ answer: 'Exons', isCorrect: false, timestamp: '2024-07-08T15:17:00Z' }] }},
+          lastActivity: '2024-07-08T15:15:00Z'
+        }
+      ];
+      setStudentProgress(mockProgress);
+    }
+  };
+
+  const loadDetailedStudentData = () => {
+    // Load from localStorage or generate from student progress
+    const savedData = localStorage.getItem('instructor-student-data');
+    if (savedData) {
+      setDetailedStudentData(JSON.parse(savedData));
+    } else {
+      // Generate detailed data from student progress
+      const detailedData = [];
+      studentProgress.forEach(student => {
+        ['room1', 'room2', 'room3', 'room4'].forEach(roomId => {
+          const roomData = student[roomId];
+          if (roomData && roomData.attempts) {
+            Object.entries(roomData.attempts).forEach(([questionId, attempts]) => {
+              attempts.forEach((attempt, index) => {
+                detailedData.push({
+                  sessionId: `session_${student.name.replace(' ', '_')}_${Date.now()}`,
+                  name: student.name,
+                  semester: student.semester,
+                  year: student.year,
+                  groupNumber: student.groupNumber,
+                  roomId,
+                  questionId,
+                  answer: attempt.answer,
+                  isCorrect: attempt.isCorrect,
+                  timestamp: attempt.timestamp,
+                  attemptNumber: index + 1
+                });
+              });
+            });
+          }
+        });
+      });
+      setDetailedStudentData(detailedData);
+    }
   };
 
   const savePuzzles = () => {
     localStorage.setItem('instructor-puzzles', JSON.stringify(puzzles));
     alert('Puzzles saved successfully!');
+  };
+
+  const exportPuzzles = () => {
+    const dataStr = JSON.stringify(puzzles, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'genetics_puzzles.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   };
 
   const exportToExcel = () => {
