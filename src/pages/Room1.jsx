@@ -6,6 +6,8 @@ import CodonChart from '../components/CodonChart'
 
 export default function Room1() {
   const [responses, setResponses] = useState({})
+  const [checkedAnswers, setCheckedAnswers] = useState({})
+  const [feedback, setFeedback] = useState({})
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showHint, setShowHint] = useState({})
@@ -13,7 +15,7 @@ export default function Room1() {
   const [activeLock, setActiveLock] = useState(null)
   const [wildTypeSequence, setWildTypeSequence] = useState("3'CGACGATACGGAGGGGTCACTCCT5'")
   const [highlightedNucleotide, setHighlightedNucleotide] = useState("G")
-  const [highlightedPosition, setHighlightedPosition] = useState(11) // Position of highlighted G
+  const [highlightedPosition, setHighlightedPosition] = useState(11)
   const navigate = useNavigate()
   const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
 
@@ -46,16 +48,103 @@ export default function Room1() {
   }
 
   const handleChange = (e, id) => {
-    const selectedAnswer = e.target.value
-    const puzzle = puzzles.find(p => p.id === id)
-    const isCorrect = puzzle.answer === selectedAnswer
+    const value = e.target.value
+    setResponses({ ...responses, [id]: value })
     
-    setResponses({ ...responses, [id]: selectedAnswer })
-    
-    // Track the attempt
-    trackAttempt('room1', id, selectedAnswer, isCorrect)
+    // Clear feedback when user changes their answer
+    if (feedback[id]) {
+      setFeedback(prev => ({ ...prev, [id]: null }))
+    }
     
     if (error) setError(null)
+  }
+
+  const checkAnswer = (puzzleId) => {
+    const userAnswer = responses[puzzleId]?.trim()
+    const puzzle = puzzles.find(p => p.id === puzzleId)
+    
+    if (!userAnswer) {
+      setFeedback(prev => ({ 
+        ...prev, 
+        [puzzleId]: { 
+          isCorrect: false, 
+          message: "Please enter an answer before checking.",
+          type: "warning"
+        }
+      }))
+      return
+    }
+
+    const isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+    
+    // Track the attempt
+    trackAttempt('room1', puzzleId, userAnswer, isCorrect)
+    
+    // Mark as checked
+    setCheckedAnswers(prev => ({ ...prev, [puzzleId]: true }))
+    
+    if (isCorrect) {
+      setFeedback(prev => ({ 
+        ...prev, 
+        [puzzleId]: { 
+          isCorrect: true, 
+          message: "🎉 Correct! Well done!",
+          type: "success"
+        }
+      }))
+    } else {
+      // Get specific feedback based on the wrong answer
+      const wrongAnswerFeedback = getWrongAnswerFeedback(puzzleId, userAnswer, puzzle)
+      setFeedback(prev => ({ 
+        ...prev, 
+        [puzzleId]: { 
+          isCorrect: false, 
+          message: wrongAnswerFeedback,
+          type: "error"
+        }
+      }))
+    }
+  }
+
+  const getWrongAnswerFeedback = (puzzleId, userAnswer, puzzle) => {
+    // Load custom feedback from localStorage (instructor-defined)
+    const savedFeedback = localStorage.getItem('instructor-feedback')
+    const customFeedback = savedFeedback ? JSON.parse(savedFeedback) : {}
+    
+    // Check if instructor has defined custom feedback for this specific wrong answer
+    const feedbackKey = `room1_${puzzleId}_${userAnswer.toLowerCase()}`
+    if (customFeedback[feedbackKey]) {
+      return customFeedback[feedbackKey]
+    }
+    
+    // Default feedback based on puzzle ID and common wrong answers
+    const defaultFeedback = {
+      'p1': {
+        'point mutation from g to c': "Close! You identified it as a point mutation, but check which nucleotide the G is changing to. Look at the highlighted position again.",
+        'point mutation from g to t': "You're on the right track with point mutation, but the specific change isn't G to T. What does the question say about the mutation?",
+        'insertion mutation': "This isn't an insertion. An insertion would add nucleotides. This is a single nucleotide change. What type of mutation involves changing one nucleotide to another?",
+        'default': "❌ Not quite right. This is a point mutation where one nucleotide is changed to another. Look at what the question is asking - what nucleotide is the G changing to?"
+      },
+      'p2': {
+        'rse': "Remember to use the codon chart to translate the mRNA sequence after the mutation occurs. Double-check your translation steps.",
+        'spe': "Make sure you're translating the correct sequence after the mutation. Review the genetic code chart carefully.",
+        'spq': "Check your codon reading frame. Make sure you're reading the codons in the right groups of three.",
+        'default': "❌ Incorrect. Use the codon chart to translate the mRNA sequence that results from the mutation. Make sure you're reading the codons correctly."
+      },
+      'p3': {
+        'ppe → rse': "You're comparing sequences, but make sure you have the right original and mutated amino acid sequences.",
+        'ppq → spe': "Check both the original and mutated sequences carefully. One of these isn't correct.",
+        'rpe → spq': "Review your translations from the previous questions. The amino acid sequences don't match what you found earlier.",
+        'default': "❌ Not correct. This should show the change from the original amino acid sequence to the mutated sequence. Review your answers to the previous questions."
+      }
+    }
+    
+    const puzzleFeedback = defaultFeedback[puzzleId]
+    if (puzzleFeedback) {
+      return puzzleFeedback[userAnswer.toLowerCase()] || puzzleFeedback['default']
+    }
+    
+    return `❌ That's not correct. The right answer is "${puzzle.answer}". ${puzzle.hint || 'Try reviewing the genetic concepts for this question.'}`
   }
 
   const toggleHint = (puzzleId) => {
@@ -65,7 +154,6 @@ export default function Room1() {
   const handleLockClick = (puzzleId) => {
     setActiveLock(activeLock === puzzleId ? null : puzzleId)
     
-    // Scroll to the puzzle section when a lock is clicked
     if (activeLock !== puzzleId) {
       setTimeout(() => {
         const puzzleElement = document.getElementById(`puzzle-${puzzleId}`)
@@ -81,31 +169,32 @@ export default function Room1() {
   }
 
   const handleSubmit = async () => {
-    const unanswered = puzzles.find(p => !responses[p.id])
-    if (unanswered) {
-      setError('ALL PUZZLE LOCKS MUST BE ACTIVATED TO PROCEED')
+    // Check if all questions have been answered correctly
+    const allAnswered = puzzles.every(p => checkedAnswers[p.id])
+    if (!allAnswered) {
+      setError('ALL PUZZLE LOCKS MUST BE CHECKED WITH CORRECT ANSWERS TO PROCEED')
+      return
+    }
+
+    const allCorrect = puzzles.every(p => feedback[p.id]?.isCorrect)
+    if (!allCorrect) {
+      setError('ALL PUZZLE LOCKS MUST BE SOLVED CORRECTLY TO PROCEED')
       return
     }
 
     setIsSubmitting(true)
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    const allCorrect = puzzles.every(p => p.answer === responses[p.id])
-    
-    if (allCorrect) {
-      setRoomUnlocked(prev => ({ ...prev, room1: true }))
-      setCurrentProgress(25)
-      completeRoom('room1')
-      navigate('/room2')
-    } else {
-      setError('ANCIENT LOCKS REMAIN SEALED. THE SPIRITS REJECT YOUR ANSWERS. SEEK THE TRUTH IN THE GENETIC CODEX.')
-    }
+    setRoomUnlocked(prev => ({ ...prev, room1: true }))
+    setCurrentProgress(25)
+    completeRoom('room1')
+    navigate('/room2')
     
     setIsSubmitting(false)
   }
 
-  const answeredCount = Object.keys(responses).length
-  const isLockSolved = (puzzleId) => responses[puzzleId] === puzzles.find(p => p.id === puzzleId)?.answer
+  const answeredCount = Object.keys(checkedAnswers).length
+  const isLockSolved = (puzzleId) => feedback[puzzleId]?.isCorrect
   const solvedCount = puzzles.filter(p => isLockSolved(p.id)).length
 
   return (
@@ -128,7 +217,7 @@ export default function Room1() {
           <div className="h-1 w-48 mx-auto bg-gradient-to-r from-amber-400 to-emerald-400 mb-4 animate-pulse"></div>
         </div>
 
-        {/* Ancient Temple Door - Inspired by realistic temple architecture */}
+        {/* Ancient Temple Door */}
         <div className="relative flex justify-center mb-12 door-container">
           <div className="relative">
             <svg width="500" height="700" viewBox="0 0 500 700" className="drop-shadow-2xl">
@@ -138,13 +227,13 @@ export default function Room1() {
               {/* Inner Frame */}
               <rect x="60" y="60" width="380" height="580" rx="20" fill="url(#innerStone)" stroke="#8b5a2b" strokeWidth="4"/>
               
-              {/* Door Panels - More realistic proportions */}
+              {/* Door Panels */}
               <rect x="80" y="100" width="340" height="520" rx="15" fill="url(#doorSurface)"/>
               
-              {/* Ornate Header Section - Removed text label */}
+              {/* Ornate Header Section */}
               <rect x="90" y="110" width="320" height="80" rx="10" fill="url(#headerCarving)" stroke="#4a5568" strokeWidth="2"/>
               
-              {/* Subtle carved pattern in header instead of text */}
+              {/* Subtle carved pattern in header */}
               <g opacity="0.3" stroke="#4a5568" strokeWidth="1.5" fill="none">
                 <circle cx="250" cy="150" r="20"/>
                 <circle cx="250" cy="150" r="15"/>
@@ -155,39 +244,33 @@ export default function Room1() {
               {/* Central Vertical Divide */}
               <line x1="250" y1="100" x2="250" y2="620" stroke="#374151" strokeWidth="4"/>
               
-              {/* Realistic Door Panels with Carved Details - Removed distracting circles */}
+              {/* Door Panel Details */}
               <g opacity="0.4" stroke="#4a5568" strokeWidth="2" fill="none">
-                {/* Left door panel carvings */}
                 <rect x="100" y="220" width="130" height="180" rx="8"/>
                 <rect x="110" y="230" width="110" height="160" rx="6"/>
                 <path d="M145 310 Q165 290, 185 310" strokeWidth="3"/>
                 
-                {/* Right door panel carvings */}
                 <rect x="270" y="220" width="130" height="180" rx="8"/>
                 <rect x="280" y="230" width="110" height="160" rx="6"/>
                 <path d="M315 310 Q335 290, 355 310" strokeWidth="3"/>
                 
-                {/* Lower panels */}
                 <rect x="100" y="420" width="130" height="140" rx="8"/>
                 <rect x="270" y="420" width="130" height="140" rx="8"/>
                 
-                {/* Decorative corner elements - simplified */}
                 <rect x="115" y="235" width="10" height="10" rx="2"/>
                 <rect x="375" y="235" width="10" height="10" rx="2"/>
                 <rect x="115" y="575" width="10" height="10" rx="2"/>
                 <rect x="375" y="575" width="10" height="10" rx="2"/>
               </g>
               
-              {/* Subtle DNA Helix Etchings */}
+              {/* DNA Helix Etchings */}
               <g opacity="0.3" fill="#10b981" stroke="#047857" strokeWidth="1.5">
-                {/* Left DNA helix */}
                 <path d="M130 260 Q140 250, 150 260 Q160 250, 170 260 Q180 250, 190 260" fill="none" strokeWidth="2"/>
                 <path d="M130 280 Q140 270, 150 280 Q160 270, 170 280 Q180 270, 190 280" fill="none" strokeWidth="2"/>
                 <line x1="135" y1="265" x2="165" y2="275" strokeWidth="1"/>
                 <line x1="145" y1="255" x2="175" y2="285" strokeWidth="1"/>
                 <line x1="155" y1="275" x2="185" y2="265" strokeWidth="1"/>
                 
-                {/* Right DNA helix */}
                 <path d="M310 460 Q320 450, 330 460 Q340 450, 350 460 Q360 450, 370 460" fill="none" strokeWidth="2"/>
                 <path d="M310 480 Q320 470, 330 480 Q340 470, 350 480 Q360 470, 370 480" fill="none" strokeWidth="2"/>
                 <line x1="315" y1="465" x2="345" y2="475" strokeWidth="1"/>
@@ -198,12 +281,11 @@ export default function Room1() {
               {/* Lock Positions */}
               {puzzles.map((puzzle, index) => {
                 const lockY = 250 + (index * 100);
-                const isAnswered = responses[puzzle.id];
+                const isAnswered = checkedAnswers[puzzle.id];
                 const isCorrect = isLockSolved(puzzle.id);
                 
                 return (
                   <g key={puzzle.id}>
-                    {/* Lock Circle Background */}
                     <circle 
                       cx="250" 
                       cy={lockY} 
@@ -214,7 +296,6 @@ export default function Room1() {
                       opacity="0.8"
                     />
                     
-                    {/* Inner Lock Circle */}
                     <circle 
                       cx="250" 
                       cy={lockY} 
@@ -226,7 +307,6 @@ export default function Room1() {
                       onClick={() => handleLockClick(puzzle.id)}
                     />
                     
-                    {/* Lock Icon */}
                     <text 
                       x="250" 
                       y={lockY + 6} 
@@ -238,7 +318,6 @@ export default function Room1() {
                       {isCorrect ? '🔓' : '🔒'}
                     </text>
                     
-                    {/* Lock Number */}
                     <text 
                       x="290" 
                       y={lockY + 5} 
@@ -253,7 +332,7 @@ export default function Room1() {
                 );
               })}
               
-              {/* Master Keyhole (appears when all locks solved) */}
+              {/* Master Keyhole */}
               {solvedCount === 3 && (
                 <g>
                   <ellipse cx="250" cy="580" rx="20" ry="25" fill="#f59e0b" opacity="0.9"/>
@@ -261,7 +340,7 @@ export default function Room1() {
                 </g>
               )}
               
-              {/* SVG Gradients and Effects - Updated for realistic stone */}
+              {/* SVG Gradients */}
               <defs>
                 <linearGradient id="outerStone" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#8b7355"/>
@@ -320,7 +399,7 @@ export default function Room1() {
         {/* Active Lock Puzzle Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
-            {/* Wild Type Genetic Sequence - Display when puzzle is active */}
+            {/* Wild Type Genetic Sequence */}
             <div className="mb-6 text-center">
               <h3 className="text-xl text-emerald-300 font-bold mb-2">Wild Type Genetic Sequence</h3>
               <p className="text-xl text-emerald-300 font-mono tracking-wider bg-gray-800 p-4 rounded-lg inline-block">
@@ -332,7 +411,7 @@ export default function Room1() {
               </p>
             </div>
 
-            {/* Codon Chart Button - Moved here */}
+            {/* Codon Chart Button */}
             <div className="mb-6 flex justify-center">
               <button
                 onClick={() => setShowGeneticCode(!showGeneticCode)}
@@ -355,19 +434,20 @@ export default function Room1() {
                 </div>
                 <div className="text-center mt-4">
                   <p className="text-purple-200 text-sm">Ancient genetic translation cipher recovered from alien archives</p>
-                  <p className="text-purple-300 text-xs mt-2">For detailed codon mappings, search "genetic code table" or consult your genetics textbook</p>
                 </div>
               </div>
             )}
 
             {puzzles.filter(p => p.id === activeLock).map((puzzle, index) => {
               const puzzleIndex = puzzles.findIndex(p => p.id === puzzle.id);
+              const hasBeenChecked = checkedAnswers[puzzle.id];
+              const currentFeedback = feedback[puzzle.id];
+              
               return (
                 <div key={puzzle.id} className="relative">
-                  {/* Lock Container */}
                   <div className={`border-4 rounded-xl p-6 transition-all duration-500 ${
-                    isLockSolved(puzzle.id) ? 'border-emerald-400 bg-gradient-to-br from-emerald-900 to-emerald-800 shadow-emerald-400/50' :
-                    responses[puzzle.id] ? 'border-amber-400 bg-gradient-to-br from-amber-900 to-amber-800 shadow-amber-400/50' :
+                    currentFeedback?.isCorrect ? 'border-emerald-400 bg-gradient-to-br from-emerald-900 to-emerald-800 shadow-emerald-400/50' :
+                    hasBeenChecked ? 'border-red-400 bg-gradient-to-br from-red-900 to-red-800 shadow-red-400/50' :
                     'border-stone-400 bg-gradient-to-br from-stone-900 to-stone-800 shadow-stone-400/50'
                   } shadow-2xl`}>
                     
@@ -375,7 +455,6 @@ export default function Room1() {
                     <button
                       onClick={() => {
                         setActiveLock(null)
-                        // Scroll back to door
                         setTimeout(() => {
                           const doorElement = document.querySelector('.door-container')
                           if (doorElement) {
@@ -395,11 +474,11 @@ export default function Room1() {
                     {/* Lock Symbol */}
                     <div className="flex items-start gap-4 mt-8">
                       <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold border-4 ${
-                        isLockSolved(puzzle.id) ? 'bg-emerald-500 border-emerald-300 text-white' :
-                        responses[puzzle.id] ? 'bg-amber-500 border-amber-300 text-black' :
+                        currentFeedback?.isCorrect ? 'bg-emerald-500 border-emerald-300 text-white' :
+                        hasBeenChecked ? 'bg-red-500 border-red-300 text-white' :
                         'bg-stone-600 border-stone-400 text-white'
                       }`} style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-                        {isLockSolved(puzzle.id) ? '🔓' : responses[puzzle.id] ? '🔶' : '🔒'}
+                        {currentFeedback?.isCorrect ? '🔓' : hasBeenChecked ? '❌' : '🔒'}
                       </div>
                       
                       <div className="flex-1">
@@ -407,25 +486,46 @@ export default function Room1() {
                           <span className="text-amber-400">SECURITY LOCK {puzzleIndex + 1}:</span> {puzzle.question}
                         </h3>
                         
-                        {/* Answer Options */}
-                        <div className="space-y-3">
-                          {puzzle.options.map((option, optIndex) => (
-                            <label 
-                              key={optIndex}
-                              className="flex items-center p-4 rounded-lg cursor-pointer transition-all border-2 hover:scale-102 transform bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600 hover:border-amber-400 hover:shadow-lg group"
-                            >
-                              <input
-                                type="radio"
-                                name={puzzle.id}
-                                value={option}
-                                checked={responses[puzzle.id] === option}
-                                onChange={(e) => handleChange(e, puzzle.id)}
-                                className="mr-4 h-5 w-5 text-amber-500 border-gray-400 focus:ring-amber-500 focus:ring-2"
-                              />
-                              <span className="text-white font-mono group-hover:text-amber-300 transition-colors">{option}</span>
-                            </label>
-                          ))}
+                        {/* Text Input */}
+                        <div className="mb-4">
+                          <input
+                            type="text"
+                            value={responses[puzzle.id] || ''}
+                            onChange={(e) => handleChange(e, puzzle.id)}
+                            placeholder="Type your answer here..."
+                            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
+                            disabled={currentFeedback?.isCorrect}
+                          />
                         </div>
+
+                        {/* Check Answer Button */}
+                        <div className="mb-4">
+                          <button
+                            onClick={() => checkAnswer(puzzle.id)}
+                            disabled={!responses[puzzle.id]?.trim() || currentFeedback?.isCorrect}
+                            className={`px-6 py-3 rounded-lg font-bold text-lg transition-all transform ${
+                              currentFeedback?.isCorrect 
+                                ? 'bg-emerald-600 cursor-not-allowed opacity-50'
+                                : !responses[puzzle.id]?.trim()
+                                ? 'bg-gray-600 cursor-not-allowed opacity-50'
+                                : 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 hover:scale-105 shadow-lg'
+                            } text-white border-2 border-amber-400`}
+                            style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
+                          >
+                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '🔍 CHECK ANSWER'}
+                          </button>
+                        </div>
+
+                        {/* Feedback Display */}
+                        {currentFeedback && (
+                          <div className={`mb-4 p-4 rounded-lg border-2 ${
+                            currentFeedback.isCorrect 
+                              ? 'bg-emerald-900 border-emerald-400 text-emerald-100'
+                              : 'bg-red-900 border-red-400 text-red-100'
+                          }`}>
+                            <p className="font-mono text-sm leading-relaxed">{currentFeedback.message}</p>
+                          </div>
+                        )}
 
                         {/* Hint Button */}
                         {puzzle.hint && (
@@ -440,7 +540,6 @@ export default function Room1() {
                             {showHint[puzzle.id] && (
                               <div className="mt-3 bg-gradient-to-r from-purple-900 to-indigo-900 border-2 border-purple-400 rounded-lg p-4">
                                 <p className="text-purple-200 text-sm font-mono">🔬 {puzzle.hint}</p>
-                                <p className="text-xs text-purple-400 mt-2 font-mono">Log this data access in your research notes.</p>
                               </div>
                             )}
                           </div>
