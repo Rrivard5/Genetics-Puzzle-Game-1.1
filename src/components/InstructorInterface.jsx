@@ -220,14 +220,114 @@ const InstructorInterface = () => {
     alert('Puzzles saved successfully!');
   };
 
-  const exportPuzzles = () => {
-    const dataStr = JSON.stringify(puzzles, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
+  const exportToExcel = () => {
+    // Create Excel-compatible CSV data
+    const csvData = [];
+    
+    // Add headers
+    csvData.push([
+      'Student Name',
+      'Semester',
+      'Year', 
+      'Group Number',
+      'Session ID',
+      'Room',
+      'Question',
+      'Answer Given',
+      'Correct (Y/N)',
+      'Attempt Number',
+      'Timestamp',
+      'Total Attempts for Question'
+    ]);
+    
+    // Add student data
+    detailedStudentData.forEach(record => {
+      const totalAttempts = detailedStudentData.filter(r => 
+        r.sessionId === record.sessionId && 
+        r.roomId === record.roomId && 
+        r.questionId === record.questionId
+      ).length;
+      
+      csvData.push([
+        record.name,
+        record.semester,
+        record.year,
+        record.groupNumber,
+        record.sessionId,
+        record.roomId,
+        record.questionId,
+        record.answer,
+        record.isCorrect ? 'Y' : 'N',
+        record.attemptNumber,
+        new Date(record.timestamp).toLocaleString(),
+        totalAttempts
+      ]);
+    });
+    
+    // Create summary sheet data
+    const summaryData = [];
+    summaryData.push(['SUMMARY REPORT']);
+    summaryData.push([]);
+    summaryData.push([
+      'Student Name',
+      'Semester',
+      'Year',
+      'Group Number',
+      'Room 1 Progress',
+      'Room 1 Attempts',
+      'Room 2 Progress', 
+      'Room 2 Attempts',
+      'Room 3 Progress',
+      'Room 3 Attempts',
+      'Room 4 Progress',
+      'Room 4 Attempts',
+      'Last Activity'
+    ]);
+    
+    studentProgress.forEach(student => {
+      const getTotalAttempts = (roomId) => {
+        return Object.values(student[roomId].attempts).reduce((total, attempts) => total + attempts.length, 0);
+      };
+      
+      summaryData.push([
+        student.name,
+        student.semester,
+        student.year,
+        student.groupNumber,
+        `${student.room1.percentage}%`,
+        getTotalAttempts('room1'),
+        `${student.room2.percentage}%`,
+        getTotalAttempts('room2'),
+        `${student.room3.percentage}%`,
+        getTotalAttempts('room3'),
+        `${student.room4.percentage}%`,
+        getTotalAttempts('room4'),
+        new Date(student.lastActivity).toLocaleString()
+      ]);
+    });
+    
+    // Combine both datasets
+    const combinedData = [
+      ...summaryData,
+      [],
+      ['DETAILED ATTEMPT LOG'],
+      [],
+      ...csvData
+    ];
+    
+    // Convert to CSV
+    const csvContent = combinedData.map(row => 
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'genetics-escape-room-puzzles.json';
+    link.download = `genetics-escape-room-data-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   const addNewPuzzle = (room) => {
@@ -316,6 +416,7 @@ const InstructorInterface = () => {
           <div className="flex space-x-8">
             {[
               { id: 'dashboard', name: 'Student Progress', icon: '📊' },
+              { id: 'detailed', name: 'Detailed Tracking', icon: '📋' },
               { id: 'settings', name: 'Game Settings', icon: '⚙️' },
               { id: 'room1', name: 'Room 1 Puzzles', icon: '🧩' },
               { id: 'room2', name: 'Room 2 Puzzles', icon: '🔬' },
@@ -413,90 +514,187 @@ const InstructorInterface = () => {
         {/* Student Progress Dashboard */}
         {activeTab === 'dashboard' && (
           <div>
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Student Progress Overview</h2>
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Student Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Room 1
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Room 2
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Room 3
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Room 4
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Last Activity
-                      </th>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Student Progress Overview</h2>
+              <button
+                onClick={exportToExcel}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                📊 Export to Excel
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Student Info
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Room 1
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Room 2
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Room 3
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Room 4
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Last Activity
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {studentProgress.map((student, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{student.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {student.semester} {student.year} - Group {student.groupNumber}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full" 
+                              style={{ width: `${student.room1.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-500">{student.room1.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room1.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-green-600 h-2 rounded-full" 
+                              style={{ width: `${student.room2.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-500">{student.room2.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room2.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-orange-600 h-2 rounded-full" 
+                              style={{ width: `${student.room3.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-500">{student.room3.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room3.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-purple-600 h-2 rounded-full" 
+                              style={{ width: `${student.room4.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-500">{student.room4.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room4.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(student.lastActivity).toLocaleString()}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {studentProgress.map((student, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {student.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full" 
-                                style={{ width: `${student.room1}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-500">{student.room1}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div 
-                                className="bg-green-600 h-2 rounded-full" 
-                                style={{ width: `${student.room2}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-500">{student.room2}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div 
-                                className="bg-orange-600 h-2 rounded-full" 
-                                style={{ width: `${student.room3}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-500">{student.room3}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div 
-                                className="bg-purple-600 h-2 rounded-full" 
-                                style={{ width: `${student.room4}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-500">{student.room4}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {student.lastActivity}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Tracking Tab */}
+        {activeTab === 'detailed' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Detailed Answer Tracking</h2>
+              <button
+                onClick={() => loadDetailedStudentData()}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                🔄 Refresh Data
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Room/Question
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Answer Given
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Result
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Attempt #
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Timestamp
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {detailedStudentData.slice(-50).reverse().map((record, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{record.name}</div>
+                        <div className="text-sm text-gray-500">Group {record.groupNumber}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{record.roomId}</div>
+                        <div className="text-sm text-gray-500">{record.questionId}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 max-w-xs truncate">{record.answer}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          record.isCorrect 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {record.isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        #{record.attemptNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(record.timestamp).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 text-sm text-gray-600 text-center">
+              Showing last 50 attempts. Export to Excel for complete data.
             </div>
           </div>
         )}
