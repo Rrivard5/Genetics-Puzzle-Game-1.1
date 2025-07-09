@@ -598,7 +598,241 @@ const InstructorInterface = () => {
                               style={{ width: `${student.room1.percentage}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm text-gray-500">{student.room1.percentage}%</span>
+                          <span className="text-sm text-gray-500">{student.room3.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room3.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-purple-600 h-2 rounded-full" 
+                              style={{ width: `${student.room4.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-500">{student.room4.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room4.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(student.lastActivity).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Tracking Tab */}
+        {activeTab === 'detailed' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">Detailed Answer Tracking</h2>
+              <button
+                onClick={() => loadDetailedStudentData()}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                🔄 Refresh Data
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Student
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Room/Question
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Answer Given
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Result
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Attempt #
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Timestamp
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {detailedStudentData.slice(-50).reverse().map((record, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{record.name}</div>
+                        <div className="text-sm text-gray-500">Group {record.groupNumber}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{record.roomId}</div>
+                        <div className="text-sm text-gray-500">{record.questionId}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 max-w-xs truncate">{record.answer}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          record.isCorrect 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {record.isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        #{record.attemptNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(record.timestamp).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 text-sm text-gray-600 text-center">
+              Showing last 50 attempts. Export to Excel for complete data.
+            </div>
+          </div>
+        )}
+
+        {/* Puzzle Management */}
+        {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Puzzles
+              </h2>
+              <div className="space-x-2">
+                <button
+                  onClick={() => addNewPuzzle(activeTab)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  + Add Puzzle
+                </button>
+                <button
+                  onClick={savePuzzles}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={exportPuzzles}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Export Puzzles
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {puzzles[activeTab]?.map((puzzle, index) => (
+                <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Puzzle {index + 1}</h3>
+                    <button
+                      onClick={() => deletePuzzle(activeTab, puzzle.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
+                      <textarea
+                        value={puzzle.question}
+                        onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, question: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="3"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
+                      <input
+                        value={puzzle.answer}
+                        onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, answer: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter the correct answer"
+                      />
+                    </div>
+
+                    {puzzle.hint && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Hint (Optional)</label>
+                        <input
+                          value={puzzle.hint}
+                          onChange={(e) => updatePuzzle(activeTab, puzzle.id, { ...puzzle, hint: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-700 mb-2">Custom Feedback for Wrong Answers</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Add specific feedback messages for common wrong answers to help guide students.
+                      </p>
+                      
+                      {/* Show existing feedback rules */}
+                      <div className="space-y-2 mb-3">
+                        {Object.entries(feedbackSettings)
+                          .filter(([key]) => key.startsWith(`${activeTab}_${puzzle.id}_`))
+                          .map(([key, feedback]) => {
+                            const wrongAnswer = key.split('_').slice(2).join('_');
+                            return (
+                              <div key={key} className="flex items-center justify-between bg-white p-3 rounded border">
+                                <div className="flex-1">
+                                  <div className="font-mono text-sm text-red-600">"{wrongAnswer}"</div>
+                                  <div className="text-sm text-gray-600 mt-1">{feedback}</div>
+                                </div>
+                                <button
+                                  onClick={() => deleteFeedbackRule(key)}
+                                  className="text-red-500 hover:text-red-700 text-sm ml-2"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          const wrongAnswer = prompt('Enter the wrong answer you want to create feedback for:');
+                          if (wrongAnswer) {
+                            addFeedbackRule(activeTab, puzzle.id, wrongAnswer);
+                          }
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+                      >
+                        + Add Feedback Rule
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default InstructorInterface;.room1.percentage}%</span>
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
                           {Object.values(student.room1.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
