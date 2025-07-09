@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGame } from '../context/GameStateContext'
-import puzzles from '../data/puzzlesRoom1.json'
 import CodonChart from '../components/CodonChart'
 
 export default function Room1() {
@@ -10,14 +9,21 @@ export default function Room1() {
   const [feedback, setFeedback] = useState({})
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showHint, setShowHint] = useState({})
   const [showGeneticCode, setShowGeneticCode] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
+  const [puzzles, setPuzzles] = useState([])
   const [wildTypeSequence, setWildTypeSequence] = useState("3'CGACGATACGGAGGGGTCACTCCT5'")
   const [highlightedNucleotide, setHighlightedNucleotide] = useState("G")
   const [highlightedPosition, setHighlightedPosition] = useState(11)
   const navigate = useNavigate()
   const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
+
+  // Load puzzles based on student's group
+  useEffect(() => {
+    if (studentInfo?.groupNumber) {
+      loadPuzzlesForGroup(studentInfo.groupNumber)
+    }
+  }, [studentInfo])
 
   // Start room timer when component mounts
   useEffect(() => {
@@ -34,6 +40,41 @@ export default function Room1() {
       }
     }
   }, [studentInfo, navigate]);
+
+  const loadPuzzlesForGroup = (groupNumber) => {
+    const savedPuzzles = localStorage.getItem('instructor-puzzles');
+    if (savedPuzzles) {
+      const allPuzzles = JSON.parse(savedPuzzles);
+      const groupPuzzles = allPuzzles.room1?.groups?.[groupNumber] || allPuzzles.room1?.groups?.[1] || [];
+      setPuzzles(groupPuzzles);
+    } else {
+      // Default puzzles for group 1
+      const defaultPuzzles = [
+        {
+          id: "p1",
+          question: "What type of mutation results from changing the highlighted G to A in the DNA sequence?",
+          type: "text",
+          answer: "Point mutation from G to A",
+          options: []
+        },
+        {
+          id: "p2",
+          question: "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
+          type: "text",
+          answer: "RPQ",
+          options: []
+        },
+        {
+          id: "p3", 
+          question: "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
+          type: "text",
+          answer: "CPE → RPQ",
+          options: []
+        }
+      ];
+      setPuzzles(defaultPuzzles);
+    }
+  };
 
   // Show loading if no student info
   if (!studentInfo) {
@@ -75,7 +116,13 @@ export default function Room1() {
       return
     }
 
-    const isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+    let isCorrect = false
+    
+    if (puzzle.type === 'multiple_choice') {
+      isCorrect = puzzle.answer === userAnswer
+    } else {
+      isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+    }
     
     // Track the attempt
     trackAttempt('room1', puzzleId, userAnswer, isCorrect)
@@ -112,43 +159,19 @@ export default function Room1() {
     const customFeedback = savedFeedback ? JSON.parse(savedFeedback) : {}
     
     // Check if instructor has defined custom feedback for this specific wrong answer
-    const feedbackKey = `room1_${puzzleId}_${userAnswer.toLowerCase()}`
+    const feedbackKey = `room1_${puzzleId}_${userAnswer.toLowerCase()}_group${studentInfo.groupNumber}`
+    const generalFeedbackKey = `room1_${puzzleId}_${userAnswer.toLowerCase()}`
+    
     if (customFeedback[feedbackKey]) {
       return customFeedback[feedbackKey]
     }
     
-    // Default feedback based on puzzle ID and common wrong answers
-    const defaultFeedback = {
-      'p1': {
-        'point mutation from g to c': "Close! You identified it as a point mutation, but check which nucleotide the G is changing to. Look at the highlighted position again.",
-        'point mutation from g to t': "You're on the right track with point mutation, but the specific change isn't G to T. What does the question say about the mutation?",
-        'insertion mutation': "This isn't an insertion. An insertion would add nucleotides. This is a single nucleotide change. What type of mutation involves changing one nucleotide to another?",
-        'default': "❌ Not quite right. This is a point mutation where one nucleotide is changed to another. Look at what the question is asking - what nucleotide is the G changing to?"
-      },
-      'p2': {
-        'rse': "Remember to use the codon chart to translate the mRNA sequence after the mutation occurs. Double-check your translation steps.",
-        'spe': "Make sure you're translating the correct sequence after the mutation. Review the genetic code chart carefully.",
-        'spq': "Check your codon reading frame. Make sure you're reading the codons in the right groups of three.",
-        'default': "❌ Incorrect. Use the codon chart to translate the mRNA sequence that results from the mutation. Make sure you're reading the codons correctly."
-      },
-      'p3': {
-        'ppe → rse': "You're comparing sequences, but make sure you have the right original and mutated amino acid sequences.",
-        'ppq → spe': "Check both the original and mutated sequences carefully. One of these isn't correct.",
-        'rpe → spq': "Review your translations from the previous questions. The amino acid sequences don't match what you found earlier.",
-        'default': "❌ Not correct. This should show the change from the original amino acid sequence to the mutated sequence. Review your answers to the previous questions."
-      }
+    if (customFeedback[generalFeedbackKey]) {
+      return customFeedback[generalFeedbackKey]
     }
     
-    const puzzleFeedback = defaultFeedback[puzzleId]
-    if (puzzleFeedback) {
-      return puzzleFeedback[userAnswer.toLowerCase()] || puzzleFeedback['default']
-    }
-    
-    return `❌ That's not correct. The right answer is "${puzzle.answer}". ${puzzle.hint || 'Try reviewing the genetic concepts for this question.'}`
-  }
-
-  const toggleHint = (puzzleId) => {
-    setShowHint(prev => ({ ...prev, [puzzleId]: !prev[puzzleId] }))
+    // Default feedback
+    return `❌ That's not correct. The right answer is "${puzzle.answer}". Try reviewing the genetic concepts for this question.`
   }
 
   const handleLockClick = (puzzleId) => {
@@ -215,6 +238,7 @@ export default function Room1() {
             TEMPLE OF MOLECULAR GENESIS
           </h1>
           <div className="h-1 w-48 mx-auto bg-gradient-to-r from-amber-400 to-emerald-400 mb-4 animate-pulse"></div>
+          <p className="text-emerald-300 text-lg">Group {studentInfo.groupNumber} - Specialized Challenge</p>
         </div>
 
         {/* Ancient Temple Door */}
@@ -333,7 +357,7 @@ export default function Room1() {
               })}
               
               {/* Master Keyhole */}
-              {solvedCount === 3 && (
+              {solvedCount === puzzles.length && (
                 <g>
                   <ellipse cx="250" cy="580" rx="20" ry="25" fill="#f59e0b" opacity="0.9"/>
                   <rect x="243" y="590" width="14" height="25" fill="#f59e0b" opacity="0.9"/>
@@ -386,9 +410,9 @@ export default function Room1() {
             {/* Door Status Text */}
             <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
               <p className="text-amber-300 font-bold text-lg" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
-                {solvedCount === 3 ? 
+                {solvedCount === puzzles.length ? 
                   "🗝️ SECURITY DOOR UNLOCKED" : 
-                  `🔒 ${3 - solvedCount} LOCKS REMAINING`
+                  `🔒 ${puzzles.length - solvedCount} LOCKS REMAINING`
                 }
               </p>
               <p className="text-emerald-400 text-sm mt-2">Click the locks to reveal their mysteries</p>
@@ -486,27 +510,53 @@ export default function Room1() {
                           <span className="text-amber-400">SECURITY LOCK {puzzleIndex + 1}:</span> {puzzle.question}
                         </h3>
                         
-                        {/* Text Input */}
+                        {/* Answer Input - Text or Multiple Choice */}
                         <div className="mb-4">
-                          <input
-                            type="text"
-                            value={responses[puzzle.id] || ''}
-                            onChange={(e) => handleChange(e, puzzle.id)}
-                            placeholder="Type your answer here..."
-                            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
-                            disabled={currentFeedback?.isCorrect}
-                          />
+                          {puzzle.type === 'multiple_choice' ? (
+                            <div className="space-y-2">
+                              {puzzle.options.map((option, optIndex) => (
+                                <label 
+                                  key={optIndex}
+                                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                                    responses[puzzle.id] === option 
+                                      ? 'border-amber-400 bg-amber-900/30' 
+                                      : 'border-gray-600 bg-gray-800/50 hover:border-amber-400/50'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={puzzle.id}
+                                    value={option}
+                                    checked={responses[puzzle.id] === option}
+                                    onChange={(e) => handleChange(e, puzzle.id)}
+                                    disabled={currentFeedback?.isCorrect}
+                                    className="mr-4 h-5 w-5 text-amber-500 border-gray-400 focus:ring-amber-500"
+                                  />
+                                  <span className="text-white font-mono text-lg">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={responses[puzzle.id] || ''}
+                              onChange={(e) => handleChange(e, puzzle.id)}
+                              placeholder="Type your answer here..."
+                              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
+                              disabled={currentFeedback?.isCorrect}
+                            />
+                          )}
                         </div>
 
                         {/* Check Answer Button */}
                         <div className="mb-4">
                           <button
                             onClick={() => checkAnswer(puzzle.id)}
-                            disabled={!responses[puzzle.id]?.trim() || currentFeedback?.isCorrect}
+                            disabled={!responses[puzzle.id] || currentFeedback?.isCorrect}
                             className={`px-6 py-3 rounded-lg font-bold text-lg transition-all transform ${
                               currentFeedback?.isCorrect 
                                 ? 'bg-emerald-600 cursor-not-allowed opacity-50'
-                                : !responses[puzzle.id]?.trim()
+                                : !responses[puzzle.id]
                                 ? 'bg-gray-600 cursor-not-allowed opacity-50'
                                 : 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 hover:scale-105 shadow-lg'
                             } text-white border-2 border-amber-400`}
@@ -524,24 +574,6 @@ export default function Room1() {
                               : 'bg-red-900 border-red-400 text-red-100'
                           }`}>
                             <p className="font-mono text-sm leading-relaxed">{currentFeedback.message}</p>
-                          </div>
-                        )}
-
-                        {/* Hint Button */}
-                        {puzzle.hint && (
-                          <div className="mt-4">
-                            <button
-                              onClick={() => toggleHint(puzzle.id)}
-                              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all transform hover:scale-105 border-2 border-purple-400"
-                              style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
-                            >
-                              {showHint[puzzle.id] ? '⬆ HIDE RESEARCH DATA' : '⬇ ACCESS RESEARCH DATA'}
-                            </button>
-                            {showHint[puzzle.id] && (
-                              <div className="mt-3 bg-gradient-to-r from-purple-900 to-indigo-900 border-2 border-purple-400 rounded-lg p-4">
-                                <p className="text-purple-200 text-sm font-mono">🔬 {puzzle.hint}</p>
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
@@ -567,11 +599,11 @@ export default function Room1() {
         <div className="mt-8 text-center">
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || solvedCount < 3}
+            disabled={isSubmitting || solvedCount < puzzles.length}
             className={`px-12 py-6 rounded-xl font-bold text-2xl shadow-2xl transition-all duration-300 border-4 ${
               isSubmitting
                 ? 'bg-gray-600 cursor-not-allowed border-gray-500'
-                : solvedCount === 3
+                : solvedCount === puzzles.length
                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-emerald-400 hover:border-emerald-300 transform hover:scale-105 animate-pulse'
                 : 'bg-gradient-to-r from-stone-600 to-stone-700 text-stone-300 border-stone-500 cursor-not-allowed'
             }`}
@@ -582,10 +614,10 @@ export default function Room1() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-white mr-4"></div>
                 ANCIENT MECHANISMS ACTIVATING...
               </span>
-            ) : solvedCount === 3 ? (
+            ) : solvedCount === puzzles.length ? (
               '🚪 ACTIVATE DOOR SEQUENCE'
             ) : (
-              `🔒 SOLVE ${3 - solvedCount} MORE SECURITY LOCKS`
+              `🔒 SOLVE ${puzzles.length - solvedCount} MORE SECURITY LOCKS`
             )}
           </button>
         </div>
