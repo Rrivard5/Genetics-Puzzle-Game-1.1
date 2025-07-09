@@ -11,6 +11,9 @@ export default function Room1() {
   const [showHint, setShowHint] = useState({})
   const [showGeneticCode, setShowGeneticCode] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
+  const [wildTypeSequence, setWildTypeSequence] = useState("3'CGACGATACGGAGGGGTCACTCCT5'")
+  const [highlightedNucleotide, setHighlightedNucleotide] = useState("G")
+  const [highlightedPosition, setHighlightedPosition] = useState(11) // Position of highlighted G
   const navigate = useNavigate()
   const { setRoomUnlocked, setCurrentProgress } = useGame()
 
@@ -86,9 +89,6 @@ export default function Room1() {
             TEMPLE OF MOLECULAR GENESIS
           </h1>
           <div className="h-1 w-48 mx-auto bg-gradient-to-r from-amber-400 to-emerald-400 mb-4 animate-pulse"></div>
-          <p className="text-xl text-emerald-300 font-mono tracking-wider">
-            GENETIC SEQUENCE: 3'CGACGATACG<span className="bg-amber-400 text-black px-1 rounded font-bold animate-pulse">G</span>AGGGGTCACTCCT5'
-          </p>
         </div>
 
         {/* Codon Chart */}
@@ -98,7 +98,7 @@ export default function Room1() {
             className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-6 py-3 rounded-lg font-bold text-lg border-2 border-purple-400 hover:border-purple-300 transition-all transform hover:scale-105 shadow-lg"
             style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
           >
-            {showGeneticCode ? '⬆ HIDE' : '⬇ REVEAL'} CODON CHART
+            {showGeneticCode ? 'HIDE' : 'REVEAL'} CODON CHART
           </button>
         </div>
 
@@ -314,6 +314,46 @@ export default function Room1() {
         {/* Active Lock Puzzle Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
+            {/* Wild Type Genetic Sequence - Display when puzzle is active */}
+            <div className="mb-6 text-center">
+              <h3 className="text-xl text-emerald-300 font-bold mb-2">Wild Type Genetic Sequence</h3>
+              <p className="text-xl text-emerald-300 font-mono tracking-wider bg-gray-800 p-4 rounded-lg inline-block">
+                {wildTypeSequence.substring(0, highlightedPosition)}
+                <span className="bg-amber-400 text-black px-1 rounded font-bold animate-pulse">
+                  {highlightedNucleotide}
+                </span>
+                {wildTypeSequence.substring(highlightedPosition + 1)}
+              </p>
+            </div>
+
+            {/* Codon Chart Button - Moved here */}
+            <div className="mb-6 flex justify-center">
+              <button
+                onClick={() => setShowGeneticCode(!showGeneticCode)}
+                className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-6 py-3 rounded-lg font-bold text-lg border-2 border-purple-400 hover:border-purple-300 transition-all transform hover:scale-105 shadow-lg"
+                style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
+              >
+                {showGeneticCode ? 'HIDE' : 'REVEAL'} CODON CHART
+              </button>
+            </div>
+
+            {showGeneticCode && (
+              <div className="mb-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-black border-4 border-purple-400 rounded-xl p-6 shadow-2xl">
+                <h3 className="text-center text-2xl font-bold text-purple-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                  CODON CHART
+                </h3>
+                <div className="flex justify-center w-full">
+                  <div className="w-full max-w-6xl">
+                    <CodonChart />
+                  </div>
+                </div>
+                <div className="text-center mt-4">
+                  <p className="text-purple-200 text-sm">Ancient genetic translation cipher recovered from alien archives</p>
+                  <p className="text-purple-300 text-xs mt-2">For detailed codon mappings, search "genetic code table" or consult your genetics textbook</p>
+                </div>
+              </div>
+            )}
+
             {puzzles.filter(p => p.id === activeLock).map((puzzle, index) => {
               const puzzleIndex = puzzles.findIndex(p => p.id === puzzle.id);
               return (
