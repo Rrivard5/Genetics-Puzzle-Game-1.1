@@ -598,6 +598,34 @@ const InstructorInterface = () => {
                               style={{ width: `${student.room1.percentage}%` }}
                             ></div>
                           </div>
+                          <span className="text-sm text-gray-500">{student.room1.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room1.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-green-600 h-2 rounded-full" 
+                              style={{ width: `${student.room2.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-500">{student.room2.percentage}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {Object.values(student.room2.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-orange-600 h-2 rounded-full" 
+                              style={{ width: `${student.room3.percentage}%` }}
+                            ></div>
+                          </div>
                           <span className="text-sm text-gray-500">{student.room3.percentage}%</span>
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
@@ -832,29 +860,4 @@ const InstructorInterface = () => {
   );
 };
 
-export default InstructorInterface;.room1.percentage}%</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room1.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-green-600 h-2 rounded-full" 
-                              style={{ width: `${student.room2.percentage}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-gray-500">{student.room2.percentage}%</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {Object.values(student.room2.attempts).reduce((total, attempts) => total + attempts.length, 0)} attempts
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-orange-600 h-2 rounded-full" 
-                              style={{ width: `${student
+export default InstructorInterface;
