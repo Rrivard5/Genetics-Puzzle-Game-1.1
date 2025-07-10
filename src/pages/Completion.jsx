@@ -57,6 +57,12 @@ export default function Completion() {
     
     setGroupLetter(assignedLetter)
     
+    // Debug logging to help track the issue
+    console.log('=== COMPLETION RECORDING DEBUG ===')
+    console.log('Student group:', studentInfo.groupNumber)
+    console.log('Assigned letter:', assignedLetter)
+    console.log('Instructor settings found:', !!instructorSettings)
+    
     // Load existing class progress
     let classProgress = []
     const existingProgress = localStorage.getItem('class-letters-progress')
@@ -93,11 +99,12 @@ export default function Completion() {
       // Save updated progress
       localStorage.setItem('class-letters-progress', JSON.stringify(classProgress))
       
-      console.log(`Group ${studentInfo.groupNumber} completion recorded with letter "${assignedLetter}"`)
+      console.log(`✅ Group ${studentInfo.groupNumber} completion recorded with letter "${assignedLetter}"`)
+      console.log('Updated class progress:', classProgress)
     } else if (assignedLetter === '?') {
-      console.error(`Cannot record completion for group ${studentInfo.groupNumber} - no letter assigned by instructor`)
+      console.error(`❌ Cannot record completion for group ${studentInfo.groupNumber} - no letter assigned by instructor`)
     } else {
-      console.log(`Group ${studentInfo.groupNumber} already completed - no duplicate record created`)
+      console.log(`ℹ️ Group ${studentInfo.groupNumber} already completed - no duplicate record created`)
       setGroupLetter(classProgress[existingGroupIndex].letter)
     }
   }
