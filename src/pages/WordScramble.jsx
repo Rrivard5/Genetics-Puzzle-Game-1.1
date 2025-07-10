@@ -257,6 +257,8 @@ export default function WordScramble() {
                   <div>Sample assignments: {debugInfo.groupLetterSample.map(([g,l]) => `${g}→${l}`).join(', ')}</div>
                 )}
                 <div>Available letters: [{availableLetters.join(', ')}]</div>
+                <div>Raw progress records: {debugInfo.rawProgressLength || 0} | Valid records: {debugInfo.validProgressLength || 0}</div>
+                <div>localStorage keys: {Object.keys(localStorage).filter(k => k.includes('progress') || k.includes('letters') || k.includes('word')).join(', ')}</div>
               </div>
             </div>
             
@@ -264,21 +266,45 @@ export default function WordScramble() {
               <div className="mt-2 text-red-400">Error: {debugInfo.error}</div>
             )}
             
-            {/* Quick fix button for instructors */}
+            {/* Quick debugging buttons for instructors */}
             <div className="mt-3 pt-3 border-t border-gray-600">
-              <button
-                onClick={() => {
-                  if (confirm('Clear all word scramble progress data? This will reset the challenge.')) {
-                    localStorage.removeItem('class-letters-progress');
-                    localStorage.removeItem('word-scramble-success');
-                    loadWordScrambleData();
-                    alert('Word scramble data cleared!');
-                  }
-                }}
-                className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-              >
-                🗑️ Clear Progress (Instructor Only)
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    console.log('Manual refresh triggered')
+                    loadWordScrambleData()
+                  }}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                >
+                  🔄 Manual Refresh
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('=== MANUAL DEBUG CHECK ===')
+                    console.log('localStorage class-letters-progress:', localStorage.getItem('class-letters-progress'))
+                    console.log('localStorage instructor-word-settings:', localStorage.getItem('instructor-word-settings'))
+                    console.log('Current completedGroups:', completedGroups)
+                    console.log('Current availableLetters:', availableLetters)
+                    console.log('Current groupLetterMap:', groupLetterMap)
+                  }}
+                  className="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                >
+                  🔍 Debug Check
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Clear all word scramble progress data? This will reset the challenge.')) {
+                      localStorage.removeItem('class-letters-progress');
+                      localStorage.removeItem('word-scramble-success');
+                      loadWordScrambleData();
+                      alert('Word scramble data cleared!');
+                    }
+                  }}
+                  className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                >
+                  🗑️ Clear Progress
+                </button>
+              </div>
             </div>
           </div>
         )}
