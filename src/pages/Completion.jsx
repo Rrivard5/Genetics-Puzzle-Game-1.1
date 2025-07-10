@@ -35,16 +35,24 @@ export default function Completion() {
     
     // Get the group's assigned letter from instructor settings
     const instructorSettings = localStorage.getItem('instructor-word-settings')
-    let assignedLetter = 'G' // default letter
+    let assignedLetter = null
     
     if (instructorSettings) {
       try {
         const settings = JSON.parse(instructorSettings)
         const groupLetters = settings.groupLetters || {}
-        assignedLetter = groupLetters[studentInfo.groupNumber] || 'G'
+        assignedLetter = groupLetters[studentInfo.groupNumber]
+        console.log(`Group ${studentInfo.groupNumber} settings lookup:`, groupLetters)
+        console.log(`Assigned letter for group ${studentInfo.groupNumber}:`, assignedLetter)
       } catch (error) {
         console.error('Error parsing instructor settings:', error)
       }
+    }
+    
+    // If no instructor settings or no letter assigned, show error
+    if (!assignedLetter) {
+      console.error(`No letter assigned for group ${studentInfo.groupNumber}. Instructor must configure word settings.`)
+      assignedLetter = '?' // Show that configuration is missing
     }
     
     setGroupLetter(assignedLetter)
@@ -67,7 +75,7 @@ export default function Completion() {
       item => item.group === studentInfo.groupNumber
     )
     
-    if (existingGroupIndex === -1) {
+    if (existingGroupIndex === -1 && assignedLetter !== '?') {
       // Add this group's completion - this is the ONLY way letters get added
       const completionRecord = {
         group: studentInfo.groupNumber,
@@ -86,6 +94,8 @@ export default function Completion() {
       localStorage.setItem('class-letters-progress', JSON.stringify(classProgress))
       
       console.log(`Group ${studentInfo.groupNumber} completion recorded with letter "${assignedLetter}"`)
+    } else if (assignedLetter === '?') {
+      console.error(`Cannot record completion for group ${studentInfo.groupNumber} - no letter assigned by instructor`)
     } else {
       console.log(`Group ${studentInfo.groupNumber} already completed - no duplicate record created`)
       setGroupLetter(classProgress[existingGroupIndex].letter)
