@@ -10,16 +10,6 @@ export default function Room3() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
   const [puzzles, setPuzzles] = useState([])
-  const [crossSettings, setCrossSettings] = useState({
-    female: 'BY Dd',
-    male: 'BR d',
-    description: 'Cross: Female (BY Dd) × Male (BR d)',
-    notes: [
-      'Scale Color: B = Blue, R = Red, Y = Yellow (codominant)',
-      'Dark Vision: D = Dark vision, d = no dark vision',
-      'Sex-linked: Dark vision is X-linked recessive'
-    ]
-  })
   const [showPedigree, setShowPedigree] = useState(false)
   const [pedigreeImages, setPedigreeImages] = useState({})
   const [pedigreeImageLoaded, setPedigreeImageLoaded] = useState(false)
@@ -31,7 +21,6 @@ export default function Room3() {
   useEffect(() => {
     if (studentInfo?.groupNumber) {
       loadPuzzlesForGroup(studentInfo.groupNumber)
-      loadCrossSettings(studentInfo.groupNumber)
       loadPedigreeImages()
     }
   }, [studentInfo])
@@ -84,17 +73,6 @@ export default function Room3() {
         }
       ];
       setPuzzles(defaultPuzzles);
-    }
-  };
-
-  const loadCrossSettings = (groupNumber) => {
-    const savedSettings = localStorage.getItem('instructor-cross-settings');
-    if (savedSettings) {
-      const allSettings = JSON.parse(savedSettings);
-      const groupSettings = allSettings.groups?.[groupNumber];
-      if (groupSettings) {
-        setCrossSettings(groupSettings);
-      }
     }
   };
 
@@ -491,24 +469,6 @@ export default function Room3() {
         {/* Active Calculation Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
-            {/* Genetics Cross Information - Removed Hardy-Weinberg text box */}
-            <div className="mb-8 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6">
-              <div className="text-center">
-                <h2 className="text-xl font-bold text-orange-800 mb-4">🧬 Genetic Cross Analysis</h2>
-                <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
-                  <div className="text-orange-700 mb-2 font-semibold">{crossSettings.description}</div>
-                  <div className="text-sm text-orange-600 space-y-1">
-                    {crossSettings.notes.map((note, index) => (
-                      <div key={index}><strong>{note.split(':')[0]}:</strong> {note.split(':')[1]}</div>
-                    ))}
-                  </div>
-                  <div className="mt-4 text-xs text-orange-500">
-                    Remember: Use Punnett squares and multiplication rule for independent traits
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Pedigree Access Button */}
             <div className="mb-6 flex justify-center">
               <button
