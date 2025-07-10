@@ -3,15 +3,80 @@ import { Link } from 'react-router-dom'
 import { useGame } from '../context/GameStateContext'
 
 export default function Completion() {
-  const { finalLetter, resetGame } = useGame()
+  const { finalLetter, resetGame, attemptTracking, studentInfo } = useGame()
   const [showConfetti, setShowConfetti] = useState(false)
+  const [wrongAnswerFeedback, setWrongAnswerFeedback] = useState([])
 
   useEffect(() => {
     // Trigger confetti animation
     setShowConfetti(true)
     const timer = setTimeout(() => setShowConfetti(false), 3000)
+    
+    // Collect all wrong answer feedback for study guidance
+    collectWrongAnswerFeedback()
+    
     return () => clearTimeout(timer)
   }, [])
+
+  const collectWrongAnswerFeedback = () => {
+    const feedback = []
+    
+    // Go through all attempts and collect feedback for wrong answers
+    Object.entries(attemptTracking).forEach(([key, attempts]) => {
+      const [roomId, questionId] = key.split('-')
+      attempts.forEach(attempt => {
+        if (!attempt.isCorrect) {
+          // Get the feedback that was shown to the student
+          const feedbackMessage = getStoredFeedback(roomId, questionId, attempt.answer)
+          if (feedbackMessage) {
+            feedback.push({
+              room: roomId,
+              question: questionId,
+              wrongAnswer: attempt.answer,
+              feedback: feedbackMessage,
+              timestamp: attempt.timestamp
+            })
+          }
+        }
+      })
+    })
+    
+    // Remove duplicates and sort by timestamp
+    const uniqueFeedback = feedback.filter((item, index, self) => 
+      index === self.findIndex(t => t.room === item.room && t.question === item.question && t.wrongAnswer === item.wrongAnswer)
+    ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    
+    setWrongAnswerFeedback(uniqueFeedback)
+  }
+
+  const getStoredFeedback = (roomId, questionId, userAnswer) => {
+    const savedFeedback = localStorage.getItem('instructor-feedback')
+    const customFeedback = savedFeedback ? JSON.parse(savedFeedback) : {}
+    
+    // Check for group-specific feedback first
+    const groupFeedbackKey = `${roomId}_${questionId}_${userAnswer.toLowerCase()}_group${studentInfo?.groupNumber}`
+    if (customFeedback[groupFeedbackKey]) {
+      return customFeedback[groupFeedbackKey]
+    }
+    
+    // Check for general feedback
+    const generalFeedbackKey = `${roomId}_${questionId}_${userAnswer.toLowerCase()}`
+    if (customFeedback[generalFeedbackKey]) {
+      return customFeedback[generalFeedbackKey]
+    }
+    
+    return null
+  }
+
+  const getRoomName = (roomId) => {
+    const roomNames = {
+      'room1': 'Molecular Genetics',
+      'room2': 'Pedigree Analysis',
+      'room3': 'Probability Genetics',
+      'room4': 'Population Genetics'
+    }
+    return roomNames[roomId] || roomId
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
@@ -47,9 +112,33 @@ export default function Completion() {
           </p>
         </div>
 
+        {/* Final Letter Reveal - Now First! */}
+        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
+          <h2 className="text-4xl font-bold mb-4">🔓 SECRET LETTER UNLOCKED!</h2>
+          <p className="text-xl mb-6">
+            🏆 Congratulations! You've unlocked the alien's final genetic code letter:
+          </p>
+          <div className="bg-white bg-opacity-20 rounded-xl p-8 mb-6">
+            <div className="text-9xl font-bold text-white mb-4 animate-pulse-soft drop-shadow-2xl">
+              {finalLetter || 'G'}
+            </div>
+            <p className="text-2xl font-bold text-yellow-100 mb-2">
+              🎯 WRITE THIS ON THE CLASS BOARD!
+            </p>
+            <p className="text-lg text-yellow-100">
+              This letter is your team's key to solving the ultimate puzzle!
+            </p>
+          </div>
+          <div className="bg-yellow-600 bg-opacity-50 rounded-lg p-4">
+            <p className="text-yellow-100 font-semibold">
+              🎓 Your instructor will use this letter as part of the class-wide challenge!
+            </p>
+          </div>
+        </div>
+
         {/* Achievement Summary */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">🏆 Your Achievements</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">🏆 Your Genetic Journey</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
               <div className="text-3xl mb-2">✅</div>
@@ -74,22 +163,46 @@ export default function Completion() {
           </div>
         </div>
 
-        {/* Final Letter Reveal */}
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
-          <h2 className="text-3xl font-bold mb-4">🔓 Secret Letter Revealed!</h2>
-          <p className="text-lg mb-6">
-            You've unlocked the alien's final genetic code letter:
-          </p>
-          <div className="bg-white bg-opacity-20 rounded-xl p-6 mb-4">
-            <div className="text-8xl font-bold text-white mb-2 animate-pulse-soft">
-              {finalLetter || 'G'}
+        {/* Study Guidance - Show feedback from wrong answers */}
+        {wrongAnswerFeedback.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">📚 Study Guidance</h2>
+            <p className="text-gray-600 mb-6">
+              Here are the concepts you should review based on your incorrect answers during the game:
+            </p>
+            <div className="space-y-4">
+              {wrongAnswerFeedback.map((item, index) => (
+                <div key={index} className="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="text-2xl">
+                        {item.room === 'room1' ? '🧩' : 
+                         item.room === 'room2' ? '🔬' : 
+                         item.room === 'room3' ? '🎲' : '🌍'}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-amber-800 mb-1">
+                        {getRoomName(item.room)} - {item.question}
+                      </div>
+                      <div className="text-sm text-amber-700 mb-2">
+                        <strong>Your answer:</strong> {item.wrongAnswer}
+                      </div>
+                      <div className="text-sm text-amber-600 leading-relaxed">
+                        {item.feedback}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-xl">Write this on the class board!</p>
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-blue-800 text-sm font-medium">
+                💡 <strong>Study Tip:</strong> Review these concepts before your next genetics exam or quiz!
+              </p>
+            </div>
           </div>
-          <p className="text-yellow-100">
-            This letter is your team's key to solving the ultimate puzzle!
-          </p>
-        </div>
+        )}
 
         {/* Story Conclusion */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl p-8 mb-8 shadow-xl">
@@ -131,6 +244,7 @@ export default function Completion() {
             This game reinforces key genetics concepts including molecular genetics, inheritance patterns, 
             probability calculations, and population genetics. Students should have demonstrated understanding 
             of DNA structure, pedigree analysis, Punnett squares, and Hardy-Weinberg equilibrium to succeed.
+            The study guidance section above shows specific areas where this student needed additional support.
           </p>
         </div>
       </div>
