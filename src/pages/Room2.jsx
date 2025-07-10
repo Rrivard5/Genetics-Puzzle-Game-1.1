@@ -10,7 +10,7 @@ export default function Room2() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
   const [puzzles, setPuzzles] = useState([])
-  const [pedigreeImages, setPedigreeImages] = useState({})
+  const [questionImages, setQuestionImages] = useState({})
   const [imageLoaded, setImageLoaded] = useState({})
   const [imageError, setImageError] = useState({})
   const navigate = useNavigate()
@@ -20,7 +20,7 @@ export default function Room2() {
   useEffect(() => {
     if (studentInfo?.groupNumber) {
       loadPuzzlesForGroup(studentInfo.groupNumber)
-      loadPedigreeImages()
+      loadQuestionImages()
     }
   }, [studentInfo])
 
@@ -108,24 +108,24 @@ export default function Room2() {
     }
   };
 
-  const loadPedigreeImages = () => {
-    const savedImages = localStorage.getItem('instructor-pedigree-images');
+  const loadQuestionImages = () => {
+    const savedImages = localStorage.getItem('instructor-question-images');
     if (savedImages) {
-      setPedigreeImages(JSON.parse(savedImages));
+      setQuestionImages(JSON.parse(savedImages));
     }
   };
 
   const getCurrentQuestionImage = (questionId) => {
     if (!studentInfo?.groupNumber) return null;
     const imageKey = `room2_group${studentInfo.groupNumber}_${questionId}`;
-    const imageData = pedigreeImages[imageKey];
+    const imageData = questionImages[imageKey];
     return imageData ? imageData.data : null;
   };
 
   const getCurrentQuestionImageInfo = (questionId) => {
     if (!studentInfo?.groupNumber) return null;
     const imageKey = `room2_group${studentInfo.groupNumber}_${questionId}`;
-    return pedigreeImages[imageKey];
+    return questionImages[imageKey];
   };
 
   // Show loading if no student info
