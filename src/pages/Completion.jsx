@@ -6,7 +6,6 @@ export default function Completion() {
   const { finalLetter, resetGame, attemptTracking, studentInfo } = useGame()
   const [showConfetti, setShowConfetti] = useState(false)
   const [wrongAnswerFeedback, setWrongAnswerFeedback] = useState([])
-  const [classLetters, setClassLetters] = useState([])
 
   useEffect(() => {
     // Scroll to the top to show the secret letter first
@@ -19,54 +18,55 @@ export default function Completion() {
     // Collect all wrong answer feedback for study guidance
     collectWrongAnswerFeedback()
     
-    // If playing in class, collect class letters
+    // If playing in class, record completion in class progress
     if (studentInfo?.playingContext === 'class') {
-      collectClassLetters()
+      recordClassCompletion()
     }
     
     return () => clearTimeout(timer)
   }, [])
 
-  const collectClassLetters = () => {
-    // This would ideally come from a server, but for now we'll simulate
-    // the letters that different groups might have unlocked
-    const groupLetters = {
-      1: 'G', 2: 'E', 3: 'N', 4: 'E', 5: 'T', 
-      6: 'I', 7: 'C', 8: 'S', 9: 'A', 10: 'R',
-      11: 'E', 12: 'F', 13: 'U', 14: 'N', 15: 'D'
+  const recordClassCompletion = () => {
+    if (!studentInfo?.groupNumber) return
+    
+    // Get the group's assigned letter from instructor settings
+    const instructorSettings = localStorage.getItem('instructor-word-settings')
+    let groupLetter = 'G' // default letter
+    
+    if (instructorSettings) {
+      const settings = JSON.parse(instructorSettings)
+      const groupLetters = settings.groupLetters || {}
+      groupLetter = groupLetters[studentInfo.groupNumber] || 'G'
     }
     
-    // Get letters from localStorage (simulate other groups finishing)
-    const savedClassProgress = localStorage.getItem('class-letters-progress')
-    let availableLetters = []
+    // Load existing class progress
+    const existingProgress = localStorage.getItem('class-letters-progress')
+    let classProgress = []
     
-    if (savedClassProgress) {
-      availableLetters = JSON.parse(savedClassProgress)
-    } else {
-      // Simulate some groups have finished (for demo purposes)
-      const completedGroups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // Example: groups 1-10 finished
-      availableLetters = completedGroups.map(group => ({
-        group,
-        letter: groupLetters[group]
-      }))
+    if (existingProgress) {
+      classProgress = JSON.parse(existingProgress)
     }
     
-    // Add current student's letter if not already there
-    const currentGroupNumber = studentInfo?.groupNumber
-    if (currentGroupNumber && !availableLetters.find(item => item.group === currentGroupNumber)) {
-      availableLetters.push({
-        group: currentGroupNumber,
-        letter: finalLetter || 'G'
+    // Check if this group has already been recorded
+    const existingGroupIndex = classProgress.findIndex(
+      item => item.group === studentInfo.groupNumber
+    )
+    
+    if (existingGroupIndex === -1) {
+      // Add this group's completion
+      classProgress.push({
+        group: studentInfo.groupNumber,
+        letter: groupLetter,
+        completedAt: new Date().toISOString(),
+        studentName: studentInfo.name
       })
+      
+      // Sort by group number
+      classProgress.sort((a, b) => a.group - b.group)
+      
+      // Save updated progress
+      localStorage.setItem('class-letters-progress', JSON.stringify(classProgress))
     }
-    
-    // Sort by group number
-    availableLetters.sort((a, b) => a.group - b.group)
-    
-    setClassLetters(availableLetters)
-    
-    // Save updated progress
-    localStorage.setItem('class-letters-progress', JSON.stringify(availableLetters))
   }
 
   const collectWrongAnswerFeedback = () => {
@@ -129,6 +129,19 @@ export default function Completion() {
     return roomNames[roomId] || roomId
   }
 
+  const getGroupLetter = () => {
+    if (!studentInfo?.groupNumber) return finalLetter || 'G'
+    
+    const instructorSettings = localStorage.getItem('instructor-word-settings')
+    if (instructorSettings) {
+      const settings = JSON.parse(instructorSettings)
+      const groupLetters = settings.groupLetters || {}
+      return groupLetters[studentInfo.groupNumber] || finalLetter || 'G'
+    }
+    
+    return finalLetter || 'G'
+  }
+
   const isPlayingInClass = studentInfo?.playingContext === 'class'
 
   return (
@@ -170,23 +183,34 @@ export default function Completion() {
           <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
             <h2 className="text-4xl font-bold mb-4">🔓 SECRET LETTER UNLOCKED!</h2>
             <p className="text-xl mb-6">
-              🏆 Congratulations! You've unlocked the alien's genetic code letter:
+              🏆 Congratulations! You've unlocked your group's genetic code letter:
             </p>
             <div className="bg-white bg-opacity-20 rounded-xl p-8 mb-6">
               <div className="text-9xl font-bold text-white mb-4 animate-pulse-soft drop-shadow-2xl">
-                {finalLetter || 'G'}
+                {getGroupLetter()}
               </div>
               <p className="text-2xl font-bold text-yellow-100 mb-2">
-                🎯 WRITE THIS ON THE CLASS BOARD!
+                🎯 YOUR GROUP'S CONTRIBUTION!
               </p>
               <p className="text-lg text-yellow-100">
-                This letter is your team's key to solving the ultimate puzzle!
+                This letter is your team's piece of the final puzzle!
               </p>
             </div>
-            <div className="bg-yellow-600 bg-opacity-50 rounded-lg p-4">
+            <div className="bg-yellow-600 bg-opacity-50 rounded-lg p-4 mb-4">
               <p className="text-yellow-100 font-semibold">
-                🎓 Your instructor will use this letter as part of the class-wide challenge!
+                🎓 Work with your class to solve the word scramble using all groups' letters!
               </p>
+            </div>
+            
+            {/* Word Scramble Button */}
+            <div className="mt-4">
+              <Link
+                to="/word-scramble"
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold rounded-xl text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <span className="mr-2">🧩</span>
+                Join Word Scramble Challenge
+              </Link>
             </div>
           </div>
         ) : (
@@ -208,31 +232,6 @@ export default function Completion() {
               <p className="text-blue-100 font-semibold">
                 📚 Great job reviewing genetics concepts on your own!
               </p>
-            </div>
-          </div>
-        )}
-
-        {/* Class Letters Collection - Only for class players */}
-        {isPlayingInClass && classLetters.length > 0 && (
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
-            <h2 className="text-3xl font-bold mb-4">📝 Class Progress - Available Letters</h2>
-            <p className="text-lg mb-6">
-              Here are the letters your classmates have unlocked so far. Use these to start working on the word puzzle!
-            </p>
-            <div className="bg-white bg-opacity-20 rounded-xl p-6">
-              <div className="grid grid-cols-5 gap-4 mb-4">
-                {classLetters.map((item, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-4xl font-bold text-white mb-2 bg-white bg-opacity-30 rounded-lg p-3">
-                      {item.letter}
-                    </div>
-                    <div className="text-sm text-pink-100">Group {item.group}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="text-pink-100 text-sm">
-                💡 <strong>Tip:</strong> Try to unscramble these letters to form words related to genetics!
-              </div>
             </div>
           </div>
         )}
