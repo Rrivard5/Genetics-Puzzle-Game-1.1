@@ -6,6 +6,7 @@ export default function Completion() {
   const { finalLetter, resetGame, attemptTracking, studentInfo } = useGame()
   const [showConfetti, setShowConfetti] = useState(false)
   const [wrongAnswerFeedback, setWrongAnswerFeedback] = useState([])
+  const [groupLetter, setGroupLetter] = useState('')
 
   useEffect(() => {
     // Scroll to the top to show the secret letter first
@@ -18,54 +19,76 @@ export default function Completion() {
     // Collect all wrong answer feedback for study guidance
     collectWrongAnswerFeedback()
     
-    // If playing in class, record completion in class progress
-    if (studentInfo?.playingContext === 'class') {
+    // CRITICAL: Record completion for class tracking
+    if (studentInfo?.playingContext === 'class' && studentInfo?.groupNumber) {
       recordClassCompletion()
     }
     
     return () => clearTimeout(timer)
-  }, [])
+  }, [studentInfo])
 
   const recordClassCompletion = () => {
-    if (!studentInfo?.groupNumber) return
+    if (!studentInfo?.groupNumber || !studentInfo?.name) {
+      console.warn('Missing student info for completion recording')
+      return
+    }
     
     // Get the group's assigned letter from instructor settings
     const instructorSettings = localStorage.getItem('instructor-word-settings')
-    let groupLetter = 'G' // default letter
+    let assignedLetter = 'G' // default letter
     
     if (instructorSettings) {
-      const settings = JSON.parse(instructorSettings)
-      const groupLetters = settings.groupLetters || {}
-      groupLetter = groupLetters[studentInfo.groupNumber] || 'G'
+      try {
+        const settings = JSON.parse(instructorSettings)
+        const groupLetters = settings.groupLetters || {}
+        assignedLetter = groupLetters[studentInfo.groupNumber] || 'G'
+      } catch (error) {
+        console.error('Error parsing instructor settings:', error)
+      }
     }
+    
+    setGroupLetter(assignedLetter)
     
     // Load existing class progress
-    const existingProgress = localStorage.getItem('class-letters-progress')
     let classProgress = []
+    const existingProgress = localStorage.getItem('class-letters-progress')
     
     if (existingProgress) {
-      classProgress = JSON.parse(existingProgress)
+      try {
+        classProgress = JSON.parse(existingProgress)
+      } catch (error) {
+        console.error('Error parsing existing class progress:', error)
+        classProgress = []
+      }
     }
     
-    // Check if this group has already been recorded
+    // Check if this group has already been recorded (prevent duplicates)
     const existingGroupIndex = classProgress.findIndex(
       item => item.group === studentInfo.groupNumber
     )
     
     if (existingGroupIndex === -1) {
-      // Add this group's completion
-      classProgress.push({
+      // Add this group's completion - this is the ONLY way letters get added
+      const completionRecord = {
         group: studentInfo.groupNumber,
-        letter: groupLetter,
+        letter: assignedLetter,
         completedAt: new Date().toISOString(),
-        studentName: studentInfo.name
-      })
+        studentName: studentInfo.name,
+        sessionId: studentInfo.sessionId
+      }
       
-      // Sort by group number
+      classProgress.push(completionRecord)
+      
+      // Sort by group number for better display
       classProgress.sort((a, b) => a.group - b.group)
       
       // Save updated progress
       localStorage.setItem('class-letters-progress', JSON.stringify(classProgress))
+      
+      console.log(`Group ${studentInfo.groupNumber} completion recorded with letter "${assignedLetter}"`)
+    } else {
+      console.log(`Group ${studentInfo.groupNumber} already completed - no duplicate record created`)
+      setGroupLetter(classProgress[existingGroupIndex].letter)
     }
   }
 
@@ -129,17 +152,9 @@ export default function Completion() {
     return roomNames[roomId] || roomId
   }
 
-  const getGroupLetter = () => {
-    if (!studentInfo?.groupNumber) return finalLetter || 'G'
-    
-    const instructorSettings = localStorage.getItem('instructor-word-settings')
-    if (instructorSettings) {
-      const settings = JSON.parse(instructorSettings)
-      const groupLetters = settings.groupLetters || {}
-      return groupLetters[studentInfo.groupNumber] || finalLetter || 'G'
-    }
-    
-    return finalLetter || 'G'
+  const getDisplayLetter = () => {
+    // Use the letter we got from instructor settings or fallback
+    return groupLetter || finalLetter || 'G'
   }
 
   const isPlayingInClass = studentInfo?.playingContext === 'class'
@@ -187,10 +202,10 @@ export default function Completion() {
             </p>
             <div className="bg-white bg-opacity-20 rounded-xl p-8 mb-6">
               <div className="text-9xl font-bold text-white mb-4 animate-pulse-soft drop-shadow-2xl">
-                {getGroupLetter()}
+                {getDisplayLetter()}
               </div>
               <p className="text-2xl font-bold text-yellow-100 mb-2">
-                🎯 YOUR GROUP'S CONTRIBUTION!
+                🎯 GROUP {studentInfo?.groupNumber}'S CONTRIBUTION!
               </p>
               <p className="text-lg text-yellow-100">
                 This letter is your team's piece of the final puzzle!
@@ -346,6 +361,11 @@ export default function Completion() {
             of DNA structure, pedigree analysis, Punnett squares, and Hardy-Weinberg equilibrium to succeed.
             {wrongAnswerFeedback.length > 0 && (
               <span> The study guidance section above shows specific areas where this student needed additional support.</span>
+            )}
+            {isPlayingInClass && (
+              <span className="block mt-2">
+                <strong>Class Progress:</strong> Group {studentInfo?.groupNumber} has contributed letter "{getDisplayLetter()}" to the word scramble challenge.
+              </span>
             )}
           </p>
         </div>
