@@ -899,6 +899,7 @@ const InstructorInterface = () => {
             {[
               { id: 'dashboard', name: 'Student Progress', icon: '📊' },
               { id: 'detailed', name: 'Detailed Tracking', icon: '📋' },
+              { id: 'data-management', name: 'Data Management', icon: '🗂️' },
               { id: 'word-settings', name: 'Word Scramble', icon: '🧩' },
               { id: 'feedback', name: 'Feedback Management', icon: '💬' },
               { id: 'room1', name: 'Room 1 Settings', icon: '🧩' },
@@ -1117,6 +1118,164 @@ const InstructorInterface = () => {
             </div>
             <div className="mt-4 text-sm text-gray-600 text-center">
               Showing last 50 attempts. Export to Excel for complete data.
+            </div>
+          </div>
+        )}
+
+        {/* Data Management Tab */}
+        {activeTab === 'data-management' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">🗂️ Data Management & Cleanup</h2>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Current Data Status</h3>
+              
+              {/* Data Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="text-blue-800 font-semibold">Student Progress</div>
+                  <div className="text-2xl font-bold text-blue-600">{studentProgress.length}</div>
+                  <div className="text-sm text-blue-600">student records</div>
+                </div>
+                
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="text-green-800 font-semibold">Detailed Attempts</div>
+                  <div className="text-2xl font-bold text-green-600">{detailedStudentData.length}</div>
+                  <div className="text-sm text-green-600">answer attempts</div>
+                </div>
+                
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="text-purple-800 font-semibold">Class Completions</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(() => {
+                      const classProgress = localStorage.getItem('class-letters-progress');
+                      return classProgress ? JSON.parse(classProgress).length : 0;
+                    })()}
+                  </div>
+                  <div className="text-sm text-purple-600">groups completed</div>
+                </div>
+              </div>
+              
+              {/* Word Scramble Status */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold text-yellow-800 mb-2">Word Scramble Status</h4>
+                <div className="text-sm text-yellow-700">
+                  {(() => {
+                    const classProgress = localStorage.getItem('class-letters-progress');
+                    const wordSettings = localStorage.getItem('instructor-word-settings');
+                    
+                    if (!wordSettings) {
+                      return "⚠️ Word scramble not configured yet";
+                    }
+                    
+                    const settings = JSON.parse(wordSettings);
+                    const completions = classProgress ? JSON.parse(classProgress) : [];
+                    
+                    return (
+                      <div>
+                        <p>Target word: <strong>{settings.targetWord || 'Not set'}</strong></p>
+                        <p>Groups with letters: {completions.length} / {Object.keys(settings.groupLetters || {}).length}</p>
+                        <p>Available letters: {completions.map(c => c.letter).join(', ') || 'None yet'}</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">⚠️ Data Cleanup Operations</h3>
+              <p className="text-gray-600 mb-6">
+                Use these tools to clear data between class sessions or when testing. 
+                <strong className="text-red-600"> Warning: These actions cannot be undone!</strong>
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Clear Class Progress */}
+                <div className="border border-red-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-red-800 mb-2">Clear Word Scramble Progress</h4>
+                  <p className="text-sm text-red-600 mb-4">
+                    Removes all group completion records from the word scramble. Use this to start fresh for a new class session.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear ALL word scramble progress? This will remove all group completion records and reset the word scramble.')) {
+                        localStorage.removeItem('class-letters-progress');
+                        localStorage.removeItem('word-scramble-success');
+                        alert('Word scramble progress cleared! The word scramble page will now show no completions.');
+                      }
+                    }}
+                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold"
+                  >
+                    🗑️ Clear Word Scramble Data
+                  </button>
+                </div>
+                
+                {/* Clear Student Data */}
+                <div className="border border-orange-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-orange-800 mb-2">Clear Student Tracking Data</h4>
+                  <p className="text-sm text-orange-600 mb-4">
+                    Removes all student progress and detailed answer tracking. Use this to clear test data before real class use.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear ALL student tracking data? This includes progress records and detailed answer attempts.')) {
+                        localStorage.removeItem('instructor-student-progress');
+                        localStorage.removeItem('instructor-student-data');
+                        setStudentProgress([]);
+                        setDetailedStudentData([]);
+                        alert('Student tracking data cleared!');
+                      }
+                    }}
+                    className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-semibold"
+                  >
+                    📊 Clear Student Data
+                  </button>
+                </div>
+                
+                {/* Clear Everything */}
+                <div className="border border-gray-800 rounded-lg p-4 md:col-span-2">
+                  <h4 className="font-semibold text-gray-800 mb-2">Nuclear Option: Clear Everything</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Removes ALL data including student progress, word scramble progress, and detailed tracking. 
+                    <strong className="text-red-600"> Only use this for a complete reset!</strong>
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (confirm('⚠️ DANGER: This will delete ALL student data, word scramble progress, and tracking information. Are you absolutely sure?')) {
+                        if (confirm('This is your final warning. ALL DATA WILL BE PERMANENTLY DELETED. Proceed?')) {
+                          // Clear all student and progress data
+                          localStorage.removeItem('instructor-student-progress');
+                          localStorage.removeItem('instructor-student-data');
+                          localStorage.removeItem('class-letters-progress');
+                          localStorage.removeItem('word-scramble-success');
+                          
+                          // Reset state
+                          setStudentProgress([]);
+                          setDetailedStudentData([]);
+                          
+                          alert('🧹 Complete data wipe completed! All student and progress data has been cleared.');
+                        }
+                      }
+                    }}
+                    className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors text-sm font-semibold"
+                  >
+                    💥 CLEAR EVERYTHING
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-800 mb-2">💡 Recommended Workflow</h4>
+              <ol className="text-sm text-blue-700 space-y-1">
+                <li>1. <strong>Before class:</strong> Configure word scramble settings and clear old data</li>
+                <li>2. <strong>During class:</strong> Students complete rooms and contribute letters automatically</li>
+                <li>3. <strong>After class:</strong> Export student data, then clear progress for next session</li>
+                <li>4. <strong>Between semesters:</strong> Use "Clear Everything" for a complete reset</li>
+              </ol>
             </div>
           </div>
         )}
