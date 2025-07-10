@@ -10,6 +10,11 @@ export default function Room4() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
   const [puzzles, setPuzzles] = useState([])
+  const [showHelp, setShowHelp] = useState(false)
+  const [helpQuestion, setHelpQuestion] = useState(null)
+  const [helpResponse, setHelpResponse] = useState('')
+  const [helpAnswered, setHelpAnswered] = useState(false)
+  const [helpFeedback, setHelpFeedback] = useState(null)
   const navigate = useNavigate()
   const { setRoomUnlocked, setFinalLetter, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
 
@@ -17,6 +22,7 @@ export default function Room4() {
   useEffect(() => {
     if (studentInfo?.groupNumber) {
       loadPuzzlesForGroup(studentInfo.groupNumber)
+      loadHelpQuestion(studentInfo.groupNumber)
     }
   }, [studentInfo])
 
@@ -71,6 +77,45 @@ export default function Room4() {
     }
   };
 
+  const loadHelpQuestion = (groupNumber) => {
+    const savedPuzzles = localStorage.getItem('instructor-puzzles');
+    if (savedPuzzles) {
+      const allPuzzles = JSON.parse(savedPuzzles);
+      const helpQ = allPuzzles.room4?.groups?.[groupNumber]?.helpQuestion || allPuzzles.room4?.groups?.[1]?.helpQuestion;
+      if (helpQ) {
+        setHelpQuestion(helpQ);
+      } else {
+        // Default help question
+        setHelpQuestion({
+          id: "help1",
+          question: "What does the Hardy-Weinberg principle describe?",
+          type: "multiple_choice",
+          answer: "The genetic equilibrium in populations",
+          options: [
+            "The genetic equilibrium in populations",
+            "The rate of mutations in DNA",
+            "The process of natural selection",
+            "The inheritance of dominant traits"
+          ]
+        });
+      }
+    } else {
+      // Default help question
+      setHelpQuestion({
+        id: "help1",
+        question: "What does the Hardy-Weinberg principle describe?",
+        type: "multiple_choice",
+        answer: "The genetic equilibrium in populations",
+        options: [
+          "The genetic equilibrium in populations",
+          "The rate of mutations in DNA",
+          "The process of natural selection",
+          "The inheritance of dominant traits"
+        ]
+      });
+    }
+  };
+
   // Show loading if no student info
   if (!studentInfo) {
     return (
@@ -93,6 +138,13 @@ export default function Room4() {
     }
     
     if (error) setError(null)
+  }
+
+  const handleHelpChange = (e) => {
+    setHelpResponse(e.target.value)
+    if (helpFeedback) {
+      setHelpFeedback(null)
+    }
   }
 
   const checkAnswer = (puzzleId) => {
@@ -145,6 +197,37 @@ export default function Room4() {
           type: "error"
         }
       }))
+    }
+  }
+
+  const checkHelpAnswer = () => {
+    if (!helpResponse.trim()) {
+      setHelpFeedback({
+        isCorrect: false,
+        message: "Please select an answer before checking.",
+        type: "warning"
+      })
+      return
+    }
+
+    const isCorrect = helpQuestion.answer === helpResponse.trim()
+    
+    // Track the help attempt
+    trackAttempt('room4', 'help', helpResponse, isCorrect)
+    
+    if (isCorrect) {
+      setHelpAnswered(true)
+      setHelpFeedback({
+        isCorrect: true,
+        message: "🎉 Correct! You've unlocked the Population Genetics equations!",
+        type: "success"
+      })
+    } else {
+      setHelpFeedback({
+        isCorrect: false,
+        message: `❌ That's not correct. The right answer is "${helpQuestion.answer}". Try again!`,
+        type: "error"
+      })
     }
   }
 
@@ -215,7 +298,6 @@ export default function Room4() {
   const answeredCount = Object.keys(checkedAnswers).length
   const isLockSolved = (puzzleId) => feedback[puzzleId]?.isCorrect
   const solvedCount = puzzles.filter(p => isLockSolved(p.id)).length
-  const progressPercentage = (answeredCount / puzzles.length) * 100
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-900 via-indigo-800 to-violet-900 relative overflow-hidden">
@@ -238,25 +320,114 @@ export default function Room4() {
           <p className="text-purple-300 text-lg">Group {studentInfo.groupNumber} - Final Challenge</p>
         </div>
 
-        {/* Hardy-Weinberg Information */}
-        <div className="mb-8 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl p-6">
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-purple-800 mb-4">🧬 Population Genetics</h2>
-            <div className="bg-white rounded-lg p-4 border-2 border-purple-300">
-              <div className="text-purple-700 mb-2 font-semibold">Hardy-Weinberg Equilibrium</div>
-              <div className="text-sm text-purple-600 space-y-1">
-                <div><strong>Allele frequencies:</strong> p + q = 1</div>
-                <div><strong>Genotype frequencies:</strong> p² + 2pq + q² = 1</div>
-                <div><strong>Dominant allele frequency:</strong> p = 0.6</div>
-                <div><strong>Recessive allele frequency:</strong> q = 0.4</div>
+        {/* Help Question Modal */}
+        {showHelp && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">🆘 Population Genetics Help</h2>
+                  <button
+                    onClick={() => setShowHelp(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                {helpQuestion && (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-blue-800 mb-2">Help Question:</h3>
+                      <p className="text-blue-700">{helpQuestion.question}</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {helpQuestion.options.map((option, index) => (
+                        <label 
+                          key={index}
+                          className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                            helpResponse === option 
+                              ? 'border-blue-400 bg-blue-50' 
+                              : 'border-gray-200 bg-gray-50 hover:border-blue-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="helpQuestion"
+                            value={option}
+                            checked={helpResponse === option}
+                            onChange={handleHelpChange}
+                            disabled={helpAnswered}
+                            className="mr-3 h-4 w-4 text-blue-600"
+                          />
+                          <span className="text-gray-700">{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                    
+                    <div className="flex justify-center">
+                      <button
+                        onClick={checkHelpAnswer}
+                        disabled={!helpResponse || helpAnswered}
+                        className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                          helpAnswered 
+                            ? 'bg-green-600 cursor-not-allowed opacity-50'
+                            : !helpResponse
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
+                      >
+                        {helpAnswered ? '✅ Correct!' : '🔍 Check Answer'}
+                      </button>
+                    </div>
+                    
+                    {helpFeedback && (
+                      <div className={`p-4 rounded-lg border-2 ${
+                        helpFeedback.isCorrect 
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : 'bg-red-50 border-red-200 text-red-800'
+                      }`}>
+                        <p>{helpFeedback.message}</p>
+                      </div>
+                    )}
+                    
+                    {helpAnswered && (
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg p-6 mt-4">
+                        <h3 className="text-xl font-bold text-green-800 mb-4">🧬 Population Genetics Equations Unlocked!</h3>
+                        <div className="space-y-3">
+                          <div className="bg-white rounded-lg p-4 border border-green-300">
+                            <p className="text-lg font-mono text-gray-800"><strong>Allele frequencies:</strong> p + q = 1</p>
+                          </div>
+                          <div className="bg-white rounded-lg p-4 border border-green-300">
+                            <p className="text-lg font-mono text-gray-800"><strong>Genotype frequencies:</strong> p² + 2pq + q² = 1</p>
+                          </div>
+                          <div className="text-sm text-green-700 mt-4">
+                            <p>Use these equations to solve the population genetics problems!</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Observatory Mechanism */}
+        {/* Observatory Mechanism with Help Button */}
         <div className="relative flex justify-center mb-12 door-container">
           <div className="relative">
+            {/* Help Button */}
+            <button
+              onClick={() => setShowHelp(true)}
+              className="absolute -left-32 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-6 rounded-xl font-bold text-lg shadow-lg transition-all duration-200 border-4 border-yellow-400 hover:border-yellow-300 animate-pulse"
+              style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
+            >
+              <div className="text-3xl mb-2">🆘</div>
+              <div className="text-sm">Need Help?</div>
+            </button>
+            
             <svg width="500" height="700" viewBox="0 0 500 700" className="drop-shadow-2xl">
               {/* Outer Observatory Frame */}
               <rect x="30" y="30" width="440" height="640" rx="25" fill="url(#outerObservatory)" stroke="#8b5cf6" strokeWidth="8"/>
@@ -283,7 +454,7 @@ export default function Room4() {
               
               {/* Observatory Lock Positions */}
               {puzzles.map((puzzle, index) => {
-                const lockY = 270 + (index * 120);
+                const lockY = 270 + (index * 100);
                 const isAnswered = checkedAnswers[puzzle.id];
                 const isCorrect = isLockSolved(puzzle.id);
                 
