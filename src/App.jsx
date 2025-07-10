@@ -6,6 +6,7 @@ import Room2 from './pages/Room2'
 import Room3 from './pages/Room3'
 import Room4 from './pages/Room4'
 import Completion from './pages/Completion'
+import WordScramble from './pages/WordScramble'
 import InstructorInterface from './components/InstructorInterface'
 import { GameProvider } from './context/GameStateContext'
 import Header from './components/Header'
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="/room3" element={<Room3 />} />
               <Route path="/room4" element={<Room4 />} />
               <Route path="/complete" element={<Completion />} />
+              <Route path="/word-scramble" element={<WordScramble />} />
               <Route path="/instructor" element={<InstructorInterface />} />
             </Routes>
           </main>
