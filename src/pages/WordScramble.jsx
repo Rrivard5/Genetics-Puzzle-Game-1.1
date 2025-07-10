@@ -34,7 +34,7 @@ export default function WordScramble() {
         const progress = JSON.parse(classProgress)
         setCompletedGroups(progress)
         
-        // Extract available letters
+        // Extract available letters from completed groups only
         const letters = progress.map(group => group.letter).filter(letter => letter)
         setAvailableLetters(letters)
       } else {
@@ -121,14 +121,29 @@ export default function WordScramble() {
     if (!targetWord) return "No hint available"
     
     const hints = [
-      `The word has ${targetWord.length} letters`,
-      `The word starts with "${targetWord[0]}"`,
-      `The word is related to the study of heredity and variation`,
-      `The word ends with "${targetWord[targetWord.length - 1]}"`,
-      `The word contains the letters: ${targetWord.split('').slice(0, Math.ceil(targetWord.length / 2)).join(', ')}`
+      `The target has ${targetWord.length} characters`,
+      `The target starts with "${targetWord[0]}"`,
+      `The target is related to the study of heredity and variation`,
+      `The target ends with "${targetWord[targetWord.length - 1]}"`,
+      `The target contains the letters: ${targetWord.split('').slice(0, Math.ceil(targetWord.length / 2)).join(', ')}`
     ]
     
     return hints[Math.min(attempts.length, hints.length - 1)]
+  }
+
+  const countWords = (text) => {
+    if (!text) return 0
+    return text.trim().split(/\s+/).length
+  }
+
+  const getUniqueLettersCount = (letters) => {
+    return new Set(letters.filter(letter => letter && letter.trim())).size
+  }
+
+  const getTotalExpectedLetters = () => {
+    if (!targetWord) return 0
+    // Count letters only (not spaces or punctuation)
+    return targetWord.replace(/[^A-Za-z]/g, '').length
   }
 
   if (isLoading) {
@@ -162,7 +177,7 @@ export default function WordScramble() {
           <div className="mb-8 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl p-8 text-center shadow-2xl">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-4xl font-bold mb-4">PUZZLE SOLVED!</h2>
-            <p className="text-2xl mb-4">The word is: <span className="font-bold text-yellow-300">{targetWord.toUpperCase()}</span></p>
+            <p className="text-2xl mb-4">The answer is: <span className="font-bold text-yellow-300">{targetWord.toUpperCase()}</span></p>
             <p className="text-lg text-green-100">
               Congratulations to everyone who worked together to solve this challenge!
             </p>
@@ -192,10 +207,18 @@ export default function WordScramble() {
             )}
           </div>
           
+          {/* Updated letter count information */}
           {availableLetters.length > 0 && (
-            <div className="mt-4 text-center text-blue-200 text-sm">
-              Total letters available: {availableLetters.length} | 
-              Unique letters: {[...new Set(availableLetters)].length}
+            <div className="mt-4 text-center text-blue-200 text-sm space-y-1">
+              <div>
+                Total letters: {getTotalExpectedLetters()} | 
+                Letters unlocked so far: {availableLetters.length}
+              </div>
+              {targetWord && (
+                <div>
+                  Number of words in target: {countWords(targetWord)}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -239,7 +262,7 @@ export default function WordScramble() {
                   type="text"
                   value={userGuess}
                   onChange={(e) => setUserGuess(e.target.value.toUpperCase())}
-                  placeholder="Enter your word guess..."
+                  placeholder="Enter your guess..."
                   className="flex-1 px-4 py-3 rounded-lg text-black text-lg font-bold text-center border-2 border-purple-300 focus:outline-none focus:border-yellow-400"
                   disabled={isCorrect}
                 />
@@ -272,13 +295,13 @@ export default function WordScramble() {
             {/* Can Form Word Check */}
             {targetWord && availableLetters.length > 0 && (
               <div className="mt-4 text-center">
-                {canFormWord(availableLetters, targetWord) ? (
+                {canFormWord(availableLetters, targetWord.replace(/[^A-Za-z]/g, '')) ? (
                   <div className="text-green-300 text-sm">
-                    ✅ You have enough letters to form the target word!
+                    ✅ You have enough letters to form the target!
                   </div>
                 ) : (
                   <div className="text-orange-300 text-sm">
-                    ⏳ Waiting for more groups to complete... ({availableLetters.length} letters available)
+                    ⏳ Waiting for more groups to complete... ({availableLetters.length}/{getTotalExpectedLetters()} letters available)
                   </div>
                 )}
               </div>
@@ -314,7 +337,7 @@ export default function WordScramble() {
             <h2 className="text-xl font-bold mb-3">📚 How to Play</h2>
             <ul className="space-y-2 text-sm">
               <li>• Each group that completes all 4 rooms contributes one letter</li>
-              <li>• Use the available letters to form a word related to genetics</li>
+              <li>• Use the available letters to form a word or phrase related to genetics</li>
               <li>• Work together as a class to solve the final puzzle</li>
               <li>• The page updates automatically as more groups finish</li>
               <li>• Once solved, everyone will see the solution!</li>
@@ -332,21 +355,6 @@ export default function WordScramble() {
             Return Home
           </Link>
         </div>
-
-        {/* Debug Info for Instructors */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-8 bg-gray-800 rounded-lg p-4 text-xs text-gray-300">
-            <details>
-              <summary className="cursor-pointer">Debug Info (Dev Only)</summary>
-              <div className="mt-2 space-y-1">
-                <div>Target Word: {targetWord}</div>
-                <div>Available Letters: [{availableLetters.join(', ')}]</div>
-                <div>Completed Groups: {completedGroups.length}</div>
-                <div>Can Form Word: {canFormWord(availableLetters, targetWord) ? 'Yes' : 'No'}</div>
-              </div>
-            </details>
-          </div>
-        )}
       </div>
     </div>
   )
