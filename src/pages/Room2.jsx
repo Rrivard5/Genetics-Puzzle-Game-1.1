@@ -13,6 +13,7 @@ export default function Room2() {
   const [questionImages, setQuestionImages] = useState({})
   const [imageLoaded, setImageLoaded] = useState({})
   const [imageError, setImageError] = useState({})
+  const [imageSettings, setImageSettings] = useState({})
   const navigate = useNavigate()
   const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
 
@@ -21,6 +22,7 @@ export default function Room2() {
     if (studentInfo?.groupNumber) {
       loadPuzzlesForGroup(studentInfo.groupNumber)
       loadQuestionImages()
+      loadImageSettings()
     }
   }, [studentInfo])
 
@@ -115,6 +117,13 @@ export default function Room2() {
     }
   };
 
+  const loadImageSettings = () => {
+    const savedSettings = localStorage.getItem('instructor-image-settings');
+    if (savedSettings) {
+      setImageSettings(JSON.parse(savedSettings));
+    }
+  };
+
   const getCurrentQuestionImage = (questionId) => {
     if (!studentInfo?.groupNumber) return null;
     const imageKey = `room2_group${studentInfo.groupNumber}_${questionId}`;
@@ -126,6 +135,12 @@ export default function Room2() {
     if (!studentInfo?.groupNumber) return null;
     const imageKey = `room2_group${studentInfo.groupNumber}_${questionId}`;
     return questionImages[imageKey];
+  };
+
+  const isImageExpected = (questionId) => {
+    if (!studentInfo?.groupNumber) return false;
+    const settingKey = `room2_group${studentInfo.groupNumber}_${questionId}`;
+    return imageSettings[settingKey] === true;
   };
 
   // Show loading if no student info
@@ -501,78 +516,76 @@ export default function Room2() {
         {/* Active Analysis Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
-            {/* Enhanced Question Image Display */}
-            <div className="mb-8">
-              <h3 className="text-xl text-cyan-300 font-bold mb-4 text-center">
-                🧬 Question Analysis Data - Group {studentInfo.groupNumber}
-              </h3>
-              <div className="bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 border-4 border-cyan-400 rounded-xl p-6 shadow-2xl">
-                <div className="flex justify-center">
-                  {getCurrentQuestionImage(activeLock) ? (
-                    <div className="relative">
-                      {/* Loading indicator */}
-                      {!imageLoaded[activeLock] && !imageError[activeLock] && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                            <p className="text-cyan-300">Loading question image...</p>
+            {/* Enhanced Question Image Display - Only show if instructor wants it */}
+            {isImageExpected(activeLock) && (
+              <div className="mb-8">
+                <h3 className="text-xl text-cyan-300 font-bold mb-4 text-center">
+                  🧬 Question Analysis Data - Group {studentInfo.groupNumber}
+                </h3>
+                <div className="bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 border-4 border-cyan-400 rounded-xl p-6 shadow-2xl">
+                  <div className="flex justify-center">
+                    {getCurrentQuestionImage(activeLock) ? (
+                      <div className="relative">
+                        {/* Loading indicator */}
+                        {!imageLoaded[activeLock] && !imageError[activeLock] && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                            <div className="text-center">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+                              <p className="text-cyan-300">Loading question image...</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Error state */}
+                        {imageError[activeLock] && (
+                          <div className="bg-red-900 border-2 border-red-400 rounded-lg p-8 text-center">
+                            <div className="text-6xl mb-4">⚠️</div>
+                            <p className="text-red-300 text-lg mb-2">Error Loading Question Image</p>
+                            <p className="text-red-400 text-sm">Please contact your instructor</p>
+                          </div>
+                        )}
+                        
+                        {/* Actual image */}
+                        <img 
+                          src={getCurrentQuestionImage(activeLock)} 
+                          alt={`Question ${activeLock} - Group ${studentInfo.groupNumber}`}
+                          className={`max-w-full max-h-96 rounded-lg shadow-lg border-2 border-cyan-300 ${
+                            !imageLoaded[activeLock] ? 'hidden' : 'block'
+                          }`}
+                          onLoad={() => handleImageLoad(activeLock)}
+                          onError={() => handleImageError(activeLock)}
+                        />
+                        
+                        {/* Image info overlay */}
+                        {getCurrentQuestionImageInfo(activeLock) && imageLoaded[activeLock] && (
+                          <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white px-3 py-1 rounded-lg text-xs">
+                            {getCurrentQuestionImageInfo(activeLock).name}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-800 border-2 border-cyan-400 rounded-lg p-8 text-center min-w-[400px]">
+                        <div className="text-6xl mb-4">⚠️</div>
+                        <p className="text-red-300 text-lg mb-2">Missing Question Image</p>
+                        <p className="text-cyan-300 text-sm mb-4">
+                          An image is expected for this question in Group {studentInfo.groupNumber}
+                        </p>
+                        <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mt-4">
+                          <div className="text-yellow-400 text-sm">
+                            <p>🎓 <strong>For Instructors:</strong> Upload images in the "Room 2 Settings" tab of the instructor portal.</p>
                           </div>
                         </div>
-                      )}
-                      
-                      {/* Error state */}
-                      {imageError[activeLock] && (
-                        <div className="bg-red-900 border-2 border-red-400 rounded-lg p-8 text-center">
-                          <div className="text-6xl mb-4">⚠️</div>
-                          <p className="text-red-300 text-lg mb-2">Error Loading Question Image</p>
-                          <p className="text-red-400 text-sm">Please contact your instructor</p>
-                        </div>
-                      )}
-                      
-                      {/* Actual image */}
-                      <img 
-                        src={getCurrentQuestionImage(activeLock)} 
-                        alt={`Question ${activeLock} - Group ${studentInfo.groupNumber}`}
-                        className={`max-w-full max-h-96 rounded-lg shadow-lg border-2 border-cyan-300 ${
-                          !imageLoaded[activeLock] ? 'hidden' : 'block'
-                        }`}
-                        onLoad={() => handleImageLoad(activeLock)}
-                        onError={() => handleImageError(activeLock)}
-                      />
-                      
-                      {/* Image info overlay */}
-                      {getCurrentQuestionImageInfo(activeLock) && imageLoaded[activeLock] && (
-                        <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white px-3 py-1 rounded-lg text-xs">
-                          {getCurrentQuestionImageInfo(activeLock).name}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-800 border-2 border-cyan-400 rounded-lg p-8 text-center min-w-[400px]">
-                      <div className="text-6xl mb-4">🧬</div>
-                      <p className="text-cyan-300 text-lg mb-2">Question Analysis Chart</p>
-                      <p className="text-blue-400 text-sm mb-4">
-                        No image available for this question in Group {studentInfo.groupNumber}
-                      </p>
-                      <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mt-4">
-                        <div className="text-yellow-400 text-sm">
-                          <p>📝 <strong>For Students:</strong> Please inform your instructor that no image has been uploaded for this question.</p>
-                          <p className="mt-2">🎓 <strong>For Instructors:</strong> Upload images in the "Room 2 Settings" tab of the instructor portal.</p>
-                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-                <div className="text-center mt-4">
-                  <p className="text-cyan-200 text-sm">
-                    {getCurrentQuestionImage(activeLock) 
-                      ? `Genetic analysis data for Group ${studentInfo.groupNumber} recovered from alien genetic archives`
-                      : "Genetic analysis interface ready - awaiting question data"
-                    }
-                  </p>
+                    )}
+                  </div>
+                  <div className="text-center mt-4">
+                    <p className="text-cyan-200 text-sm">
+                      Genetic analysis data for Group {studentInfo.groupNumber} recovered from alien genetic archives
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Puzzle Questions */}
             {puzzles.filter(p => p.id === activeLock).map((puzzle, index) => {
