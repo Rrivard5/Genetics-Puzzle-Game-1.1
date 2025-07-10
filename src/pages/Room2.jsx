@@ -353,7 +353,7 @@ export default function Room2() {
               
               {/* Analysis Lock Positions */}
               {puzzles.map((puzzle, index) => {
-                const lockY = 250 + (index * 100);
+                const lockY = 270 + (index * 120);
                 const isAnswered = checkedAnswers[puzzle.id];
                 const isCorrect = isLockSolved(puzzle.id);
                 
@@ -528,7 +528,7 @@ export default function Room2() {
                       <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mt-4">
                         <div className="text-yellow-400 text-sm">
                           <p>📝 <strong>For Students:</strong> Please inform your instructor that no pedigree image has been uploaded for your group.</p>
-                          <p className="mt-2">🎓 <strong>For Instructors:</strong> Upload images in the "Pedigree Images" tab of the instructor portal.</p>
+                          <p className="mt-2">🎓 <strong>For Instructors:</strong> Upload images in the "Room 2 Settings" tab of the instructor portal.</p>
                         </div>
                       </div>
                     </div>
