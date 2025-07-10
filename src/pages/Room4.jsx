@@ -326,7 +326,7 @@ export default function Room4() {
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">🆘 Population Genetics Help</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">💡 Population Genetics Help</h2>
                   <button
                     onClick={() => setShowHelp(false)}
                     className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -418,14 +418,14 @@ export default function Room4() {
         {/* Observatory Mechanism with Help Button */}
         <div className="relative flex justify-center mb-12 door-container">
           <div className="relative">
-            {/* Help Button */}
+            {/* Help Button - Improved font and removed SOS */}
             <button
               onClick={() => setShowHelp(true)}
-              className="absolute -left-32 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-6 rounded-xl font-bold text-lg shadow-lg transition-all duration-200 border-4 border-yellow-400 hover:border-yellow-300 animate-pulse"
-              style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
+              className="absolute -left-32 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-6 rounded-xl font-bold text-lg shadow-lg transition-all duration-200 border-4 border-yellow-400 hover:border-yellow-300 animate-pulse"
+              style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '1px' }}
             >
-              <div className="text-3xl mb-2">🆘</div>
-              <div className="text-sm">Need Help?</div>
+              <div className="text-3xl mb-2">💡</div>
+              <div className="text-base leading-tight">Need Help?</div>
             </button>
             
             <svg width="500" height="700" viewBox="0 0 500 700" className="drop-shadow-2xl">
