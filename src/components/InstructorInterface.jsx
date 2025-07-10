@@ -390,9 +390,34 @@ const InstructorInterface = () => {
   const loadPuzzles = () => {
     const savedPuzzles = localStorage.getItem('instructor-puzzles');
     if (savedPuzzles) {
-      setPuzzles(JSON.parse(savedPuzzles));
+      const loadedPuzzles = JSON.parse(savedPuzzles);
+      
+      // Ensure Room 4 groups have help questions
+      if (loadedPuzzles.room4 && loadedPuzzles.room4.groups) {
+        Object.keys(loadedPuzzles.room4.groups).forEach(groupNum => {
+          const groupPuzzles = loadedPuzzles.room4.groups[groupNum];
+          const hasHelpQuestion = groupPuzzles.some(p => p.id === 'help');
+          
+          if (!hasHelpQuestion) {
+            groupPuzzles.push({
+              id: "help",
+              question: "What does the Hardy-Weinberg principle describe?",
+              type: "multiple_choice",
+              answer: "The genetic equilibrium in populations",
+              options: [
+                "The genetic equilibrium in populations",
+                "The rate of mutations in DNA",
+                "The process of natural selection",
+                "The inheritance of dominant traits"
+              ]
+            });
+          }
+        });
+      }
+      
+      setPuzzles(loadedPuzzles);
     } else {
-      // Initialize with default structure
+      // Initialize with default structure including help questions
       const defaultPuzzles = {
         room1: {
           groups: {
@@ -449,7 +474,24 @@ const InstructorInterface = () => {
           }
         },
         room3: { groups: {} },
-        room4: { groups: {} }
+        room4: { 
+          groups: {
+            1: [
+              {
+                id: "help",
+                question: "What does the Hardy-Weinberg principle describe?",
+                type: "multiple_choice",
+                answer: "The genetic equilibrium in populations",
+                options: [
+                  "The genetic equilibrium in populations",
+                  "The rate of mutations in DNA",
+                  "The process of natural selection",
+                  "The inheritance of dominant traits"
+                ]
+              }
+            ]
+          }
+        }
       };
       setPuzzles(defaultPuzzles);
     }
@@ -524,22 +566,32 @@ const InstructorInterface = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Updated addNewPuzzle function to avoid adding help questions manually
   const addNewPuzzle = (room, groupNumber) => {
     const existingPuzzles = puzzles[room].groups[groupNumber] || [];
+    const regularPuzzles = existingPuzzles.filter(p => p.id !== 'help');
+    const helpQuestion = existingPuzzles.find(p => p.id === 'help');
+    
     const newPuzzle = {
-      id: `p${existingPuzzles.length + 1}`,
+      id: `p${regularPuzzles.length + 1}`,
       question: 'New question here...',
       type: 'text',
       answer: 'Correct answer here...',
       options: []
     };
+    
+    const updatedPuzzles = [...regularPuzzles, newPuzzle];
+    if (helpQuestion) {
+      updatedPuzzles.push(helpQuestion);
+    }
+    
     setPuzzles(prev => ({
       ...prev,
       [room]: {
         ...prev[room],
         groups: {
           ...prev[room].groups,
-          [groupNumber]: [...existingPuzzles, newPuzzle]
+          [groupNumber]: updatedPuzzles
         }
       }
     }));
@@ -561,6 +613,11 @@ const InstructorInterface = () => {
   };
 
   const deletePuzzle = (room, groupNumber, puzzleId) => {
+    if (puzzleId === 'help') {
+      alert('Cannot delete the help question. You can edit it instead.');
+      return;
+    }
+    
     if (confirm('Are you sure you want to delete this puzzle?')) {
       setPuzzles(prev => ({
         ...prev,
@@ -603,6 +660,22 @@ const InstructorInterface = () => {
           type: "multiple_choice",
           answer: "Option A",
           options: ["Option A", "Option B", "Option C", "Option D"]
+        }
+      ];
+    } else if (room === 'room4') {
+      // Room 4 includes help question
+      defaultPuzzles = [
+        {
+          id: "help",
+          question: "What does the Hardy-Weinberg principle describe?",
+          type: "multiple_choice",
+          answer: "The genetic equilibrium in populations",
+          options: [
+            "The genetic equilibrium in populations",
+            "The rate of mutations in DNA",
+            "The process of natural selection",
+            "The inheritance of dominant traits"
+          ]
         }
       ];
     }
@@ -1347,56 +1420,6 @@ const InstructorInterface = () => {
               )}
             </div>
 
-{/* Group Selection for Questions */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(puzzles[activeTab].groups).map(groupNum => (
-                  <button
-                    key={groupNum}
-                    onClick={() => setSelectedGroup(parseInt(groupNum))}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedGroup === parseInt(groupNum)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Group {groupNum}
-                  </button>
-                ))}
-              </div>
-              
-              {selectedGroup && (
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => addNewPuzzle(activeTab, selectedGroup)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    + Add Question to Group {selectedGroup}
-                  </button>
-                  
-                  <select
-                    onChange={(e) => {
-                      const fromGroup = parseInt(e.target.value);
-                      if (fromGroup && fromGroup !== selectedGroup) {
-                        copyGroupQuestions(activeTab, fromGroup, selectedGroup);
-                      }
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Copy from another group...</option>
-                    {Object.keys(puzzles[activeTab].groups)
-                      .filter(num => parseInt(num) !== selectedGroup)
-                      .map(groupNum => (
-                        <option key={groupNum} value={groupNum}>
-                          Copy from Group {groupNum}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
             {/* Help Question Management - ONLY for Room 4 */}
             {activeTab === 'room4' && selectedGroup && (
               <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg shadow p-6">
@@ -1590,13 +1613,16 @@ const InstructorInterface = () => {
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-gray-800">
                         Group {selectedGroup} - Question {index + 1}
+                        {activeTab === 'room2' && ` (Lock ${index + 1})`}
                       </h3>
-                      <button
-                        onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
+                      {(activeTab !== 'room2' || puzzles[activeTab].groups[selectedGroup].length > 3) && (
+                        <button
+                          onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                     
                     <div className="space-y-4">
@@ -1609,6 +1635,63 @@ const InstructorInterface = () => {
                           rows="3"
                         />
                       </div>
+
+                      {/* Question Image Upload for Room 2 */}
+                      {activeTab === 'room2' && (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                          <h4 className="font-medium text-gray-700 mb-2">Question Image Settings</h4>
+                          <div className="mb-3">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={imageSettings[`room2_group${selectedGroup}_${puzzle.id}`] || false}
+                                onChange={() => toggleImageExpected('room2', selectedGroup, puzzle.id)}
+                                className="mr-2"
+                              />
+                              <span className="text-sm text-gray-700">
+                                This question requires an image (students will see an error if no image is uploaded)
+                              </span>
+                            </label>
+                          </div>
+                          
+                          {questionImages[`room2_group${selectedGroup}_${puzzle.id}`] ? (
+                            <div className="space-y-2">
+                              <img
+                                src={questionImages[`room2_group${selectedGroup}_${puzzle.id}`].data}
+                                alt={`Question ${puzzle.id} image`}
+                                className="w-full max-w-md h-32 object-cover rounded border"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => previewQuestionImage('room2', selectedGroup, puzzle.id)}
+                                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                                >
+                                  Preview
+                                </button>
+                                <button
+                                  onClick={() => removeQuestionImage('room2', selectedGroup, puzzle.id)}
+                                  className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
+                                <span className="text-gray-400">No image uploaded</span>
+                              </div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleQuestionImageUpload(e, 'room2', selectedGroup, puzzle.id)}
+                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                disabled={uploadingImages[`room2_${selectedGroup}_${puzzle.id}`]}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
@@ -1720,15 +1803,6 @@ const InstructorInterface = () => {
                 ))}
                 
                 {puzzles[activeTab].groups[selectedGroup].filter(p => p.id !== 'help').length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No questions created for Group {selectedGroup} yet.</p>
-                    <p className="text-sm mt-2">Click "Add Question" to create your first question.</p>
-                  </div>
-                )}
-              </div>
-            )}
-                
-                {puzzles[activeTab].groups[selectedGroup].length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <p>No questions created for Group {selectedGroup} yet.</p>
                     <p className="text-sm mt-2">Click "Add Question" to create your first question.</p>
