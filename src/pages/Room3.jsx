@@ -491,7 +491,7 @@ export default function Room3() {
         {/* Active Calculation Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
-            {/* Genetics Cross Information - Moved here and customizable */}
+            {/* Genetics Cross Information - Removed Hardy-Weinberg text box */}
             <div className="mb-8 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6">
               <div className="text-center">
                 <h2 className="text-xl font-bold text-orange-800 mb-4">🧬 Genetic Cross Analysis</h2>
