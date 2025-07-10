@@ -25,6 +25,7 @@ const InstructorInterface = () => {
   const [feedbackSettings, setFeedbackSettings] = useState({});
   const [questionImages, setQuestionImages] = useState({});
   const [uploadingImages, setUploadingImages] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -109,19 +110,27 @@ const InstructorInterface = () => {
     }
   };
 
-  const saveGameSettings = () => {
-    localStorage.setItem('instructor-game-settings', JSON.stringify(gameSettings));
-    alert('Game settings saved successfully!');
-  };
-
-  const saveCrossSettings = () => {
-    localStorage.setItem('instructor-cross-settings', JSON.stringify(crossSettings));
-    alert('Cross settings saved successfully!');
-  };
-
-  const saveImageSettings = () => {
-    localStorage.setItem('instructor-image-settings', JSON.stringify(imageSettings));
-    alert('Image settings saved successfully!');
+  // Single save function that saves everything
+  const saveAllSettings = async () => {
+    setIsSaving(true);
+    try {
+      // Save all settings to localStorage
+      localStorage.setItem('instructor-puzzles', JSON.stringify(puzzles));
+      localStorage.setItem('instructor-game-settings', JSON.stringify(gameSettings));
+      localStorage.setItem('instructor-cross-settings', JSON.stringify(crossSettings));
+      localStorage.setItem('instructor-image-settings', JSON.stringify(imageSettings));
+      localStorage.setItem('instructor-feedback', JSON.stringify(feedbackSettings));
+      localStorage.setItem('instructor-question-images', JSON.stringify(questionImages));
+      
+      // Simulate a brief delay to show the saving state
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      alert('All settings saved successfully!');
+    } catch (error) {
+      alert('Error saving settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateGroupGameSettings = (groupNumber, field, value) => {
@@ -206,21 +215,11 @@ const InstructorInterface = () => {
     }
   };
 
-  const saveFeedbackSettings = () => {
-    localStorage.setItem('instructor-feedback', JSON.stringify(feedbackSettings));
-    alert('Feedback settings saved successfully!');
-  };
-
   const loadQuestionImages = () => {
     const savedImages = localStorage.getItem('instructor-question-images');
     if (savedImages) {
       setQuestionImages(JSON.parse(savedImages));
     }
-  };
-
-  const saveQuestionImages = () => {
-    localStorage.setItem('instructor-question-images', JSON.stringify(questionImages));
-    alert('Question images saved successfully!');
   };
 
   // Enhanced image upload handler for individual questions
@@ -487,11 +486,6 @@ const InstructorInterface = () => {
     }
   };
 
-  const savePuzzles = () => {
-    localStorage.setItem('instructor-puzzles', JSON.stringify(puzzles));
-    alert('Puzzles saved successfully!');
-  };
-
   const exportPuzzles = () => {
     const dataStr = JSON.stringify(puzzles, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -713,12 +707,34 @@ const InstructorInterface = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">Genetics Escape Room - Instructor Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Logout
-            </button>
+            <div className="flex items-center space-x-4">
+              {/* Single Save Button */}
+              <button
+                onClick={saveAllSettings}
+                disabled={isSaving}
+                className={`px-6 py-3 rounded-lg font-semibold text-lg transition-all transform ${
+                  isSaving
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700 hover:scale-105 shadow-lg'
+                }`}
+              >
+                {isSaving ? (
+                  <span className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </span>
+                ) : (
+                  '💾 Save All Settings'
+                )}
+              </button>
+              
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -753,6 +769,17 @@ const InstructorInterface = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Save Reminder Notice */}
+        {['room1', 'room2', 'room3', 'room4', 'feedback'].includes(activeTab) && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="font-semibold text-green-800 mb-2">💾 Save Reminder</h3>
+            <p className="text-green-700 text-sm">
+              Don't forget to click the "Save All Settings" button in the header after making changes. 
+              This will save all your puzzles, images, cross settings, and feedback rules at once.
+            </p>
+          </div>
+        )}
+
         {/* Group Management Notice */}
         {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -946,10 +973,10 @@ const InstructorInterface = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">Feedback Management</h2>
               <button
-                onClick={saveFeedbackSettings}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={exportPuzzles}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Save Feedback Settings
+                📤 Export Puzzles
               </button>
             </div>
             
@@ -996,1027 +1023,59 @@ const InstructorInterface = () => {
           </div>
         )}
 
-        {/* Room 1 Settings */}
-        {activeTab === 'room1' && (
+        {/* Room Settings - Simplified without multiple save buttons */}
+        {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Room 1 - Molecular Genetics Settings</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => addNewGroup('room1')}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  + Add Group
-                </button>
-                <button
-                  onClick={savePuzzles}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={saveQuestionImages}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Save Images
-                </button>
-                <button
-                  onClick={exportPuzzles}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Export Puzzles
-                </button>
-              </div>
+              <h2 className="text-xl font-bold text-gray-800">
+                {activeTab === 'room1' ? 'Room 1 - Molecular Genetics Settings' :
+                 activeTab === 'room2' ? 'Room 2 - Pedigree Analysis Settings' :
+                 activeTab === 'room3' ? 'Room 3 - Probability Genetics Settings' :
+                 'Room 4 - Population Genetics Settings'}
+              </h2>
+              <button
+                onClick={() => addNewGroup(activeTab)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                + Add Group
+              </button>
             </div>
 
-            {/* Group Selection for Room 1 */}
-            <div className="mb-6 bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">Select Group to Edit</h3>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {[...Array(15)].map((_, i) => {
-                  const groupNumber = i + 1;
-                  return (
-                    <button
-                      key={groupNumber}
-                      onClick={() => setSelectedGroup(groupNumber)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        selectedGroup === groupNumber
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      Group {groupNumber}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Group-Specific Genetic Code Settings */}
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-gray-700 mb-4">
-                  Genetic Code Settings for Group {selectedGroup}
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Wild Type Genetic Sequence
-                    </label>
-                    <input
-                      type="text"
-                      value={gameSettings.groups[selectedGroup]?.wildTypeSequence || "3'CGACGATACGGAGGGGTCACTCCT5'"}
-                      onChange={(e) => updateGroupGameSettings(selectedGroup, 'wildTypeSequence', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                      placeholder="Enter genetic sequence"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Highlighted Nucleotide
-                    </label>
-                    <input
-                      type="text"
-                      value={gameSettings.groups[selectedGroup]?.highlightedNucleotide || "G"}
-                      onChange={(e) => updateGroupGameSettings(selectedGroup, 'highlightedNucleotide', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                      placeholder="Enter nucleotide (A, T, G, C)"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Highlighted Position (0-based index)
-                    </label>
-                    <input
-                      type="number"
-                      value={gameSettings.groups[selectedGroup]?.highlightedPosition || 11}
-                      onChange={(e) => updateGroupGameSettings(selectedGroup, 'highlightedPosition', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter position number"
-                    />
-                  </div>
-                  
-                  <div className="pt-4">
-                    <button
-                      onClick={saveGameSettings}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Save Group {selectedGroup} Settings
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Group Selection for Questions */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(puzzles['room1'].groups).map(groupNum => (
-                  <button
-                    key={groupNum}
-                    onClick={() => setSelectedGroup(parseInt(groupNum))}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedGroup === parseInt(groupNum)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Group {groupNum}
-                  </button>
-                ))}
-              </div>
-              
-              {selectedGroup && (
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => addNewPuzzle('room1', selectedGroup)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    + Add Question to Group {selectedGroup}
-                  </button>
-                  
-                  <select
-                    onChange={(e) => {
-                      const fromGroup = parseInt(e.target.value);
-                      if (fromGroup && fromGroup !== selectedGroup) {
-                        copyGroupQuestions('room1', fromGroup, selectedGroup);
-                      }
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Copy from another group...</option>
-                    {Object.keys(puzzles['room1'].groups)
-                      .filter(num => parseInt(num) !== selectedGroup)
-                      .map(groupNum => (
-                        <option key={groupNum} value={groupNum}>
-                          Copy from Group {groupNum}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Questions for Selected Group */}
-            {selectedGroup && puzzles['room1'].groups[selectedGroup] && (
-              <div className="space-y-6">
-                {puzzles['room1'].groups[selectedGroup].map((puzzle, index) => (
-                  <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        Group {selectedGroup} - Question {index + 1}
-                      </h3>
+            {/* Room 1 Specific Settings */}
+            {activeTab === 'room1' && (
+              <div className="mb-6 bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Select Group to Edit</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[...Array(15)].map((_, i) => {
+                    const groupNumber = i + 1;
+                    return (
                       <button
-                        onClick={() => deletePuzzle('room1', selectedGroup, puzzle.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        key={groupNumber}
+                        onClick={() => setSelectedGroup(groupNumber)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          selectedGroup === groupNumber
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
                       >
-                        Delete
+                        Group {groupNumber}
                       </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                        <textarea
-                          value={puzzle.question}
-                          onChange={(e) => updatePuzzle('room1', selectedGroup, puzzle.id, { ...puzzle, question: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows="3"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-                        <select
-                          value={puzzle.type}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            const updatedPuzzle = { ...puzzle, type: newType };
-                            if (newType === 'multiple_choice' && (!puzzle.options || puzzle.options.length === 0)) {
-                              updatedPuzzle.options = ['Option A', 'Option B', 'Option C', 'Option D'];
-                            }
-                            updatePuzzle('room1', selectedGroup, puzzle.id, updatedPuzzle);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="text">Text Input (Open-ended)</option>
-                          <option value="multiple_choice">Multiple Choice</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-                        <input
-                          value={puzzle.answer}
-                          onChange={(e) => updatePuzzle('room1', selectedGroup, puzzle.id, { ...puzzle, answer: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter the correct answer"
-                        />
-                      </div>
-
-                      {puzzle.type === 'multiple_choice' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
-                          {puzzle.options.map((option, optIndex) => (
-                            <div key={optIndex} className="flex items-center space-x-2 mb-2">
-                              <input
-                                type="radio"
-                                name={`answer-${puzzle.id}`}
-                                checked={puzzle.answer === option}
-                                onChange={() => updatePuzzle('room1', selectedGroup, puzzle.id, { ...puzzle, answer: option })}
-                                className="text-blue-600"
-                              />
-                              <input
-                                value={option}
-                                onChange={(e) => updatePuzzleOption('room1', selectedGroup, puzzle.id, optIndex, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <button
-                                onClick={() => removeOptionFromPuzzle('room1', selectedGroup, puzzle.id, optIndex)}
-                                className="text-red-600 hover:text-red-800 text-sm"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => addOptionToPuzzle('room1', selectedGroup, puzzle.id)}
-                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                          >
-                            + Add Option
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Room 2 Settings */}
-        {activeTab === 'room2' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Room 2 - Pedigree Analysis Settings</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => addNewGroup('room2')}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  + Add Group
-                </button>
-                <button
-                  onClick={savePuzzles}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={saveQuestionImages}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Save Images
-                </button>
-                <button
-                  onClick={saveImageSettings}
-                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                  Save Image Settings
-                </button>
-              </div>
-            </div>
-
-            {/* Group Selection for Questions */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(puzzles['room2'].groups).map(groupNum => (
-                  <button
-                    key={groupNum}
-                    onClick={() => setSelectedGroup(parseInt(groupNum))}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedGroup === parseInt(groupNum)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Group {groupNum}
-                    <div className="text-xs mt-1">
-                      {puzzles['room2'].groups[groupNum]?.length || 0}/3 questions
-                    </div>
-                  </button>
-                ))}
-              </div>
-              
-              {selectedGroup && (
-                <div className="mt-4 flex gap-2">
-                  {puzzles['room2'].groups[selectedGroup]?.length !== 3 && (
-                    <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-3 py-2 rounded-lg text-sm">
-                      Room 2 requires exactly 3 questions (one for each lock). 
-                      {puzzles['room2'].groups[selectedGroup]?.length < 3 && (
-                        <button
-                          onClick={() => addNewPuzzle('room2', selectedGroup)}
-                          className="ml-2 bg-yellow-600 text-white px-2 py-1 rounded text-xs hover:bg-yellow-700"
-                        >
-                          Add Question
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  <select
-                    onChange={(e) => {
-                      const fromGroup = parseInt(e.target.value);
-                      if (fromGroup && fromGroup !== selectedGroup) {
-                        copyGroupQuestions('room2', fromGroup, selectedGroup);
-                      }
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Copy from another group...</option>
-                    {Object.keys(puzzles['room2'].groups)
-                      .filter(num => parseInt(num) !== selectedGroup)
-                      .map(groupNum => (
-                        <option key={groupNum} value={groupNum}>
-                          Copy from Group {groupNum}
-                        </option>
-                      ))}
-                  </select>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
 
-            {/* Questions for Selected Group */}
-            {selectedGroup && puzzles['room2'].groups[selectedGroup] && (
-              <div className="space-y-6">
-                {puzzles['room2'].groups[selectedGroup].map((puzzle, index) => (
-                  <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        Group {selectedGroup} - Question {index + 1} (Lock {index + 1})
-                      </h3>
-                      {puzzles['room2'].groups[selectedGroup].length > 3 && (
-                        <button
-                          onClick={() => deletePuzzle('room2', selectedGroup, puzzle.id)}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                        <textarea
-                          value={puzzle.question}
-                          onChange={(e) => updatePuzzle('room2', selectedGroup, puzzle.id, { ...puzzle, question: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows="3"
-                        />
-                      </div>
-
-                      {/* Image Settings */}
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <h4 className="font-medium text-gray-700 mb-2">Question Image Settings</h4>
-                        <div className="mb-3">
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={imageSettings[`room2_group${selectedGroup}_${puzzle.id}`] || false}
-                              onChange={() => toggleImageExpected('room2', selectedGroup, puzzle.id)}
-                              className="mr-2"
-                            />
-                            <span className="text-sm text-gray-700">
-                              This question requires an image (students will see an error if no image is uploaded)
-                            </span>
-                          </label>
-                        </div>
-                        
-                        {questionImages[`room2_group${selectedGroup}_${puzzle.id}`] ? (
-                          <div className="space-y-2">
-                            <img
-                              src={questionImages[`room2_group${selectedGroup}_${puzzle.id}`].data}
-                              alt={`Question ${puzzle.id} image`}
-                              className="w-full max-w-md h-32 object-cover rounded border"
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => previewQuestionImage('room2', selectedGroup, puzzle.id)}
-                                className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                              >
-                                Preview
-                              </button>
-                              <button
-                                onClick={() => removeQuestionImage('room2', selectedGroup, puzzle.id)}
-                                className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
-                              <span className="text-gray-400">No image uploaded</span>
-                            </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleQuestionImageUpload(e, 'room2', selectedGroup, puzzle.id)}
-                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                              disabled={uploadingImages[`room2_${selectedGroup}_${puzzle.id}`]}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-                        <select
-                          value={puzzle.type}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            const updatedPuzzle = { ...puzzle, type: newType };
-                            if (newType === 'multiple_choice' && (!puzzle.options || puzzle.options.length === 0)) {
-                              updatedPuzzle.options = ['Option A', 'Option B', 'Option C', 'Option D'];
-                            }
-                            updatePuzzle('room2', selectedGroup, puzzle.id, updatedPuzzle);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="text">Text Input (Open-ended)</option>
-                          <option value="multiple_choice">Multiple Choice</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-                        <input
-                          value={puzzle.answer}
-                          onChange={(e) => updatePuzzle('room2', selectedGroup, puzzle.id, { ...puzzle, answer: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter the correct answer"
-                        />
-                      </div>
-
-                      {puzzle.type === 'multiple_choice' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
-                          {puzzle.options.map((option, optIndex) => (
-                            <div key={optIndex} className="flex items-center space-x-2 mb-2">
-                              <input
-                                type="radio"
-                                name={`answer-${puzzle.id}`}
-                                checked={puzzle.answer === option}
-                                onChange={() => updatePuzzle('room2', selectedGroup, puzzle.id, { ...puzzle, answer: option })}
-                                className="text-blue-600"
-                              />
-                              <input
-                                value={option}
-                                onChange={(e) => updatePuzzleOption('room2', selectedGroup, puzzle.id, optIndex, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <button
-                                onClick={() => removeOptionFromPuzzle('room2', selectedGroup, puzzle.id, optIndex)}
-                                className="text-red-600 hover:text-red-800 text-sm"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => addOptionToPuzzle('room2', selectedGroup, puzzle.id)}
-                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                          >
-                            + Add Option
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Room 3 Settings */}
-        {activeTab === 'room3' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Room 3 - Probability Genetics Settings</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => addNewGroup('room3')}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  + Add Group
-                </button>
-                <button
-                  onClick={savePuzzles}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={saveQuestionImages}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Save Images
-                </button>
-                <button
-                  onClick={saveCrossSettings}
-                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                  Save Cross Settings
-                </button>
-              </div>
-            </div>
-
-            {/* Group Selection for Cross Settings */}
-            <div className="mb-6 bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">Select Group to Edit Cross Settings</h3>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {[...Array(15)].map((_, i) => {
-                  const groupNumber = i + 1;
-                  return (
-                    <button
-                      key={groupNumber}
-                      onClick={() => setSelectedGroup(groupNumber)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        selectedGroup === groupNumber
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      Group {groupNumber}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Group-Specific Cross Settings */}
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-gray-700 mb-4">
-                  Genetic Cross Settings for Group {selectedGroup}
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Female Genotype
-                    </label>
-                    <input
-                      type="text"
-                      value={crossSettings.groups[selectedGroup]?.female || 'BY Dd'}
-                      onChange={(e) => updateGroupCrossSettings(selectedGroup, 'female', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                      placeholder="Enter female genotype"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Male Genotype
-                    </label>
-                    <input
-                      type="text"
-                      value={crossSettings.groups[selectedGroup]?.male || 'BR d'}
-                      onChange={(e) => updateGroupCrossSettings(selectedGroup, 'male', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                      placeholder="Enter male genotype"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cross Description
-                    </label>
-                    <input
-                      type="text"
-                      value={crossSettings.groups[selectedGroup]?.description || 'Cross: Female (BY Dd) × Male (BR d)'}
-                      onChange={(e) => updateGroupCrossSettings(selectedGroup, 'description', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter cross description"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Genetic Information Notes
-                    </label>
-                    <div className="space-y-2">
-                      {(crossSettings.groups[selectedGroup]?.notes || []).map((note, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            value={note}
-                            onChange={(e) => updateCrossNote(selectedGroup, index, e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter genetic information note"
-                          />
-                          <button
-                            onClick={() => removeCrossNote(selectedGroup, index)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => addCrossNote(selectedGroup)}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                      >
-                        + Add Note
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Pedigree Image Upload for Room 3 */}
-            <div className="mb-6 bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                Pedigree Image for Group {selectedGroup}
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Upload a pedigree image specific to Room 3 for this group. If no image is uploaded, 
-                Room 3 will automatically use pedigree images from Room 2 if available.
-              </p>
-              
-              {questionImages[`room3_group${selectedGroup}_pedigree`] ? (
-                <div className="space-y-2">
-                  <img
-                    src={questionImages[`room3_group${selectedGroup}_pedigree`].data}
-                    alt={`Pedigree for Group ${selectedGroup}`}
-                    className="w-full max-w-md h-32 object-cover rounded border"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        const imageData = questionImages[`room3_group${selectedGroup}_pedigree`];
-                        const newWindow = window.open('', '_blank');
-                        newWindow.document.write(`
-                          <html>
-                            <head><title>Pedigree Chart - Group ${selectedGroup}</title></head>
-                            <body style="margin: 20px; text-align: center;">
-                              <h2>Room 3 Pedigree Chart - Group ${selectedGroup}</h2>
-                              <img src="${imageData.data}" style="max-width: 100%; border: 2px solid #ddd;" />
-                            </body>
-                          </html>
-                        `);
-                      }}
-                      className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      Preview
-                    </button>
-                    <button
-                      onClick={() => removePedigreeImage(selectedGroup)}
-                      className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
-                    <span className="text-gray-400">No pedigree image uploaded</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handlePedigreeImageUpload(e, selectedGroup)}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    disabled={uploadingImages[`room3_${selectedGroup}_pedigree`]}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Group Selection for Questions */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(puzzles['room3'].groups).map(groupNum => (
-                  <button
-                    key={groupNum}
-                    onClick={() => setSelectedGroup(parseInt(groupNum))}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedGroup === parseInt(groupNum)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Group {groupNum}
-                  </button>
-                ))}
-              </div>
-              
-              {selectedGroup && (
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => addNewPuzzle('room3', selectedGroup)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    + Add Question to Group {selectedGroup}
-                  </button>
-                  
-                  <select
-                    onChange={(e) => {
-                      const fromGroup = parseInt(e.target.value);
-                      if (fromGroup && fromGroup !== selectedGroup) {
-                        copyGroupQuestions('room3', fromGroup, selectedGroup);
-                      }
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Copy from another group...</option>
-                    {Object.keys(puzzles['room3'].groups)
-                      .filter(num => parseInt(num) !== selectedGroup)
-                      .map(groupNum => (
-                        <option key={groupNum} value={groupNum}>
-                          Copy from Group {groupNum}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Questions for Selected Group */}
-            {selectedGroup && puzzles['room3'].groups[selectedGroup] && (
-              <div className="space-y-6">
-                {puzzles['room3'].groups[selectedGroup].map((puzzle, index) => (
-                  <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        Group {selectedGroup} - Question {index + 1}
-                      </h3>
-                      <button
-                        onClick={() => deletePuzzle('room3', selectedGroup, puzzle.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                        <textarea
-                          value={puzzle.question}
-                          onChange={(e) => updatePuzzle('room3', selectedGroup, puzzle.id, { ...puzzle, question: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows="3"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-                        <select
-                          value={puzzle.type}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            const updatedPuzzle = { ...puzzle, type: newType };
-                            if (newType === 'multiple_choice' && (!puzzle.options || puzzle.options.length === 0)) {
-                              updatedPuzzle.options = ['Option A', 'Option B', 'Option C', 'Option D'];
-                            }
-                            updatePuzzle('room3', selectedGroup, puzzle.id, updatedPuzzle);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="text">Text Input (Open-ended)</option>
-                          <option value="multiple_choice">Multiple Choice</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-                        <input
-                          value={puzzle.answer}
-                          onChange={(e) => updatePuzzle('room3', selectedGroup, puzzle.id, { ...puzzle, answer: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter the correct answer"
-                        />
-                      </div>
-
-                      {puzzle.type === 'multiple_choice' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
-                          {puzzle.options.map((option, optIndex) => (
-                            <div key={optIndex} className="flex items-center space-x-2 mb-2">
-                              <input
-                                type="radio"
-                                name={`answer-${puzzle.id}`}
-                                checked={puzzle.answer === option}
-                                onChange={() => updatePuzzle('room3', selectedGroup, puzzle.id, { ...puzzle, answer: option })}
-                                className="text-blue-600"
-                              />
-                              <input
-                                value={option}
-                                onChange={(e) => updatePuzzleOption('room3', selectedGroup, puzzle.id, optIndex, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <button
-                                onClick={() => removeOptionFromPuzzle('room3', selectedGroup, puzzle.id, optIndex)}
-                                className="text-red-600 hover:text-red-800 text-sm"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => addOptionToPuzzle('room3', selectedGroup, puzzle.id)}
-                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                          >
-                            + Add Option
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Room 4 Settings */}
-        {activeTab === 'room4' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Room 4 - Population Genetics Settings</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => addNewGroup('room4')}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  + Add Group
-                </button>
-                <button
-                  onClick={savePuzzles}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-
-            {/* Group Selection for Questions */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(puzzles['room4'].groups).map(groupNum => (
-                  <button
-                    key={groupNum}
-                    onClick={() => setSelectedGroup(parseInt(groupNum))}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedGroup === parseInt(groupNum)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Group {groupNum}
-                  </button>
-                ))}
-              </div>
-              
-              {selectedGroup && (
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => addNewPuzzle('room4', selectedGroup)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    + Add Question to Group {selectedGroup}
-                  </button>
-                  
-                  <select
-                    onChange={(e) => {
-                      const fromGroup = parseInt(e.target.value);
-                      if (fromGroup && fromGroup !== selectedGroup) {
-                        copyGroupQuestions('room4', fromGroup, selectedGroup);
-                      }
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Copy from another group...</option>
-                    {Object.keys(puzzles['room4'].groups)
-                      .filter(num => parseInt(num) !== selectedGroup)
-                      .map(groupNum => (
-                        <option key={groupNum} value={groupNum}>
-                          Copy from Group {groupNum}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Questions for Selected Group */}
-            {selectedGroup && puzzles['room4'].groups[selectedGroup] && (
-              <div className="space-y-6">
-                {puzzles['room4'].groups[selectedGroup].map((puzzle, index) => (
-                  <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        Group {selectedGroup} - Question {index + 1}
-                      </h3>
-                      <button
-                        onClick={() => deletePuzzle('room4', selectedGroup, puzzle.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                        <textarea
-                          value={puzzle.question}
-                          onChange={(e) => updatePuzzle('room4', selectedGroup, puzzle.id, { ...puzzle, question: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          rows="3"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-                        <select
-                          value={puzzle.type}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            const updatedPuzzle = { ...puzzle, type: newType };
-                            if (newType === 'multiple_choice' && (!puzzle.options || puzzle.options.length === 0)) {
-                              updatedPuzzle.options = ['Option A', 'Option B', 'Option C', 'Option D'];
-                            }
-                            updatePuzzle('room4', selectedGroup, puzzle.id, updatedPuzzle);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="text">Text Input (Open-ended)</option>
-                          <option value="multiple_choice">Multiple Choice</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-                        <input
-                          value={puzzle.answer}
-                          onChange={(e) => updatePuzzle('room4', selectedGroup, puzzle.id, { ...puzzle, answer: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter the correct answer"
-                        />
-                      </div>
-
-                      {puzzle.type === 'multiple_choice' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
-                          {puzzle.options.map((option, optIndex) => (
-                            <div key={optIndex} className="flex items-center space-x-2 mb-2">
-                              <input
-                                type="radio"
-                                name={`answer-${puzzle.id}`}
-                                checked={puzzle.answer === option}
-                                onChange={() => updatePuzzle('room4', selectedGroup, puzzle.id, { ...puzzle, answer: option })}
-                                className="text-blue-600"
-                              />
-                              <input
-                                value={option}
-                                onChange={(e) => updatePuzzleOption('room4', selectedGroup, puzzle.id, optIndex, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <button
-                                onClick={() => removeOptionFromPuzzle('room4', selectedGroup, puzzle.id, optIndex)}
-                                className="text-red-600 hover:text-red-800 text-sm"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => addOptionToPuzzle('room4', selectedGroup, puzzle.id)}
-                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
-                          >
-                            + Add Option
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default InstructorInterface;
+                {/* Group-Specific Genetic Code Settings */}
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold text-gray-700 mb-4">
+                    Genetic Code Settings for Group {selectedGroup}
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wild Type Genetic Sequence
+                      </label>
+                      <input
+                        type="text"
+                        value={gameSettings.groups[selectedGroup]?.wildTypeSequence || "3'CGACGATACGGAGGGGTCACTCCT5'"}
+                        onChange={(e) => updateGroupGameSettings(selectedGroup, 'wildTypeSequence', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-
