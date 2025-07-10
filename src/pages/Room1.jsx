@@ -12,9 +12,11 @@ export default function Room1() {
   const [showGeneticCode, setShowGeneticCode] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
   const [puzzles, setPuzzles] = useState([])
-  const [wildTypeSequence, setWildTypeSequence] = useState("3'CGACGATACGGAGGGGTCACTCCT5'")
-  const [highlightedNucleotide, setHighlightedNucleotide] = useState("G")
-  const [highlightedPosition, setHighlightedPosition] = useState(11)
+  const [groupSettings, setGroupSettings] = useState({
+    wildTypeSequence: "3'CGACGATACGGAGGGGTCACTCCT5'",
+    highlightedNucleotide: "G",
+    highlightedPosition: 11
+  })
   const navigate = useNavigate()
   const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
 
@@ -22,6 +24,7 @@ export default function Room1() {
   useEffect(() => {
     if (studentInfo?.groupNumber) {
       loadPuzzlesForGroup(studentInfo.groupNumber)
+      loadGroupSettings(studentInfo.groupNumber)
     }
   }, [studentInfo])
 
@@ -40,6 +43,17 @@ export default function Room1() {
       }
     }
   }, [studentInfo, navigate]);
+
+  const loadGroupSettings = (groupNumber) => {
+    const savedSettings = localStorage.getItem('instructor-game-settings');
+    if (savedSettings) {
+      const allSettings = JSON.parse(savedSettings);
+      const groupSpecificSettings = allSettings.groups?.[groupNumber];
+      if (groupSpecificSettings) {
+        setGroupSettings(groupSpecificSettings);
+      }
+    }
+  };
 
   const loadPuzzlesForGroup = (groupNumber) => {
     const savedPuzzles = localStorage.getItem('instructor-puzzles');
@@ -423,16 +437,21 @@ export default function Room1() {
         {/* Active Lock Puzzle Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
-            {/* Wild Type Genetic Sequence */}
+            {/* Wild Type Genetic Sequence - Group Specific */}
             <div className="mb-6 text-center">
               <h3 className="text-xl text-emerald-300 font-bold mb-2">Wild Type Genetic Sequence</h3>
-              <p className="text-xl text-emerald-300 font-mono tracking-wider bg-gray-800 p-4 rounded-lg inline-block">
-                {wildTypeSequence.substring(0, highlightedPosition)}
-                <span className="bg-amber-400 text-black px-1 rounded font-bold animate-pulse">
-                  {highlightedNucleotide}
-                </span>
-                {wildTypeSequence.substring(highlightedPosition + 1)}
-              </p>
+              <div className="bg-gray-800 p-4 rounded-lg inline-block">
+                <p className="text-xl text-emerald-300 font-mono tracking-wider">
+                  {groupSettings.wildTypeSequence.substring(0, groupSettings.highlightedPosition)}
+                  <span className="bg-amber-400 text-black px-1 rounded font-bold animate-pulse">
+                    {groupSettings.highlightedNucleotide}
+                  </span>
+                  {groupSettings.wildTypeSequence.substring(groupSettings.highlightedPosition + 1)}
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Group {studentInfo.groupNumber} - Position {groupSettings.highlightedPosition + 1} highlighted
+                </p>
+              </div>
             </div>
 
             {/* Codon Chart Button */}
