@@ -1347,24 +1347,256 @@ const InstructorInterface = () => {
               )}
             </div>
 
+{/* Group Selection for Questions */}
+            <div className="mb-6 bg-white rounded-lg shadow p-4">
+              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(puzzles[activeTab].groups).map(groupNum => (
+                  <button
+                    key={groupNum}
+                    onClick={() => setSelectedGroup(parseInt(groupNum))}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      selectedGroup === parseInt(groupNum)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Group {groupNum}
+                  </button>
+                ))}
+              </div>
+              
+              {selectedGroup && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => addNewPuzzle(activeTab, selectedGroup)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    + Add Question to Group {selectedGroup}
+                  </button>
+                  
+                  <select
+                    onChange={(e) => {
+                      const fromGroup = parseInt(e.target.value);
+                      if (fromGroup && fromGroup !== selectedGroup) {
+                        copyGroupQuestions(activeTab, fromGroup, selectedGroup);
+                      }
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Copy from another group...</option>
+                    {Object.keys(puzzles[activeTab].groups)
+                      .filter(num => parseInt(num) !== selectedGroup)
+                      .map(groupNum => (
+                        <option key={groupNum} value={groupNum}>
+                          Copy from Group {groupNum}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Help Question Management - ONLY for Room 4 */}
+            {activeTab === 'room4' && selectedGroup && (
+              <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-orange-800 mb-4">🆘 Help Question Settings</h3>
+                <p className="text-orange-700 text-sm mb-4">
+                  Configure the help question that students can access when they click "Need Help?" in Room 4. 
+                  When answered correctly, this unlocks the Hardy-Weinberg equations.
+                </p>
+                
+                {(() => {
+                  const groupPuzzles = puzzles[activeTab].groups[selectedGroup] || [];
+                  const helpQuestion = groupPuzzles.find(p => p.id === 'help') || {
+                    id: 'help',
+                    question: 'What does the Hardy-Weinberg principle describe?',
+                    type: 'multiple_choice',
+                    answer: 'The genetic equilibrium in populations',
+                    options: [
+                      'The genetic equilibrium in populations',
+                      'The rate of mutations in DNA',
+                      'The process of natural selection',
+                      'The inheritance of dominant traits'
+                    ]
+                  };
+                  
+                  return (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-orange-700 mb-2">Help Question</label>
+                        <textarea
+                          value={helpQuestion.question}
+                          onChange={(e) => {
+                            const updatedQuestion = { ...helpQuestion, question: e.target.value };
+                            const updatedPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+                            updatedPuzzles.push(updatedQuestion);
+                            setPuzzles(prev => ({
+                              ...prev,
+                              [activeTab]: {
+                                ...prev[activeTab],
+                                groups: {
+                                  ...prev[activeTab].groups,
+                                  [selectedGroup]: updatedPuzzles
+                                }
+                              }
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          rows="3"
+                          placeholder="Enter the help question..."
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-orange-700 mb-2">Correct Answer</label>
+                        <input
+                          type="text"
+                          value={helpQuestion.answer}
+                          onChange={(e) => {
+                            const updatedQuestion = { ...helpQuestion, answer: e.target.value };
+                            const updatedPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+                            updatedPuzzles.push(updatedQuestion);
+                            setPuzzles(prev => ({
+                              ...prev,
+                              [activeTab]: {
+                                ...prev[activeTab],
+                                groups: {
+                                  ...prev[activeTab].groups,
+                                  [selectedGroup]: updatedPuzzles
+                                }
+                              }
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          placeholder="Enter the correct answer..."
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-orange-700 mb-2">Answer Options</label>
+                        {helpQuestion.options.map((option, optIndex) => (
+                          <div key={optIndex} className="flex items-center space-x-2 mb-2">
+                            <input
+                              type="radio"
+                              name={`helpAnswer-${selectedGroup}`}
+                              checked={helpQuestion.answer === option}
+                              onChange={() => {
+                                const updatedQuestion = { ...helpQuestion, answer: option };
+                                const updatedPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+                                updatedPuzzles.push(updatedQuestion);
+                                setPuzzles(prev => ({
+                                  ...prev,
+                                  [activeTab]: {
+                                    ...prev[activeTab],
+                                    groups: {
+                                      ...prev[activeTab].groups,
+                                      [selectedGroup]: updatedPuzzles
+                                    }
+                                  }
+                                }));
+                              }}
+                              className="text-orange-600"
+                            />
+                            <input
+                              value={option}
+                              onChange={(e) => {
+                                const newOptions = [...helpQuestion.options];
+                                newOptions[optIndex] = e.target.value;
+                                const updatedQuestion = { ...helpQuestion, options: newOptions };
+                                const updatedPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+                                updatedPuzzles.push(updatedQuestion);
+                                setPuzzles(prev => ({
+                                  ...prev,
+                                  [activeTab]: {
+                                    ...prev[activeTab],
+                                    groups: {
+                                      ...prev[activeTab].groups,
+                                      [selectedGroup]: updatedPuzzles
+                                    }
+                                  }
+                                }));
+                              }}
+                              className="flex-1 px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                            <button
+                              onClick={() => {
+                                const newOptions = helpQuestion.options.filter((_, index) => index !== optIndex);
+                                const updatedQuestion = { ...helpQuestion, options: newOptions };
+                                const updatedPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+                                updatedPuzzles.push(updatedQuestion);
+                                setPuzzles(prev => ({
+                                  ...prev,
+                                  [activeTab]: {
+                                    ...prev[activeTab],
+                                    groups: {
+                                      ...prev[activeTab].groups,
+                                      [selectedGroup]: updatedPuzzles
+                                    }
+                                  }
+                                }));
+                              }}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => {
+                            const newOptions = [...helpQuestion.options, 'New option'];
+                            const updatedQuestion = { ...helpQuestion, options: newOptions };
+                            const updatedPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+                            updatedPuzzles.push(updatedQuestion);
+                            setPuzzles(prev => ({
+                              ...prev,
+                              [activeTab]: {
+                                ...prev[activeTab],
+                                groups: {
+                                  ...prev[activeTab].groups,
+                                  [selectedGroup]: updatedPuzzles
+                                }
+                              }
+                            }));
+                          }}
+                          className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600"
+                        >
+                          + Add Option
+                        </button>
+                      </div>
+                      
+                      <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
+                        <h4 className="font-medium text-orange-800 mb-2">What happens when students answer correctly:</h4>
+                        <div className="text-sm text-orange-700 space-y-1">
+                          <p>✅ They see: "Population Genetics Equations Unlocked!"</p>
+                          <p>📚 Equations shown: p + q = 1</p>
+                          <p>📚 Equations shown: p² + 2pq + q² = 1</p>
+                          <p>⚠️ Note: Specific allele frequencies are NOT provided (students must read the questions carefully)</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* Questions for Selected Group */}
             {selectedGroup && puzzles[activeTab].groups[selectedGroup] && (
               <div className="space-y-6">
-                {puzzles[activeTab].groups[selectedGroup].map((puzzle, index) => (
+                {puzzles[activeTab].groups[selectedGroup]
+                  .filter(puzzle => puzzle.id !== 'help') // Exclude help question from regular questions display
+                  .map((puzzle, index) => (
                   <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-gray-800">
                         Group {selectedGroup} - Question {index + 1}
-                        {activeTab === 'room2' && ` (Lock ${index + 1})`}
                       </h3>
-                      {(activeTab !== 'room2' || puzzles[activeTab].groups[selectedGroup].length > 3) && (
-                        <button
-                          onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                        >
-                          Delete
-                        </button>
-                      )}
+                      <button
+                        onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Delete
+                      </button>
                     </div>
                     
                     <div className="space-y-4">
@@ -1377,63 +1609,6 @@ const InstructorInterface = () => {
                           rows="3"
                         />
                       </div>
-
-                      {/* Question Image Upload for Room 2 */}
-                      {activeTab === 'room2' && (
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                          <h4 className="font-medium text-gray-700 mb-2">Question Image Settings</h4>
-                          <div className="mb-3">
-                            <label className="flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={imageSettings[`room2_group${selectedGroup}_${puzzle.id}`] || false}
-                                onChange={() => toggleImageExpected('room2', selectedGroup, puzzle.id)}
-                                className="mr-2"
-                              />
-                              <span className="text-sm text-gray-700">
-                                This question requires an image (students will see an error if no image is uploaded)
-                              </span>
-                            </label>
-                          </div>
-                          
-                          {questionImages[`room2_group${selectedGroup}_${puzzle.id}`] ? (
-                            <div className="space-y-2">
-                              <img
-                                src={questionImages[`room2_group${selectedGroup}_${puzzle.id}`].data}
-                                alt={`Question ${puzzle.id} image`}
-                                className="w-full max-w-md h-32 object-cover rounded border"
-                              />
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => previewQuestionImage('room2', selectedGroup, puzzle.id)}
-                                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                                >
-                                  Preview
-                                </button>
-                                <button
-                                  onClick={() => removeQuestionImage('room2', selectedGroup, puzzle.id)}
-                                  className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <div className="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
-                                <span className="text-gray-400">No image uploaded</span>
-                              </div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleQuestionImageUpload(e, 'room2', selectedGroup, puzzle.id)}
-                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                disabled={uploadingImages[`room2_${selectedGroup}_${puzzle.id}`]}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
@@ -1543,6 +1718,15 @@ const InstructorInterface = () => {
                     </div>
                   </div>
                 ))}
+                
+                {puzzles[activeTab].groups[selectedGroup].filter(p => p.id !== 'help').length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No questions created for Group {selectedGroup} yet.</p>
+                    <p className="text-sm mt-2">Click "Add Question" to create your first question.</p>
+                  </div>
+                )}
+              </div>
+            )}
                 
                 {puzzles[activeTab].groups[selectedGroup].length === 0 && (
                   <div className="text-center py-8 text-gray-500">
