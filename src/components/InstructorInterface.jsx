@@ -19,7 +19,7 @@ const InstructorInterface = () => {
   const [studentProgress, setStudentProgress] = useState([]);
   const [detailedStudentData, setDetailedStudentData] = useState([]);
   const [feedbackSettings, setFeedbackSettings] = useState({});
-  const [pedigreeImages, setPedigreeImages] = useState({});
+  const [questionImages, setQuestionImages] = useState({});
   const [uploadingImages, setUploadingImages] = useState({});
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const InstructorInterface = () => {
       loadStudentProgress();
       loadDetailedStudentData();
       loadFeedbackSettings();
-      loadPedigreeImages();
+      loadQuestionImages();
     }
   }, [isAuthenticated]);
 
@@ -101,16 +101,16 @@ const InstructorInterface = () => {
     alert('Feedback settings saved successfully!');
   };
 
-  const loadPedigreeImages = () => {
-    const savedImages = localStorage.getItem('instructor-pedigree-images');
+  const loadQuestionImages = () => {
+    const savedImages = localStorage.getItem('instructor-question-images');
     if (savedImages) {
-      setPedigreeImages(JSON.parse(savedImages));
+      setQuestionImages(JSON.parse(savedImages));
     }
   };
 
-  const savePedigreeImages = () => {
-    localStorage.setItem('instructor-pedigree-images', JSON.stringify(pedigreeImages));
-    alert('Pedigree images saved successfully!');
+  const saveQuestionImages = () => {
+    localStorage.setItem('instructor-question-images', JSON.stringify(questionImages));
+    alert('Question images saved successfully!');
   };
 
   // Enhanced image upload handler for individual questions
@@ -135,7 +135,7 @@ const InstructorInterface = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageKey = `${room}_group${groupNumber}_${questionId}`;
-        setPedigreeImages(prev => ({
+        setQuestionImages(prev => ({
           ...prev,
           [imageKey]: {
             data: e.target.result,
@@ -157,7 +157,7 @@ const InstructorInterface = () => {
   const removeQuestionImage = (room, groupNumber, questionId) => {
     if (confirm('Are you sure you want to remove this image?')) {
       const imageKey = `${room}_group${groupNumber}_${questionId}`;
-      setPedigreeImages(prev => {
+      setQuestionImages(prev => {
         const updated = { ...prev };
         delete updated[imageKey];
         return updated;
@@ -167,7 +167,7 @@ const InstructorInterface = () => {
 
   const previewQuestionImage = (room, groupNumber, questionId) => {
     const imageKey = `${room}_group${groupNumber}_${questionId}`;
-    const imageData = pedigreeImages[imageKey];
+    const imageData = questionImages[imageKey];
     if (imageData) {
       const newWindow = window.open('', '_blank');
       newWindow.document.write(`
@@ -858,86 +858,102 @@ const InstructorInterface = () => {
                   Save Changes
                 </button>
                 <button
-                  onClick={exportPuzzles}
+                  onClick={saveQuestionImages}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Save Images
+                </button>
+                <button
+                  onClick={exportPuzzles}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Export Puzzles
                 </button>
               </div>
             </div>
 
-            {/* Group-Based Game Settings for Room 1 */}
+            {/* Group Selection for Room 1 */}
             {activeTab === 'room1' && (
               <div className="mb-6 bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Group-Based Genetic Code Settings</h3>
-                <p className="text-sm text-gray-600 mb-4">Configure different genetic sequences for each group</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Select Group to Edit</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
                   {[...Array(15)].map((_, i) => {
                     const groupNumber = i + 1;
-                    const groupSettings = gameSettings.groups[groupNumber] || {
-                      wildTypeSequence: "3'CGACGATACGGAGGGGTCACTCCT5'",
-                      highlightedNucleotide: "G",
-                      highlightedPosition: 11
-                    };
-                    
                     return (
-                      <div key={groupNumber} className="border rounded-lg p-4">
-                        <h4 className="font-semibold text-gray-700 mb-3">Group {groupNumber}</h4>
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Wild Type Sequence
-                            </label>
-                            <input
-                              type="text"
-                              value={groupSettings.wildTypeSequence}
-                              onChange={(e) => updateGroupGameSettings(groupNumber, 'wildTypeSequence', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Highlighted Nucleotide
-                            </label>
-                            <input
-                              type="text"
-                              value={groupSettings.highlightedNucleotide}
-                              onChange={(e) => updateGroupGameSettings(groupNumber, 'highlightedNucleotide', e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Highlighted Position
-                            </label>
-                            <input
-                              type="number"
-                              value={groupSettings.highlightedPosition}
-                              onChange={(e) => updateGroupGameSettings(groupNumber, 'highlightedPosition', parseInt(e.target.value))}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      <button
+                        key={groupNumber}
+                        onClick={() => setSelectedGroup(groupNumber)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          selectedGroup === groupNumber
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Group {groupNumber}
+                      </button>
                     );
                   })}
                 </div>
-                
-                <div className="mt-4">
-                  <button
-                    onClick={saveGameSettings}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Save All Group Settings
-                  </button>
+
+                {/* Group-Specific Genetic Code Settings */}
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold text-gray-700 mb-4">
+                    Genetic Code Settings for Group {selectedGroup}
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wild Type Genetic Sequence
+                      </label>
+                      <input
+                        type="text"
+                        value={gameSettings.groups[selectedGroup]?.wildTypeSequence || "3'CGACGATACGGAGGGGTCACTCCT5'"}
+                        onChange={(e) => updateGroupGameSettings(selectedGroup, 'wildTypeSequence', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        placeholder="Enter genetic sequence"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Highlighted Nucleotide
+                      </label>
+                      <input
+                        type="text"
+                        value={gameSettings.groups[selectedGroup]?.highlightedNucleotide || "G"}
+                        onChange={(e) => updateGroupGameSettings(selectedGroup, 'highlightedNucleotide', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        placeholder="Enter nucleotide (A, T, G, C)"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Highlighted Position (0-based index)
+                      </label>
+                      <input
+                        type="number"
+                        value={gameSettings.groups[selectedGroup]?.highlightedPosition || 11}
+                        onChange={(e) => updateGroupGameSettings(selectedGroup, 'highlightedPosition', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter position number"
+                      />
+                    </div>
+                    
+                    <div className="pt-4">
+                      <button
+                        onClick={saveGameSettings}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Save Group {selectedGroup} Settings
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Group Selection */}
+            {/* Group Selection for Questions */}
             <div className="mb-6 bg-white rounded-lg shadow p-4">
               <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
               <div className="flex flex-wrap gap-2">
@@ -1044,10 +1060,10 @@ const InstructorInterface = () => {
                           <h4 className="font-medium text-gray-700 mb-2">Question Image</h4>
                           <p className="text-sm text-gray-600 mb-3">Upload an image for this specific question</p>
                           
-                          {pedigreeImages[`${activeTab}_group${selectedGroup}_${puzzle.id}`] ? (
+                          {questionImages[`${activeTab}_group${selectedGroup}_${puzzle.id}`] ? (
                             <div className="space-y-2">
                               <img
-                                src={pedigreeImages[`${activeTab}_group${selectedGroup}_${puzzle.id}`].data}
+                                src={questionImages[`${activeTab}_group${selectedGroup}_${puzzle.id}`].data}
                                 alt={`Question ${puzzle.id} image`}
                                 className="w-full max-w-md h-32 object-cover rounded border"
                               />
