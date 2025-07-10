@@ -47,9 +47,12 @@ export default function Room4() {
     if (savedPuzzles) {
       const allPuzzles = JSON.parse(savedPuzzles);
       const groupPuzzles = allPuzzles.room4?.groups?.[groupNumber] || allPuzzles.room4?.groups?.[1] || [];
-      setPuzzles(groupPuzzles);
+      
+      // Filter out the help question from regular puzzles - they are completely separate
+      const regularPuzzles = groupPuzzles.filter(p => p.id !== 'help');
+      setPuzzles(regularPuzzles);
     } else {
-      // Default puzzles for group 1
+      // Default puzzles for group 1 (excluding help question)
       const defaultPuzzles = [
         {
           id: "p1",
@@ -81,13 +84,16 @@ export default function Room4() {
     const savedPuzzles = localStorage.getItem('instructor-puzzles');
     if (savedPuzzles) {
       const allPuzzles = JSON.parse(savedPuzzles);
-      const helpQ = allPuzzles.room4?.groups?.[groupNumber]?.helpQuestion || allPuzzles.room4?.groups?.[1]?.helpQuestion;
+      const groupPuzzles = allPuzzles.room4?.groups?.[groupNumber] || allPuzzles.room4?.groups?.[1] || [];
+      
+      // Find the help question specifically
+      const helpQ = groupPuzzles.find(p => p.id === 'help');
       if (helpQ) {
         setHelpQuestion(helpQ);
       } else {
         // Default help question
         setHelpQuestion({
-          id: "help1",
+          id: "help",
           question: "What does the Hardy-Weinberg principle describe?",
           type: "multiple_choice",
           answer: "The genetic equilibrium in populations",
@@ -102,7 +108,7 @@ export default function Room4() {
     } else {
       // Default help question
       setHelpQuestion({
-        id: "help1",
+        id: "help",
         question: "What does the Hardy-Weinberg principle describe?",
         type: "multiple_choice",
         answer: "The genetic equilibrium in populations",
@@ -326,7 +332,7 @@ export default function Room4() {
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">💡 Population Genetics Help</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">Population Genetics Help</h2>
                   <button
                     onClick={() => setShowHelp(false)}
                     className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -418,13 +424,12 @@ export default function Room4() {
         {/* Observatory Mechanism with Help Button */}
         <div className="relative flex justify-center mb-12 door-container">
           <div className="relative">
-            {/* Help Button - Improved font and removed SOS */}
+            {/* Help Button - Moved further away, removed flashing, removed icon */}
             <button
               onClick={() => setShowHelp(true)}
-              className="absolute -left-32 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-6 rounded-xl font-bold text-lg shadow-lg transition-all duration-200 border-4 border-yellow-400 hover:border-yellow-300 animate-pulse"
+              className="absolute -left-48 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-8 py-8 rounded-xl font-bold text-lg shadow-lg transition-all duration-200 border-4 border-yellow-400 hover:border-yellow-300"
               style={{ fontFamily: 'Arial, sans-serif', letterSpacing: '1px' }}
             >
-              <div className="text-3xl mb-2">💡</div>
               <div className="text-base leading-tight">Need Help?</div>
             </button>
             
