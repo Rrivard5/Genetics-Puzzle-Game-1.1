@@ -6,8 +6,12 @@ export default function Completion() {
   const { finalLetter, resetGame, attemptTracking, studentInfo } = useGame()
   const [showConfetti, setShowConfetti] = useState(false)
   const [wrongAnswerFeedback, setWrongAnswerFeedback] = useState([])
+  const [classLetters, setClassLetters] = useState([])
 
   useEffect(() => {
+    // Scroll to the top to show the secret letter first
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    
     // Trigger confetti animation
     setShowConfetti(true)
     const timer = setTimeout(() => setShowConfetti(false), 3000)
@@ -15,8 +19,55 @@ export default function Completion() {
     // Collect all wrong answer feedback for study guidance
     collectWrongAnswerFeedback()
     
+    // If playing in class, collect class letters
+    if (studentInfo?.playingContext === 'class') {
+      collectClassLetters()
+    }
+    
     return () => clearTimeout(timer)
   }, [])
+
+  const collectClassLetters = () => {
+    // This would ideally come from a server, but for now we'll simulate
+    // the letters that different groups might have unlocked
+    const groupLetters = {
+      1: 'G', 2: 'E', 3: 'N', 4: 'E', 5: 'T', 
+      6: 'I', 7: 'C', 8: 'S', 9: 'A', 10: 'R',
+      11: 'E', 12: 'F', 13: 'U', 14: 'N', 15: 'D'
+    }
+    
+    // Get letters from localStorage (simulate other groups finishing)
+    const savedClassProgress = localStorage.getItem('class-letters-progress')
+    let availableLetters = []
+    
+    if (savedClassProgress) {
+      availableLetters = JSON.parse(savedClassProgress)
+    } else {
+      // Simulate some groups have finished (for demo purposes)
+      const completedGroups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // Example: groups 1-10 finished
+      availableLetters = completedGroups.map(group => ({
+        group,
+        letter: groupLetters[group]
+      }))
+    }
+    
+    // Add current student's letter if not already there
+    const currentGroupNumber = studentInfo?.groupNumber
+    if (currentGroupNumber && !availableLetters.find(item => item.group === currentGroupNumber)) {
+      availableLetters.push({
+        group: currentGroupNumber,
+        letter: finalLetter || 'G'
+      })
+    }
+    
+    // Sort by group number
+    availableLetters.sort((a, b) => a.group - b.group)
+    
+    setClassLetters(availableLetters)
+    
+    // Save updated progress
+    localStorage.setItem('class-letters-progress', JSON.stringify(availableLetters))
+  }
 
   const collectWrongAnswerFeedback = () => {
     const feedback = []
@@ -78,6 +129,8 @@ export default function Completion() {
     return roomNames[roomId] || roomId
   }
 
+  const isPlayingInClass = studentInfo?.playingContext === 'class'
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
       {/* Confetti Effect */}
@@ -113,28 +166,76 @@ export default function Completion() {
         </div>
 
         {/* Final Letter Reveal - Now First! */}
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
-          <h2 className="text-4xl font-bold mb-4">🔓 SECRET LETTER UNLOCKED!</h2>
-          <p className="text-xl mb-6">
-            🏆 Congratulations! You've unlocked the alien's final genetic code letter:
-          </p>
-          <div className="bg-white bg-opacity-20 rounded-xl p-8 mb-6">
-            <div className="text-9xl font-bold text-white mb-4 animate-pulse-soft drop-shadow-2xl">
-              {finalLetter || 'G'}
+        {isPlayingInClass ? (
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
+            <h2 className="text-4xl font-bold mb-4">🔓 SECRET LETTER UNLOCKED!</h2>
+            <p className="text-xl mb-6">
+              🏆 Congratulations! You've unlocked the alien's genetic code letter:
+            </p>
+            <div className="bg-white bg-opacity-20 rounded-xl p-8 mb-6">
+              <div className="text-9xl font-bold text-white mb-4 animate-pulse-soft drop-shadow-2xl">
+                {finalLetter || 'G'}
+              </div>
+              <p className="text-2xl font-bold text-yellow-100 mb-2">
+                🎯 WRITE THIS ON THE CLASS BOARD!
+              </p>
+              <p className="text-lg text-yellow-100">
+                This letter is your team's key to solving the ultimate puzzle!
+              </p>
             </div>
-            <p className="text-2xl font-bold text-yellow-100 mb-2">
-              🎯 WRITE THIS ON THE CLASS BOARD!
-            </p>
-            <p className="text-lg text-yellow-100">
-              This letter is your team's key to solving the ultimate puzzle!
-            </p>
+            <div className="bg-yellow-600 bg-opacity-50 rounded-lg p-4">
+              <p className="text-yellow-100 font-semibold">
+                🎓 Your instructor will use this letter as part of the class-wide challenge!
+              </p>
+            </div>
           </div>
-          <div className="bg-yellow-600 bg-opacity-50 rounded-lg p-4">
-            <p className="text-yellow-100 font-semibold">
-              🎓 Your instructor will use this letter as part of the class-wide challenge!
+        ) : (
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl p-8 mb-8 shadow-xl">
+            <h2 className="text-4xl font-bold mb-4">🎯 Individual Challenge Complete!</h2>
+            <p className="text-xl mb-6">
+              🏆 Congratulations! You've completed the genetics escape room on your own!
             </p>
+            <div className="bg-white bg-opacity-20 rounded-xl p-6 mb-4">
+              <div className="text-6xl mb-4">🧬</div>
+              <p className="text-2xl font-bold text-blue-100 mb-2">
+                Practice Session Complete!
+              </p>
+              <p className="text-lg text-blue-100">
+                You've mastered all four rooms of genetic challenges!
+              </p>
+            </div>
+            <div className="bg-blue-600 bg-opacity-50 rounded-lg p-4">
+              <p className="text-blue-100 font-semibold">
+                📚 Great job reviewing genetics concepts on your own!
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Class Letters Collection - Only for class players */}
+        {isPlayingInClass && classLetters.length > 0 && (
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl p-8 mb-8 shadow-xl">
+            <h2 className="text-3xl font-bold mb-4">📝 Class Progress - Available Letters</h2>
+            <p className="text-lg mb-6">
+              Here are the letters your classmates have unlocked so far. Use these to start working on the word puzzle!
+            </p>
+            <div className="bg-white bg-opacity-20 rounded-xl p-6">
+              <div className="grid grid-cols-5 gap-4 mb-4">
+                {classLetters.map((item, index) => (
+                  <div key={index} className="text-center">
+                    <div className="text-4xl font-bold text-white mb-2 bg-white bg-opacity-30 rounded-lg p-3">
+                      {item.letter}
+                    </div>
+                    <div className="text-sm text-pink-100">Group {item.group}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-pink-100 text-sm">
+                💡 <strong>Tip:</strong> Try to unscramble these letters to form words related to genetics!
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Achievement Summary */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
@@ -244,7 +345,9 @@ export default function Completion() {
             This game reinforces key genetics concepts including molecular genetics, inheritance patterns, 
             probability calculations, and population genetics. Students should have demonstrated understanding 
             of DNA structure, pedigree analysis, Punnett squares, and Hardy-Weinberg equilibrium to succeed.
-            The study guidance section above shows specific areas where this student needed additional support.
+            {wrongAnswerFeedback.length > 0 && (
+              <span> The study guidance section above shows specific areas where this student needed additional support.</span>
+            )}
           </p>
         </div>
       </div>
