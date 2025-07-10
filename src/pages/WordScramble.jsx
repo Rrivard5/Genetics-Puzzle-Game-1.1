@@ -51,15 +51,24 @@ export default function WordScramble() {
               group && 
               typeof group.group === 'number' && 
               typeof group.letter === 'string' && 
-              group.letter.trim() !== ''
+              group.letter.trim() !== '' &&
+              group.letter !== '?'  // Exclude incomplete records
             )
             setCompletedGroups(progress)
             
             // Extract letters from ONLY the completed groups
             const letters = progress.map(group => group.letter.trim().toUpperCase()).filter(letter => letter)
             setAvailableLetters(letters)
+            
+            // Debug logging to track the issue
+            console.log('=== WORD SCRAMBLE DEBUG ===')
+            console.log('Raw class progress:', classProgress)
+            console.log('Parsed progress:', progress)
+            console.log('Filtered progress:', progress)
+            console.log('Available letters:', letters)
           } else {
             // Invalid data structure
+            console.error('Invalid class progress data structure:', progress)
             setCompletedGroups([])
             setAvailableLetters([])
           }
@@ -70,6 +79,7 @@ export default function WordScramble() {
         }
       } else {
         // No completions yet
+        console.log('No class progress found')
         setCompletedGroups([])
         setAvailableLetters([])
       }
@@ -215,60 +225,89 @@ export default function WordScramble() {
           </p>
         </div>
 
-        {/* Debug Info Panel (for instructors) */}
-        <div className="mb-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 text-sm text-gray-300">
-          <h3 className="font-bold text-white mb-2">📊 Real-time Status & Debugging</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-yellow-400 font-semibold">Target Word:</div>
-              <div>{debugInfo.targetWord || 'Not set'}</div>
+        {/* Debug Info Panel (for instructors only) */}
+        {window.location.pathname === '/instructor' && (
+          <div className="mb-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 text-sm text-gray-300">
+            <h3 className="font-bold text-white mb-2">📊 Instructor Debug Panel</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <div className="text-yellow-400 font-semibold">Target Word:</div>
+                <div>{debugInfo.targetWord || 'Not set'}</div>
+              </div>
+              <div>
+                <div className="text-blue-400 font-semibold">Groups Completed:</div>
+                <div>{debugInfo.completedCount || 0} / {debugInfo.totalGroups || 0}</div>
+              </div>
+              <div>
+                <div className="text-green-400 font-semibold">Letters Available:</div>
+                <div>{availableLetters.length} / {getTotalExpectedLetters()}</div>
+              </div>
+              <div>
+                <div className="text-purple-400 font-semibold">Last Updated:</div>
+                <div>{debugInfo.lastUpdated || 'Never'}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-blue-400 font-semibold">Groups Completed:</div>
-              <div>{debugInfo.completedCount || 0} / {debugInfo.totalGroups || 0}</div>
+            
+            {/* Additional debug info */}
+            <div className="mt-3 pt-3 border-t border-gray-600">
+              <div className="text-gray-400 text-xs">
+                <div>Config Status: {debugInfo.hasInstructorSettings ? '✅' : '❌'} Settings | {debugInfo.hasClassProgress ? '✅' : '❌'} Progress</div>
+                {debugInfo.groupLetterSample && (
+                  <div>Sample assignments: {debugInfo.groupLetterSample.map(([g,l]) => `${g}→${l}`).join(', ')}</div>
+                )}
+                <div>Available letters: [{availableLetters.join(', ')}]</div>
+              </div>
             </div>
-            <div>
-              <div className="text-green-400 font-semibold">Letters Available:</div>
-              <div>{availableLetters.length} / {getTotalExpectedLetters()}</div>
-            </div>
-            <div>
-              <div className="text-purple-400 font-semibold">Last Updated:</div>
-              <div>{debugInfo.lastUpdated || 'Never'}</div>
+            
+            {debugInfo.error && (
+              <div className="mt-2 text-red-400">Error: {debugInfo.error}</div>
+            )}
+            
+            {/* Quick fix button for instructors */}
+            <div className="mt-3 pt-3 border-t border-gray-600">
+              <button
+                onClick={() => {
+                  if (confirm('Clear all word scramble progress data? This will reset the challenge.')) {
+                    localStorage.removeItem('class-letters-progress');
+                    localStorage.removeItem('word-scramble-success');
+                    loadWordScrambleData();
+                    alert('Word scramble data cleared!');
+                  }
+                }}
+                className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+              >
+                🗑️ Clear Progress (Instructor Only)
+              </button>
             </div>
           </div>
-          
-          {/* Additional debug info */}
-          <div className="mt-3 pt-3 border-t border-gray-600">
-            <div className="text-gray-400 text-xs">
-              <div>Config Status: {debugInfo.hasInstructorSettings ? '✅' : '❌'} Settings | {debugInfo.hasClassProgress ? '✅' : '❌'} Progress</div>
-              {debugInfo.groupLetterSample && (
-                <div>Sample assignments: {debugInfo.groupLetterSample.map(([g,l]) => `${g}→${l}`).join(', ')}</div>
-              )}
-              <div>Available letters: [{availableLetters.join(', ')}]</div>
+        )}
+
+        {/* Student Status Panel */}
+        {window.location.pathname !== '/instructor' && (
+          <div className="mb-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 text-sm text-blue-200">
+            <h3 className="font-bold text-white mb-2">📊 Class Progress Status</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-blue-300 font-semibold">Target Word:</div>
+                <div>{targetWord || 'Not set'}</div>
+              </div>
+              <div>
+                <div className="text-green-300 font-semibold">Groups Completed:</div>
+                <div>{completedGroups.length} / {Object.keys(groupLetterMap).length}</div>
+              </div>
+              <div>
+                <div className="text-yellow-300 font-semibold">Letters Available:</div>
+                <div>{availableLetters.length} / {getTotalExpectedLetters()}</div>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-blue-600">
+              <div className="text-blue-300 text-xs">
+                <div>Available letters: [{availableLetters.join(', ')}]</div>
+                <div>Last updated: {debugInfo.lastUpdated || 'Never'}</div>
+              </div>
             </div>
           </div>
-          
-          {debugInfo.error && (
-            <div className="mt-2 text-red-400">Error: {debugInfo.error}</div>
-          )}
-          
-          {/* Quick fix button for instructors */}
-          <div className="mt-3 pt-3 border-t border-gray-600">
-            <button
-              onClick={() => {
-                if (confirm('Clear all word scramble progress data? This will reset the challenge.')) {
-                  localStorage.removeItem('class-letters-progress');
-                  localStorage.removeItem('word-scramble-success');
-                  loadWordScrambleData();
-                  alert('Word scramble data cleared!');
-                }
-              }}
-              className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-            >
-              🗑️ Clear Progress (Instructor)
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Success Banner */}
         {isCorrect && (
@@ -328,6 +367,8 @@ export default function WordScramble() {
             {Object.entries(groupLetterMap).map(([groupNum, assignedLetter]) => {
               const completionRecord = completedGroups.find(group => group.group === parseInt(groupNum))
               const isCompleted = !!completionRecord
+              const actualLetter = isCompleted ? completionRecord.letter : assignedLetter
+              
               return (
                 <div
                   key={groupNum}
@@ -339,7 +380,7 @@ export default function WordScramble() {
                 >
                   <div className="font-bold">Group {groupNum}</div>
                   <div className="text-2xl font-bold mt-1">
-                    {isCompleted ? assignedLetter : '?'}
+                    {isCompleted ? actualLetter : '?'}
                   </div>
                   <div className="text-xs mt-1">
                     {isCompleted ? (
@@ -348,9 +389,17 @@ export default function WordScramble() {
                         <div className="text-xs text-green-200">
                           {completionRecord.studentName?.split(' ')[0] || 'Student'}
                         </div>
+                        <div className="text-xs text-green-200">
+                          Expected: {assignedLetter}, Got: {actualLetter}
+                        </div>
                       </div>
                     ) : (
-                      '⏳ In Progress'
+                      <div>
+                        <div>⏳ In Progress</div>
+                        <div className="text-xs text-gray-400">
+                          Will get: {assignedLetter}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
