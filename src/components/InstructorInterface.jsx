@@ -750,7 +750,7 @@ const InstructorInterface = () => {
           </div>
         )}
 
-        {/* Room 1 Settings */}
+        {/* Room Settings - Start with Room 1 */}
         {activeTab === 'room1' && (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -1235,6 +1235,13 @@ const InstructorInterface = () => {
                     </div>
                   </div>
                 ))}
+                
+                {puzzles.room4.groups[selectedGroup].length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No questions created for Group {selectedGroup} yet.</p>
+                    <p className="text-sm mt-2">Click "Add Puzzle" to create your first question.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1244,7 +1251,8 @@ const InstructorInterface = () => {
   );
 };
 
-export default InstructorInterface; rounded-lg shadow p-4">
+export default InstructorInterface;
+            <div className="mb-6 bg-white rounded-lg shadow p-4">
               <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit:</h3>
               <div className="flex flex-wrap gap-2">
                 {Object.keys(puzzles.room1.groups).map(groupNum => (
@@ -1767,4 +1775,3 @@ export default InstructorInterface; rounded-lg shadow p-4">
             </div>
 
             {/* Group Selection */}
-            <div className="mb-6 bg-white
