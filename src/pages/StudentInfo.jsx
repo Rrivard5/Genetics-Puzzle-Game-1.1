@@ -7,7 +7,8 @@ export default function StudentInfo() {
     name: '',
     semester: '',
     year: new Date().getFullYear(),
-    groupNumber: ''
+    groupNumber: '',
+    playingContext: 'class' // New field: 'class' or 'individual'
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,10 @@ export default function StudentInfo() {
       newErrors.groupNumber = 'Group number is required';
     } else if (isNaN(studentData.groupNumber) || studentData.groupNumber < 1 || studentData.groupNumber > 50) {
       newErrors.groupNumber = 'Please enter a valid group number (1-50)';
+    }
+    
+    if (!studentData.playingContext) {
+      newErrors.playingContext = 'Please select how you are playing';
     }
     
     setErrors(newErrors);
@@ -181,6 +186,54 @@ export default function StudentInfo() {
               disabled={isSubmitting}
             />
             {errors.groupNumber && <p className="mt-1 text-sm text-red-600">{errors.groupNumber}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              How are you playing? *
+            </label>
+            <div className="space-y-2">
+              <label className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                studentData.playingContext === 'class' 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 bg-gray-50 hover:border-blue-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="playingContext"
+                  value="class"
+                  checked={studentData.playingContext === 'class'}
+                  onChange={handleChange}
+                  className="mr-3 h-4 w-4 text-blue-600"
+                  disabled={isSubmitting}
+                />
+                <div>
+                  <div className="font-medium text-gray-900">🏫 Playing in class</div>
+                  <div className="text-sm text-gray-600">Part of a class activity with other groups</div>
+                </div>
+              </label>
+              
+              <label className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                studentData.playingContext === 'individual' 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 bg-gray-50 hover:border-blue-300'
+              }`}>
+                <input
+                  type="radio"
+                  name="playingContext"
+                  value="individual"
+                  checked={studentData.playingContext === 'individual'}
+                  onChange={handleChange}
+                  className="mr-3 h-4 w-4 text-blue-600"
+                  disabled={isSubmitting}
+                />
+                <div>
+                  <div className="font-medium text-gray-900">👤 Playing individually</div>
+                  <div className="text-sm text-gray-600">Playing on your own for practice or review</div>
+                </div>
+              </label>
+            </div>
+            {errors.playingContext && <p className="mt-1 text-sm text-red-600">{errors.playingContext}</p>}
           </div>
 
           <div className="pt-4">
