@@ -182,12 +182,13 @@ export default function WordScramble() {
   const getHint = () => {
     if (!targetWord) return "No hint available"
     
+    // Don't reveal the target word in hints for students
     const hints = [
       `The word has ${targetWord.length} letters`,
       `The word starts with "${targetWord[0]}"`,
-      `The word is related to the study of heredity and variation`,
+      `The word is related to genetics and inheritance`,
       `The word ends with "${targetWord[targetWord.length - 1]}"`,
-      `The word contains these letters: ${targetWord.split('').slice(0, Math.ceil(targetWord.length / 2)).join(', ')}`
+      `The word relates to traits that are not expressed when dominant alleles are present`
     ]
     
     return hints[Math.min(attempts.length, hints.length - 1)]
@@ -286,18 +287,14 @@ export default function WordScramble() {
         {window.location.pathname !== '/instructor' && (
           <div className="mb-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 text-sm text-blue-200">
             <h3 className="font-bold text-white mb-2">📊 Class Progress Status</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <div className="text-blue-300 font-semibold">Target Word:</div>
-                <div>{targetWord || 'Not set'}</div>
-              </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-green-300 font-semibold">Groups Completed:</div>
                 <div>{completedGroups.length} / {Object.keys(groupLetterMap).length}</div>
               </div>
               <div>
                 <div className="text-yellow-300 font-semibold">Letters Available:</div>
-                <div>{availableLetters.length} / {getTotalExpectedLetters()}</div>
+                <div>{availableLetters.length} letters unlocked</div>
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-blue-600">
@@ -322,40 +319,44 @@ export default function WordScramble() {
         )}
 
         {/* Available Letters Display - ONLY from real completions */}
-        <div className="mb-8 bg-white bg-opacity-10 rounded-2xl p-6 backdrop-blur-lg">
-          <h2 className="text-2xl font-bold text-white mb-4 text-center">🔤 Letters from Completed Groups</h2>
+        <div className="mb-8 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-3xl p-8 shadow-2xl border-4 border-yellow-300">
+          <h2 className="text-4xl font-bold text-white mb-6 text-center drop-shadow-lg" 
+              style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '2px' }}>
+            🔤 UNLOCKED LETTERS
+          </h2>
           <div className="flex justify-center">
             {availableLetters.length > 0 ? (
-              <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
                 {availableLetters.map((letter, index) => (
                   <div
                     key={index}
-                    className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg"
+                    className="w-20 h-20 bg-gradient-to-br from-white to-gray-100 rounded-2xl flex items-center justify-center text-4xl font-bold text-gray-800 shadow-lg border-4 border-white transform hover:scale-105 transition-transform duration-200"
+                    style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
                   >
                     {letter}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-blue-200">
-                <div className="text-4xl mb-2">⏳</div>
-                <p className="text-lg">Waiting for groups to complete Room 4...</p>
-                <p className="text-sm mt-2 text-blue-300">
+              <div className="text-center text-white">
+                <div className="text-8xl mb-4">⏳</div>
+                <p className="text-2xl font-bold mb-2">Waiting for groups to complete Room 4...</p>
+                <p className="text-lg text-yellow-100">
                   Letters will appear here automatically as groups finish their challenges
                 </p>
               </div>
             )}
           </div>
           
-          {/* Real-time progress info */}
-          <div className="mt-4 text-center text-blue-200 text-sm space-y-1">
-            <div>
-              Target word needs: {getTotalExpectedLetters()} letters | 
-              Available now: {availableLetters.length} letters
-            </div>
-            <div>
-              Groups completed: {completedGroups.length} | 
-              Total groups: {Object.keys(groupLetterMap).length}
+          {/* Progress info without revealing target */}
+          <div className="mt-6 text-center text-white text-lg">
+            <div className="bg-black bg-opacity-30 rounded-xl p-4 inline-block">
+              <div className="font-bold text-yellow-200">
+                📊 Progress: {availableLetters.length} letters unlocked
+              </div>
+              <div className="text-yellow-100 text-sm mt-1">
+                Groups completed: {completedGroups.length} / {Object.keys(groupLetterMap).length}
+              </div>
             </div>
           </div>
         </div>
@@ -397,7 +398,7 @@ export default function WordScramble() {
                       <div>
                         <div>⏳ In Progress</div>
                         <div className="text-xs text-gray-400">
-                          Will get: {assignedLetter}
+                          Letter assigned
                         </div>
                       </div>
                     )}
@@ -449,16 +450,16 @@ export default function WordScramble() {
               )}
             </div>
 
-            {/* Can Form Word Check */}
+            {/* Can Form Word Check - without revealing target */}
             {targetWord && availableLetters.length > 0 && (
               <div className="mt-4 text-center">
                 {canFormWord(availableLetters, targetWord.replace(/[^A-Za-z]/g, '')) ? (
                   <div className="text-green-300 text-sm">
-                    ✅ You have enough letters to form the target word!
+                    ✅ You have enough letters to solve the puzzle!
                   </div>
                 ) : (
                   <div className="text-orange-300 text-sm">
-                    ⏳ Need more groups to complete Room 4... ({availableLetters.length}/{getTotalExpectedLetters()} letters available)
+                    ⏳ Need more groups to complete Room 4... ({availableLetters.length} letters available)
                   </div>
                 )}
               </div>
