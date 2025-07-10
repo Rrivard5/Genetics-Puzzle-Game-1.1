@@ -13,9 +13,8 @@ const InstructorInterface = () => {
   });
   const [selectedGroup, setSelectedGroup] = useState(1);
   const [gameSettings, setGameSettings] = useState({
-    wildTypeSequence: "3'CGACGATACGGAGGGGTCACTCCT5'",
-    highlightedNucleotide: "G",
-    highlightedPosition: 11
+    // Group-based genetic code settings
+    groups: {}
   });
   const [studentProgress, setStudentProgress] = useState([]);
   const [detailedStudentData, setDetailedStudentData] = useState([]);
@@ -56,12 +55,38 @@ const InstructorInterface = () => {
     const savedSettings = localStorage.getItem('instructor-game-settings');
     if (savedSettings) {
       setGameSettings(JSON.parse(savedSettings));
+    } else {
+      // Initialize with default settings for each group
+      const defaultSettings = {
+        groups: {}
+      };
+      for (let i = 1; i <= 15; i++) {
+        defaultSettings.groups[i] = {
+          wildTypeSequence: "3'CGACGATACGGAGGGGTCACTCCT5'",
+          highlightedNucleotide: "G",
+          highlightedPosition: 11
+        };
+      }
+      setGameSettings(defaultSettings);
     }
   };
 
   const saveGameSettings = () => {
     localStorage.setItem('instructor-game-settings', JSON.stringify(gameSettings));
     alert('Game settings saved successfully!');
+  };
+
+  const updateGroupGameSettings = (groupNumber, field, value) => {
+    setGameSettings(prev => ({
+      ...prev,
+      groups: {
+        ...prev.groups,
+        [groupNumber]: {
+          ...prev.groups[groupNumber],
+          [field]: value
+        }
+      }
+    }));
   };
 
   const loadFeedbackSettings = () => {
@@ -88,8 +113,8 @@ const InstructorInterface = () => {
     alert('Pedigree images saved successfully!');
   };
 
-  // Enhanced image upload handler
-  const handlePedigreeUpload = (event, groupNumber) => {
+  // Enhanced image upload handler for individual questions
+  const handleQuestionImageUpload = (event, room, groupNumber, questionId) => {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
@@ -104,47 +129,51 @@ const InstructorInterface = () => {
         return;
       }
 
-      setUploadingImages(prev => ({ ...prev, [groupNumber]: true }));
+      const uploadKey = `${room}_${groupNumber}_${questionId}`;
+      setUploadingImages(prev => ({ ...prev, [uploadKey]: true }));
       
       const reader = new FileReader();
       reader.onload = (e) => {
+        const imageKey = `${room}_group${groupNumber}_${questionId}`;
         setPedigreeImages(prev => ({
           ...prev,
-          [`group${groupNumber}`]: {
+          [imageKey]: {
             data: e.target.result,
             name: file.name,
             size: file.size,
             lastModified: new Date().toISOString()
           }
         }));
-        setUploadingImages(prev => ({ ...prev, [groupNumber]: false }));
+        setUploadingImages(prev => ({ ...prev, [uploadKey]: false }));
       };
       reader.onerror = () => {
         alert('Error reading file. Please try again.');
-        setUploadingImages(prev => ({ ...prev, [groupNumber]: false }));
+        setUploadingImages(prev => ({ ...prev, [uploadKey]: false }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removePedigreeImage = (groupNumber) => {
-    if (confirm('Are you sure you want to remove this pedigree image?')) {
+  const removeQuestionImage = (room, groupNumber, questionId) => {
+    if (confirm('Are you sure you want to remove this image?')) {
+      const imageKey = `${room}_group${groupNumber}_${questionId}`;
       setPedigreeImages(prev => {
         const updated = { ...prev };
-        delete updated[`group${groupNumber}`];
+        delete updated[imageKey];
         return updated;
       });
     }
   };
 
-  const previewPedigreeImage = (groupNumber) => {
-    const imageData = pedigreeImages[`group${groupNumber}`];
+  const previewQuestionImage = (room, groupNumber, questionId) => {
+    const imageKey = `${room}_group${groupNumber}_${questionId}`;
+    const imageData = pedigreeImages[imageKey];
     if (imageData) {
       const newWindow = window.open('', '_blank');
       newWindow.document.write(`
         <html>
           <head>
-            <title>Pedigree Preview - Group ${groupNumber}</title>
+            <title>Question Image Preview - ${room.toUpperCase()} Group ${groupNumber} Question ${questionId}</title>
             <style>
               body { margin: 0; padding: 20px; background: #f5f5f5; font-family: Arial, sans-serif; }
               .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
@@ -157,10 +186,10 @@ const InstructorInterface = () => {
           <body>
             <div class="container">
               <div class="header">
-                <h2>Pedigree Chart - Group ${groupNumber}</h2>
+                <h2>${room.toUpperCase()} - Group ${groupNumber} - Question ${questionId}</h2>
               </div>
               <div class="image-container">
-                <img src="${imageData.data}" alt="Pedigree Chart Group ${groupNumber}" />
+                <img src="${imageData.data}" alt="Question Image" />
               </div>
               <div class="info">
                 <p><strong>Filename:</strong> ${imageData.name}</p>
@@ -231,7 +260,33 @@ const InstructorInterface = () => {
             ]
           }
         },
-        room2: { groups: {} },
+        room2: {
+          groups: {
+            1: [
+              {
+                id: "p1",
+                question: "Looking at the pedigree, what type of inheritance pattern does this trait follow?",
+                type: "multiple_choice",
+                answer: "X-linked recessive",
+                options: ["Autosomal dominant", "Autosomal recessive", "X-linked recessive", "X-linked dominant"]
+              },
+              {
+                id: "p2",
+                question: "What is the genotype of the affected individual?",
+                type: "multiple_choice",
+                answer: "XdXd",
+                options: ["XDXd", "XdXd", "XdXd RB", "XDXd BB"]
+              },
+              {
+                id: "p3",
+                question: "What percentage of offspring would be affected?",
+                type: "multiple_choice",
+                answer: "25%",
+                options: ["0%", "25%", "50%", "100%"]
+              }
+            ]
+          }
+        },
         room3: { groups: {} },
         room4: { groups: {} }
       };
@@ -367,13 +422,42 @@ const InstructorInterface = () => {
   const addNewGroup = (room) => {
     const existingGroups = Object.keys(puzzles[room].groups).map(Number);
     const newGroupNumber = existingGroups.length > 0 ? Math.max(...existingGroups) + 1 : 1;
+    
+    let defaultPuzzles = [];
+    if (room === 'room2') {
+      // Room 2 needs exactly 3 questions for the 3 locks
+      defaultPuzzles = [
+        {
+          id: "p1",
+          question: "Question 1 for the pedigree analysis...",
+          type: "multiple_choice",
+          answer: "Option A",
+          options: ["Option A", "Option B", "Option C", "Option D"]
+        },
+        {
+          id: "p2",
+          question: "Question 2 for the pedigree analysis...",
+          type: "multiple_choice",
+          answer: "Option A",
+          options: ["Option A", "Option B", "Option C", "Option D"]
+        },
+        {
+          id: "p3",
+          question: "Question 3 for the pedigree analysis...",
+          type: "multiple_choice",
+          answer: "Option A",
+          options: ["Option A", "Option B", "Option C", "Option D"]
+        }
+      ];
+    }
+    
     setPuzzles(prev => ({
       ...prev,
       [room]: {
         ...prev[room],
         groups: {
           ...prev[room].groups,
-          [newGroupNumber]: []
+          [newGroupNumber]: defaultPuzzles
         }
       }
     }));
@@ -750,7 +834,7 @@ const InstructorInterface = () => {
           </div>
         )}
 
-        {/* Room Settings Templates */}
+        {/* Room Settings */}
         {['room1', 'room2', 'room3', 'room4'].includes(activeTab) && (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -782,119 +866,72 @@ const InstructorInterface = () => {
               </div>
             </div>
 
-            {/* Game Settings for Room 1 */}
+            {/* Group-Based Game Settings for Room 1 */}
             {activeTab === 'room1' && (
               <div className="mb-6 bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Game Settings</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Wild Type Genetic Sequence
-                    </label>
-                    <input
-                      type="text"
-                      value={gameSettings.wildTypeSequence}
-                      onChange={(e) => setGameSettings(prev => ({ ...prev, wildTypeSequence: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                      placeholder="Enter genetic sequence"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Highlighted Nucleotide
-                    </label>
-                    <input
-                      type="text"
-                      value={gameSettings.highlightedNucleotide}
-                      onChange={(e) => setGameSettings(prev => ({ ...prev, highlightedNucleotide: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                      placeholder="Enter nucleotide (A, T, G, C)"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Highlighted Position (0-based index)
-                    </label>
-                    <input
-                      type="number"
-                      value={gameSettings.highlightedPosition}
-                      onChange={(e) => setGameSettings(prev => ({ ...prev, highlightedPosition: parseInt(e.target.value) }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter position number"
-                    />
-                  </div>
-                  
-                  <div className="pt-4">
-                    <button
-                      onClick={saveGameSettings}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Save Game Settings
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Pedigree Image Management for Room 2 */}
-            {activeTab === 'room2' && (
-              <div className="mb-6 bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Pedigree Image Management</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Group-Based Genetic Code Settings</h3>
+                <p className="text-sm text-gray-600 mb-4">Configure different genetic sequences for each group</p>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[...Array(15)].map((_, i) => {
                     const groupNumber = i + 1;
-                    const hasImage = pedigreeImages[`group${groupNumber}`];
+                    const groupSettings = gameSettings.groups[groupNumber] || {
+                      wildTypeSequence: "3'CGACGATACGGAGGGGTCACTCCT5'",
+                      highlightedNucleotide: "G",
+                      highlightedPosition: 11
+                    };
+                    
                     return (
                       <div key={groupNumber} className="border rounded-lg p-4">
-                        <h4 className="font-semibold text-gray-700 mb-2">Group {groupNumber}</h4>
-                        {hasImage ? (
-                          <div className="space-y-2">
-                            <img
-                              src={hasImage.data}
-                              alt={`Group ${groupNumber} pedigree`}
-                              className="w-full h-32 object-cover rounded border"
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => previewPedigreeImage(groupNumber)}
-                                className="flex-1 bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
-                              >
-                                Preview
-                              </button>
-                              <button
-                                onClick={() => removePedigreeImage(groupNumber)}
-                                className="flex-1 bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
-                              <span className="text-gray-400">No image</span>
-                            </div>
+                        <h4 className="font-semibold text-gray-700 mb-3">Group {groupNumber}</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Wild Type Sequence
+                            </label>
                             <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handlePedigreeUpload(e, groupNumber)}
-                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                              disabled={uploadingImages[groupNumber]}
+                              type="text"
+                              value={groupSettings.wildTypeSequence}
+                              onChange={(e) => updateGroupGameSettings(groupNumber, 'wildTypeSequence', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
                             />
                           </div>
-                        )}
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Highlighted Nucleotide
+                            </label>
+                            <input
+                              type="text"
+                              value={groupSettings.highlightedNucleotide}
+                              onChange={(e) => updateGroupGameSettings(groupNumber, 'highlightedNucleotide', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Highlighted Position
+                            </label>
+                            <input
+                              type="number"
+                              value={groupSettings.highlightedPosition}
+                              onChange={(e) => updateGroupGameSettings(groupNumber, 'highlightedPosition', parseInt(e.target.value))}
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+                
                 <div className="mt-4">
                   <button
-                    onClick={savePedigreeImages}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                    onClick={saveGameSettings}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Save All Images
+                    Save All Group Settings
                   </button>
                 </div>
               </div>
@@ -902,7 +939,7 @@ const InstructorInterface = () => {
 
             {/* Group Selection */}
             <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit:</h3>
+              <h3 className="font-semibold text-gray-700 mb-3">Select Group to Edit Questions:</h3>
               <div className="flex flex-wrap gap-2">
                 {Object.keys(puzzles[activeTab].groups).map(groupNum => (
                   <button
@@ -915,18 +952,38 @@ const InstructorInterface = () => {
                     }`}
                   >
                     Group {groupNum}
+                    {activeTab === 'room2' && (
+                      <div className="text-xs mt-1">
+                        {puzzles[activeTab].groups[groupNum]?.length || 0}/3 questions
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
               
               {selectedGroup && (
                 <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => addNewPuzzle(activeTab, selectedGroup)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    + Add Puzzle to Group {selectedGroup}
-                  </button>
+                  {activeTab !== 'room2' && (
+                    <button
+                      onClick={() => addNewPuzzle(activeTab, selectedGroup)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      + Add Question to Group {selectedGroup}
+                    </button>
+                  )}
+                  {activeTab === 'room2' && puzzles[activeTab].groups[selectedGroup]?.length !== 3 && (
+                    <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-3 py-2 rounded-lg text-sm">
+                      Room 2 requires exactly 3 questions (one for each lock). 
+                      {puzzles[activeTab].groups[selectedGroup]?.length < 3 && (
+                        <button
+                          onClick={() => addNewPuzzle(activeTab, selectedGroup)}
+                          className="ml-2 bg-yellow-600 text-white px-2 py-1 rounded text-xs hover:bg-yellow-700"
+                        >
+                          Add Question
+                        </button>
+                      )}
+                    </div>
+                  )}
                   
                   <select
                     onChange={(e) => {
@@ -950,21 +1007,24 @@ const InstructorInterface = () => {
               )}
             </div>
 
-            {/* Puzzles for Selected Group */}
+            {/* Questions for Selected Group */}
             {selectedGroup && puzzles[activeTab].groups[selectedGroup] && (
               <div className="space-y-6">
                 {puzzles[activeTab].groups[selectedGroup].map((puzzle, index) => (
                   <div key={puzzle.id} className="bg-white rounded-lg shadow p-6">
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-gray-800">
-                        Group {selectedGroup} - Puzzle {index + 1}
+                        Group {selectedGroup} - Question {index + 1}
+                        {activeTab === 'room2' && ` (Lock ${index + 1})`}
                       </h3>
-                      <button
-                        onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
+                      {(activeTab !== 'room2' || puzzles[activeTab].groups[selectedGroup].length > 3) && (
+                        <button
+                          onClick={() => deletePuzzle(activeTab, selectedGroup, puzzle.id)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                     
                     <div className="space-y-4">
@@ -977,6 +1037,51 @@ const InstructorInterface = () => {
                           rows="3"
                         />
                       </div>
+
+                      {/* Question Image Upload for Room 2 */}
+                      {activeTab === 'room2' && (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                          <h4 className="font-medium text-gray-700 mb-2">Question Image</h4>
+                          <p className="text-sm text-gray-600 mb-3">Upload an image for this specific question</p>
+                          
+                          {pedigreeImages[`${activeTab}_group${selectedGroup}_${puzzle.id}`] ? (
+                            <div className="space-y-2">
+                              <img
+                                src={pedigreeImages[`${activeTab}_group${selectedGroup}_${puzzle.id}`].data}
+                                alt={`Question ${puzzle.id} image`}
+                                className="w-full max-w-md h-32 object-cover rounded border"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => previewQuestionImage(activeTab, selectedGroup, puzzle.id)}
+                                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                                >
+                                  Preview
+                                </button>
+                                <button
+                                  onClick={() => removeQuestionImage(activeTab, selectedGroup, puzzle.id)}
+                                  className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
+                                <span className="text-gray-400">No image uploaded</span>
+                              </div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleQuestionImageUpload(e, activeTab, selectedGroup, puzzle.id)}
+                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                disabled={uploadingImages[`${activeTab}_${selectedGroup}_${puzzle.id}`]}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
@@ -1090,7 +1195,7 @@ const InstructorInterface = () => {
                 {puzzles[activeTab].groups[selectedGroup].length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <p>No questions created for Group {selectedGroup} yet.</p>
-                    <p className="text-sm mt-2">Click "Add Puzzle" to create your first question.</p>
+                    <p className="text-sm mt-2">Click "Add Question" to create your first question.</p>
                   </div>
                 )}
               </div>
