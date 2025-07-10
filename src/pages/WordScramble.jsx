@@ -217,11 +217,11 @@ export default function WordScramble() {
 
         {/* Debug Info Panel (for instructors) */}
         <div className="mb-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 text-sm text-gray-300">
-          <h3 className="font-bold text-white mb-2">📊 Real-time Status</h3>
+          <h3 className="font-bold text-white mb-2">📊 Real-time Status & Debugging</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <div className="text-yellow-400 font-semibold">Target Word:</div>
-              <div>{targetWord || 'Not set'}</div>
+              <div>{debugInfo.targetWord || 'Not set'}</div>
             </div>
             <div>
               <div className="text-blue-400 font-semibold">Groups Completed:</div>
@@ -236,9 +236,38 @@ export default function WordScramble() {
               <div>{debugInfo.lastUpdated || 'Never'}</div>
             </div>
           </div>
+          
+          {/* Additional debug info */}
+          <div className="mt-3 pt-3 border-t border-gray-600">
+            <div className="text-gray-400 text-xs">
+              <div>Config Status: {debugInfo.hasInstructorSettings ? '✅' : '❌'} Settings | {debugInfo.hasClassProgress ? '✅' : '❌'} Progress</div>
+              {debugInfo.groupLetterSample && (
+                <div>Sample assignments: {debugInfo.groupLetterSample.map(([g,l]) => `${g}→${l}`).join(', ')}</div>
+              )}
+              <div>Available letters: [{availableLetters.join(', ')}]</div>
+            </div>
+          </div>
+          
           {debugInfo.error && (
             <div className="mt-2 text-red-400">Error: {debugInfo.error}</div>
           )}
+          
+          {/* Quick fix button for instructors */}
+          <div className="mt-3 pt-3 border-t border-gray-600">
+            <button
+              onClick={() => {
+                if (confirm('Clear all word scramble progress data? This will reset the challenge.')) {
+                  localStorage.removeItem('class-letters-progress');
+                  localStorage.removeItem('word-scramble-success');
+                  loadWordScrambleData();
+                  alert('Word scramble data cleared!');
+                }
+              }}
+              className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+            >
+              🗑️ Clear Progress (Instructor)
+            </button>
+          </div>
         </div>
 
         {/* Success Banner */}
