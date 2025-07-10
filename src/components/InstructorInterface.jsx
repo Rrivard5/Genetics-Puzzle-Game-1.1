@@ -87,10 +87,22 @@ const InstructorInterface = () => {
     const letters = word.toUpperCase().split('');
     const newGroupLetters = {};
     
-    // Assign letters to groups
+    // Create an array of letters repeated enough times to cover all groups
+    const expandedLetters = [];
+    for (let i = 0; i < numGroups; i++) {
+      expandedLetters.push(letters[i % letters.length]);
+    }
+    
+    // Shuffle the letters randomly using Fisher-Yates shuffle algorithm
+    const shuffledLetters = [...expandedLetters];
+    for (let i = shuffledLetters.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledLetters[i], shuffledLetters[j]] = [shuffledLetters[j], shuffledLetters[i]];
+    }
+    
+    // Assign shuffled letters to groups
     for (let i = 1; i <= numGroups; i++) {
-      const letterIndex = (i - 1) % letters.length;
-      newGroupLetters[i] = letters[letterIndex];
+      newGroupLetters[i] = shuffledLetters[i - 1];
     }
     
     settings.groupLetters = newGroupLetters;
@@ -1120,7 +1132,7 @@ const InstructorInterface = () => {
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Target Word Configuration</h3>
               <p className="text-gray-600 mb-6">
                 Set up the target word for the class word scramble challenge. Letters will be automatically 
-                distributed among the specified number of groups.
+                distributed <strong>randomly</strong> among the groups to prevent students from guessing letter positions.
               </p>
               
               <div className="space-y-6">
@@ -1185,8 +1197,25 @@ const InstructorInterface = () => {
                     <p>• Target word: <strong>{wordSettings.targetWord}</strong></p>
                     <p>• Word length: <strong>{wordSettings.targetWord.length} letters</strong></p>
                     <p>• Number of groups: <strong>{wordSettings.numGroups}</strong></p>
-                    <p>• Letters are assigned cyclically (Group 1 gets 1st letter, Group 2 gets 2nd letter, etc.)</p>
-                    <p>• If there are more groups than letters, the pattern repeats</p>
+                    <p>• Letters are distributed <strong>randomly</strong> to prevent students from guessing letter positions</p>
+                    <p>• If there are more groups than letters, some letters will be assigned to multiple groups</p>
+                    <p>• Each time you change the word or group count, letters are redistributed randomly</p>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <button
+                      onClick={() => {
+                        const updatedSettings = { ...wordSettings };
+                        assignLettersToGroups(updatedSettings, wordSettings.targetWord, wordSettings.numGroups);
+                        setWordSettings(updatedSettings);
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      🎲 Randomize Letter Distribution Again
+                    </button>
+                    <p className="text-xs text-blue-600 mt-2">
+                      Click this button to shuffle the letter assignments to different groups
+                    </p>
                   </div>
                 </div>
               </div>
