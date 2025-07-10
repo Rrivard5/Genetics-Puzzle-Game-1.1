@@ -1,163 +1,612 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGame } from '../context/GameStateContext'
-import puzzles from '../data/puzzlesRoom3.json'
 
 export default function Room3() {
   const [responses, setResponses] = useState({})
+  const [checkedAnswers, setCheckedAnswers] = useState({})
+  const [feedback, setFeedback] = useState({})
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeLock, setActiveLock] = useState(null)
+  const [puzzles, setPuzzles] = useState([])
   const navigate = useNavigate()
-  const { setRoomUnlocked, setCurrentProgress } = useGame()
+  const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
+
+  // Load puzzles based on student's group
+  useEffect(() => {
+    if (studentInfo?.groupNumber) {
+      loadPuzzlesForGroup(studentInfo.groupNumber)
+    }
+  }, [studentInfo])
+
+  // Start room timer when component mounts
+  useEffect(() => {
+    startRoomTimer('room3')
+  }, [startRoomTimer])
+
+  // Redirect to student info if no student info exists
+  useEffect(() => {
+    if (!studentInfo) {
+      const savedStudentInfo = localStorage.getItem('current-student-info');
+      if (!savedStudentInfo) {
+        navigate('/student-info');
+        return;
+      }
+    }
+  }, [studentInfo, navigate]);
+
+  const loadPuzzlesForGroup = (groupNumber) => {
+    const savedPuzzles = localStorage.getItem('instructor-puzzles');
+    if (savedPuzzles) {
+      const allPuzzles = JSON.parse(savedPuzzles);
+      const groupPuzzles = allPuzzles.room3?.groups?.[groupNumber] || allPuzzles.room3?.groups?.[1] || [];
+      setPuzzles(groupPuzzles);
+    } else {
+      // Default puzzles for group 1
+      const defaultPuzzles = [
+        {
+          id: "p1",
+          question: "A female (BY Dd) and male (BR d) mate. What is the likelihood that one of their female offspring who does not have dark vision will have blue OR red scales?",
+          type: "multiple_choice",
+          answer: "1/2",
+          options: ["1/8", "1/4", "1/2", "3/4"]
+        },
+        {
+          id: "p2",
+          question: "In the same cross (BY Dd × BR d), what is the probability of getting a male offspring with orange scales and dark vision?",
+          type: "multiple_choice",
+          answer: "1/4",
+          options: ["1/8", "1/4", "1/2", "0"]
+        },
+        {
+          id: "p3",
+          question: "If two loci are 33 centimorgans apart, what is the recombination frequency between them?",
+          type: "multiple_choice",
+          answer: "33%",
+          options: ["0%", "16.5%", "33%", "50%"]
+        }
+      ];
+      setPuzzles(defaultPuzzles);
+    }
+  };
+
+  // Show loading if no student info
+  if (!studentInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (e, id) => {
-    setResponses({ ...responses, [id]: e.target.value })
+    const value = e.target.value
+    setResponses({ ...responses, [id]: value })
+    
+    // Clear feedback when user changes their answer
+    if (feedback[id]) {
+      setFeedback(prev => ({ ...prev, [id]: null }))
+    }
+    
     if (error) setError(null)
   }
 
+  const checkAnswer = (puzzleId) => {
+    const userAnswer = responses[puzzleId]?.trim()
+    const puzzle = puzzles.find(p => p.id === puzzleId)
+    
+    if (!userAnswer) {
+      setFeedback(prev => ({ 
+        ...prev, 
+        [puzzleId]: { 
+          isCorrect: false, 
+          message: "Please select an answer before checking.",
+          type: "warning"
+        }
+      }))
+      return
+    }
+
+    let isCorrect = false
+    
+    if (puzzle.type === 'multiple_choice') {
+      isCorrect = puzzle.answer === userAnswer
+    } else {
+      isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+    }
+    
+    // Track the attempt
+    trackAttempt('room3', puzzleId, userAnswer, isCorrect)
+    
+    // Mark as checked
+    setCheckedAnswers(prev => ({ ...prev, [puzzleId]: true }))
+    
+    if (isCorrect) {
+      setFeedback(prev => ({ 
+        ...prev, 
+        [puzzleId]: { 
+          isCorrect: true, 
+          message: "🎉 Correct! Excellent probability calculation!",
+          type: "success"
+        }
+      }))
+    } else {
+      // Get specific feedback based on the wrong answer
+      const wrongAnswerFeedback = getWrongAnswerFeedback(puzzleId, userAnswer, puzzle)
+      setFeedback(prev => ({ 
+        ...prev, 
+        [puzzleId]: { 
+          isCorrect: false, 
+          message: wrongAnswerFeedback,
+          type: "error"
+        }
+      }))
+    }
+  }
+
+  const getWrongAnswerFeedback = (puzzleId, userAnswer, puzzle) => {
+    // Load custom feedback from localStorage (instructor-defined)
+    const savedFeedback = localStorage.getItem('instructor-feedback')
+    const customFeedback = savedFeedback ? JSON.parse(savedFeedback) : {}
+    
+    // Check if instructor has defined custom feedback for this specific wrong answer
+    const feedbackKey = `room3_${puzzleId}_${userAnswer.toLowerCase()}_group${studentInfo.groupNumber}`
+    const generalFeedbackKey = `room3_${puzzleId}_${userAnswer.toLowerCase()}`
+    
+    if (customFeedback[feedbackKey]) {
+      return customFeedback[feedbackKey]
+    }
+    
+    if (customFeedback[generalFeedbackKey]) {
+      return customFeedback[generalFeedbackKey]
+    }
+    
+    // Default feedback
+    return `❌ That's not correct. The right answer is "${puzzle.answer}". Try reviewing the probability calculations for this question.`
+  }
+
+  const handleLockClick = (puzzleId) => {
+    setActiveLock(activeLock === puzzleId ? null : puzzleId)
+    
+    if (activeLock !== puzzleId) {
+      setTimeout(() => {
+        const puzzleElement = document.getElementById(`puzzle-${puzzleId}`)
+        if (puzzleElement) {
+          puzzleElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start',
+            inline: 'nearest'
+          })
+        }
+      }, 100)
+    }
+  }
+
   const handleSubmit = async () => {
-    const unanswered = puzzles.find(p => !responses[p.id])
-    if (unanswered) {
-      setError('Please answer all questions before submitting.')
+    // Check if all questions have been answered correctly
+    const allAnswered = puzzles.every(p => checkedAnswers[p.id])
+    if (!allAnswered) {
+      setError('ALL PROBABILITY LOCKS MUST BE CALCULATED AND VERIFIED TO PROCEED')
+      return
+    }
+
+    const allCorrect = puzzles.every(p => feedback[p.id]?.isCorrect)
+    if (!allCorrect) {
+      setError('ALL PROBABILITY LOCKS MUST BE SOLVED CORRECTLY TO PROCEED')
       return
     }
 
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    const allCorrect = puzzles.every(p => p.answer === responses[p.id])
-    
-    if (allCorrect) {
-      setRoomUnlocked(prev => ({ ...prev, room3: true }))
-      setCurrentProgress(75)
-      navigate('/room4')
-    } else {
-      setError('Unfortunately, the code you put into the door was incorrect and the door does not budge when you push on it. Check your answers and try again. Remember, you can ask Dr. R if you need a hint.')
-    }
+    setRoomUnlocked(prev => ({ ...prev, room3: true }))
+    setCurrentProgress(75)
+    completeRoom('room3')
+    navigate('/room4')
     
     setIsSubmitting(false)
   }
 
-  const answeredCount = Object.keys(responses).length
-  const progressPercentage = (answeredCount / puzzles.length) * 100
+  const answeredCount = Object.keys(checkedAnswers).length
+  const isLockSolved = (puzzleId) => feedback[puzzleId]?.isCorrect
+  const solvedCount = puzzles.filter(p => isLockSolved(p.id)).length
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Room Header with Mechanical/Copper Theme */}
-      <div className="relative bg-gradient-to-r from-orange-700 via-amber-700 to-orange-800 text-white rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden">
-        {/* Mechanical Pattern Overlay */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(251,146,60,0.3),rgba(245,158,11,0.3),rgba(251,146,60,0.3))]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(251,146,60,0.4),transparent_50%)]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(245,158,11,0.4),transparent_50%)]"></div>
-        </div>
-        
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">🎲 Room 3 - Puzzle 2</h1>
-            <p className="text-xl text-orange-100">Probability Mechanics</p>
-            <p className="text-sm text-orange-200 mt-2">Calculate genetic probabilities to unlock the mechanism</p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-orange-200">Progress</div>
-            <div className="text-2xl font-bold">{answeredCount}/{puzzles.length}</div>
-          </div>
-        </div>
-        
-        <div className="relative z-10 mt-6 bg-orange-900 bg-opacity-50 rounded-full h-3">
-          <div 
-            className="bg-amber-400 rounded-full h-3 transition-all duration-300"
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-orange-900 via-amber-800 to-yellow-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-16 left-16 w-3 h-3 bg-amber-400 rounded-full animate-pulse"></div>
+        <div className="absolute top-40 right-24 w-2 h-2 bg-orange-400 rounded-full animate-ping"></div>
+        <div className="absolute bottom-24 left-40 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+        <div className="absolute top-1/3 right-16 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
       </div>
 
-      {/* Genetics Cross Information */}
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6 mb-6">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-orange-800 mb-4">🧬 Genetic Cross Analysis</h2>
-          <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
-            <div className="text-orange-700 mb-2 font-semibold">Cross: Female (BY Dd) × Male (BR d)</div>
-            <div className="text-sm text-orange-600 space-y-1">
-              <div><strong>Scale Color:</strong> B = Blue, R = Red, Y = Yellow (codominant)</div>
-              <div><strong>Dark Vision:</strong> D = Dark vision, d = no dark vision</div>
-              <div><strong>Sex-linked:</strong> Dark vision is X-linked recessive</div>
-            </div>
-            <div className="mt-4 text-xs text-orange-500">
-              Remember: Use Punnett squares and multiplication rule for independent traits
-            </div>
-          </div>
+      <div className="relative z-10 max-w-6xl mx-auto p-6">
+        {/* Probability Chamber Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400" 
+              style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '3px', textShadow: '0 0 20px rgba(251, 191, 36, 0.5)' }}>
+            PROBABILITY CALCULATION CHAMBER
+          </h1>
+          <div className="h-1 w-48 mx-auto bg-gradient-to-r from-amber-400 to-orange-400 mb-4 animate-pulse"></div>
+          <p className="text-amber-300 text-lg">Group {studentInfo.groupNumber} - Genetic Probability Division</p>
         </div>
-      </div>
 
-      {/* Questions */}
-      <div className="space-y-6">
-        {puzzles.map((puzzle, index) => (
-          <div key={puzzle.id} className="bg-white rounded-xl shadow-lg p-6 border-2 border-orange-200">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
-                {index + 1}
+        {/* Genetics Cross Information */}
+        <div className="mb-8 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-orange-800 mb-4">🧬 Genetic Cross Analysis</h2>
+            <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
+              <div className="text-orange-700 mb-2 font-semibold">Cross: Female (BY Dd) × Male (BR d)</div>
+              <div className="text-sm text-orange-600 space-y-1">
+                <div><strong>Scale Color:</strong> B = Blue, R = Red, Y = Yellow (codominant)</div>
+                <div><strong>Dark Vision:</strong> D = Dark vision, d = no dark vision</div>
+                <div><strong>Sex-linked:</strong> Dark vision is X-linked recessive</div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 leading-relaxed">
-                  {puzzle.question}
-                </h3>
-                <div className="space-y-2">
-                  {puzzle.options.map((option, optIndex) => (
-                    <label 
-                      key={optIndex}
-                      className="flex items-center p-3 rounded-lg hover:bg-orange-50 cursor-pointer transition-colors border border-orange-100"
+              <div className="mt-4 text-xs text-orange-500">
+                Remember: Use Punnett squares and multiplication rule for independent traits
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Probability Mechanism */}
+        <div className="relative flex justify-center mb-12 door-container">
+          <div className="relative">
+            <svg width="500" height="700" viewBox="0 0 500 700" className="drop-shadow-2xl">
+              {/* Outer Mechanism Frame */}
+              <rect x="30" y="30" width="440" height="640" rx="25" fill="url(#outerMechanism)" stroke="#d97706" strokeWidth="8"/>
+              
+              {/* Inner Frame */}
+              <rect x="60" y="60" width="380" height="580" rx="20" fill="url(#innerMechanism)" stroke="#b45309" strokeWidth="4"/>
+              
+              {/* Mechanism Panels */}
+              <rect x="80" y="100" width="340" height="520" rx="15" fill="url(#mechanismSurface)"/>
+              
+              {/* Control Header Section */}
+              <rect x="90" y="110" width="320" height="80" rx="10" fill="url(#headerMechanism)" stroke="#92400e" strokeWidth="2"/>
+              
+              {/* Probability pattern in header */}
+              <g opacity="0.4" stroke="#f59e0b" strokeWidth="1.5" fill="none">
+                <circle cx="250" cy="150" r="20"/>
+                <circle cx="250" cy="150" r="15"/>
+                <circle cx="250" cy="150" r="10"/>
+                <path d="M230 140 Q250 130, 270 140 Q250 150, 230 140"/>
+                <path d="M230 160 Q250 170, 270 160 Q250 150, 230 160"/>
+              </g>
+              
+              {/* Central Vertical Calculator */}
+              <line x1="250" y1="100" x2="250" y2="620" stroke="#b45309" strokeWidth="4"/>
+              
+              {/* Mechanism Panel Details */}
+              <g opacity="0.3" stroke="#f59e0b" strokeWidth="2" fill="none">
+                <rect x="100" y="220" width="130" height="180" rx="8"/>
+                <rect x="110" y="230" width="110" height="160" rx="6"/>
+                <path d="M145 310 Q165 290, 185 310" strokeWidth="3"/>
+                
+                <rect x="270" y="220" width="130" height="180" rx="8"/>
+                <rect x="280" y="230" width="110" height="160" rx="6"/>
+                <path d="M315 310 Q335 290, 355 310" strokeWidth="3"/>
+                
+                <rect x="100" y="420" width="130" height="140" rx="8"/>
+                <rect x="270" y="420" width="130" height="140" rx="8"/>
+                
+                <rect x="115" y="235" width="12" height="12" rx="3"/>
+                <rect x="375" y="235" width="12" height="12" rx="3"/>
+                <rect x="115" y="575" width="12" height="12" rx="3"/>
+                <rect x="375" y="575" width="12" height="12" rx="3"/>
+              </g>
+              
+              {/* Probability Calculation Etchings */}
+              <g opacity="0.4" fill="none" stroke="#fbbf24" strokeWidth="2">
+                {/* Left side probability grid */}
+                <rect x="130" y="270" width="50" height="50" rx="4"/>
+                <line x1="130" y1="295" x2="180" y2="295"/>
+                <line x1="155" y1="270" x2="155" y2="320"/>
+                <circle cx="142" cy="282" r="3"/>
+                <circle cx="167" cy="282" r="3"/>
+                <circle cx="142" cy="307" r="3"/>
+                <circle cx="167" cy="307" r="3"/>
+                
+                {/* Right side probability grid */}
+                <rect x="310" y="470" width="50" height="50" rx="4"/>
+                <line x1="310" y1="495" x2="360" y2="495"/>
+                <line x1="335" y1="470" x2="335" y2="520"/>
+                <circle cx="322" cy="482" r="3"/>
+                <circle cx="347" cy="482" r="3"/>
+                <circle cx="322" cy="507" r="3"/>
+                <circle cx="347" cy="507" r="3"/>
+              </g>
+              
+              {/* Probability Lock Positions */}
+              {puzzles.map((puzzle, index) => {
+                const lockY = 270 + (index * 120);
+                const isAnswered = checkedAnswers[puzzle.id];
+                const isCorrect = isLockSolved(puzzle.id);
+                
+                return (
+                  <g key={puzzle.id}>
+                    <circle 
+                      cx="250" 
+                      cy={lockY} 
+                      r="35" 
+                      fill="url(#lockBackground)"
+                      stroke={isCorrect ? "#f59e0b" : isAnswered ? "#d97706" : "#78716c"}
+                      strokeWidth="3"
+                      opacity="0.9"
+                    />
+                    
+                    <circle 
+                      cx="250" 
+                      cy={lockY} 
+                      r="25" 
+                      fill={isCorrect ? "url(#solvedGlow)" : isAnswered ? "url(#partialGlow)" : "url(#lockedGlow)"}
+                      stroke={isCorrect ? "#b45309" : isAnswered ? "#d97706" : "#78716c"}
+                      strokeWidth="2"
+                      className="cursor-pointer transition-all duration-200"
+                      onClick={() => handleLockClick(puzzle.id)}
+                    />
+                    
+                    <text 
+                      x="250" 
+                      y={lockY + 6} 
+                      textAnchor="middle" 
+                      fill="white" 
+                      fontSize="20"
+                      className="cursor-pointer pointer-events-none"
                     >
-                      <input
-                        type="radio"
-                        name={puzzle.id}
-                        value={option}
-                        checked={responses[puzzle.id] === option}
-                        onChange={(e) => handleChange(e, puzzle.id)}
-                        className="mr-3 h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
-                      />
-                      <span className="text-gray-700">{option}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                      {isCorrect ? '🔓' : '🔒'}
+                    </text>
+                    
+                    <text 
+                      x="290" 
+                      y={lockY + 5} 
+                      fill="#f59e0b" 
+                      fontSize="14" 
+                      fontFamily="Impact, Arial Black, sans-serif"
+                      className="pointer-events-none"
+                    >
+                      {index + 1}
+                    </text>
+                  </g>
+                );
+              })}
+              
+              {/* Master Calculation Port */}
+              {solvedCount === puzzles.length && (
+                <g>
+                  <ellipse cx="250" cy="580" rx="20" ry="25" fill="#f59e0b" opacity="0.9"/>
+                  <rect x="243" y="590" width="14" height="25" fill="#f59e0b" opacity="0.9"/>
+                </g>
+              )}
+              
+              {/* SVG Gradients - Orange/Amber theme */}
+              <defs>
+                <linearGradient id="outerMechanism" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#b45309"/>
+                  <stop offset="30%" stopColor="#d97706"/>
+                  <stop offset="70%" stopColor="#f59e0b"/>
+                  <stop offset="100%" stopColor="#b45309"/>
+                </linearGradient>
+                <linearGradient id="innerMechanism" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#92400e"/>
+                  <stop offset="50%" stopColor="#b45309"/>
+                  <stop offset="100%" stopColor="#a3530a"/>
+                </linearGradient>
+                <linearGradient id="mechanismSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#dc2626"/>
+                  <stop offset="30%" stopColor="#ea580c"/>
+                  <stop offset="70%" stopColor="#f59e0b"/>
+                  <stop offset="100%" stopColor="#dc2626"/>
+                </linearGradient>
+                <linearGradient id="headerMechanism" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ea580c"/>
+                  <stop offset="50%" stopColor="#dc2626"/>
+                  <stop offset="100%" stopColor="#f59e0b"/>
+                </linearGradient>
+                <radialGradient id="lockBackground">
+                  <stop offset="0%" stopColor="#dc2626"/>
+                  <stop offset="100%" stopColor="#ea580c"/>
+                </radialGradient>
+                <radialGradient id="solvedGlow">
+                  <stop offset="0%" stopColor="#f59e0b"/>
+                  <stop offset="100%" stopColor="#b45309"/>
+                </radialGradient>
+                <radialGradient id="partialGlow">
+                  <stop offset="0%" stopColor="#d97706"/>
+                  <stop offset="100%" stopColor="#b45309"/>
+                </radialGradient>
+                <radialGradient id="lockedGlow">
+                  <stop offset="0%" stopColor="#78716c"/>
+                  <stop offset="100%" stopColor="#57534e"/>
+                </radialGradient>
+              </defs>
+            </svg>
+            
+            {/* Mechanism Status Text */}
+            <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
+              <p className="text-amber-300 font-bold text-lg" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                {solvedCount === puzzles.length ? 
+                  "🎲 PROBABILITY CALCULATIONS COMPLETE" : 
+                  `🔢 ${puzzles.length - solvedCount} CALCULATIONS REMAINING`
+                }
+              </p>
+              <p className="text-orange-400 text-sm mt-2">Click the calculation locks to solve probability problems</p>
             </div>
           </div>
-        ))}
-      </div>
-
-      {error && (
-        <div className="mt-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <span className="text-red-600 mr-2">🚫</span>
-            <span className="text-red-700 font-medium">{error}</span>
-          </div>
         </div>
-      )}
 
-      <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className={`px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 ${
-            isSubmitting
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white hover:shadow-xl transform hover:-translate-y-0.5'
-          }`}
-        >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Calculating Probabilities...
-            </span>
-          ) : (
-            'Submit Calculations'
-          )}
-        </button>
-      </div>
+        {/* Active Calculation Display */}
+        {activeLock && (
+          <div className="mt-16" id={`puzzle-${activeLock}`}>
+            {puzzles.filter(p => p.id === activeLock).map((puzzle, index) => {
+              const puzzleIndex = puzzles.findIndex(p => p.id === puzzle.id);
+              const hasBeenChecked = checkedAnswers[puzzle.id];
+              const currentFeedback = feedback[puzzle.id];
+              
+              return (
+                <div key={puzzle.id} className="relative">
+                  <div className={`border-4 rounded-xl p-6 transition-all duration-500 ${
+                    currentFeedback?.isCorrect ? 'border-amber-400 bg-gradient-to-br from-amber-900 to-amber-800 shadow-amber-400/50' :
+                    hasBeenChecked ? 'border-orange-400 bg-gradient-to-br from-orange-900 to-orange-800 shadow-orange-400/50' :
+                    'border-stone-400 bg-gradient-to-br from-stone-900 to-stone-800 shadow-stone-400/50'
+                  } shadow-2xl`}>
+                    
+                    {/* Return to Mechanism Button */}
+                    <button
+                      onClick={() => {
+                        setActiveLock(null)
+                        setTimeout(() => {
+                          const mechanismElement = document.querySelector('.door-container')
+                          if (mechanismElement) {
+                            mechanismElement.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'center',
+                              inline: 'nearest'
+                            })
+                          }
+                        }, 100)
+                      }}
+                      className="absolute top-4 right-4 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
+                    >
+                      ⬆️ Return to Mechanism
+                    </button>
+                    
+                    {/* Calculation Symbol */}
+                    <div className="flex items-start gap-4 mt-8">
+                      <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold border-4 ${
+                        currentFeedback?.isCorrect ? 'bg-amber-500 border-amber-300 text-white' :
+                        hasBeenChecked ? 'bg-orange-500 border-orange-300 text-white' :
+                        'bg-stone-600 border-stone-400 text-white'
+                      }`} style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                        {currentFeedback?.isCorrect ? '🔓' : hasBeenChecked ? '❌' : '🔒'}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white mb-4 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+                          <span className="text-amber-400">CALCULATION LOCK {puzzleIndex + 1}:</span> {puzzle.question}
+                        </h3>
+                        
+                        {/* Answer Input - Text or Multiple Choice */}
+                        <div className="mb-4">
+                          {puzzle.type === 'multiple_choice' ? (
+                            <div className="space-y-2">
+                              {puzzle.options.map((option, optIndex) => (
+                                <label 
+                                  key={optIndex}
+                                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                                    responses[puzzle.id] === option 
+                                      ? 'border-amber-400 bg-amber-900/30' 
+                                      : 'border-stone-600 bg-stone-800/50 hover:border-amber-400/50'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={puzzle.id}
+                                    value={option}
+                                    checked={responses[puzzle.id] === option}
+                                    onChange={(e) => handleChange(e, puzzle.id)}
+                                    disabled={currentFeedback?.isCorrect}
+                                    className="mr-4 h-5 w-5 text-amber-500 border-stone-400 focus:ring-amber-500"
+                                  />
+                                  <span className="text-white font-mono text-lg">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={responses[puzzle.id] || ''}
+                              onChange={(e) => handleChange(e, puzzle.id)}
+                              placeholder="Type your answer here..."
+                              className="w-full px-4 py-3 rounded-lg bg-stone-700 text-white border-2 border-stone-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
+                              disabled={currentFeedback?.isCorrect}
+                            />
+                          )}
+                        </div>
 
-      <div className="mt-6 text-center text-gray-600">
-        <p className="text-sm">💡 Hint: Use Punnett squares and the multiplication rule for probability calculations</p>
+                        {/* Check Answer Button */}
+                        <div className="mb-4">
+                          <button
+                            onClick={() => checkAnswer(puzzle.id)}
+                            disabled={!responses[puzzle.id] || currentFeedback?.isCorrect}
+                            className={`px-6 py-3 rounded-lg font-bold text-lg transition-all transform ${
+                              currentFeedback?.isCorrect 
+                                ? 'bg-amber-600 cursor-not-allowed opacity-50'
+                                : !responses[puzzle.id]
+                                ? 'bg-gray-600 cursor-not-allowed opacity-50'
+                                : 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 hover:scale-105 shadow-lg'
+                            } text-white border-2 border-amber-400`}
+                            style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
+                          >
+                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '🎲 CALCULATE PROBABILITY'}
+                          </button>
+                        </div>
+
+                        {/* Feedback Display */}
+                        {currentFeedback && (
+                          <div className={`mb-4 p-4 rounded-lg border-2 ${
+                            currentFeedback.isCorrect 
+                              ? 'bg-amber-900 border-amber-400 text-amber-100'
+                              : 'bg-orange-900 border-orange-400 text-orange-100'
+                          }`}>
+                            <p className="font-mono text-sm leading-relaxed">{currentFeedback.message}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-8 bg-gradient-to-r from-red-900 to-red-800 border-4 border-red-400 rounded-xl p-6 text-center">
+            <div className="text-4xl mb-2">⚠️</div>
+            <p className="text-red-200 font-bold text-lg" style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}>
+              {error}
+            </p>
+          </div>
+        )}
+
+        {/* Activation Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || solvedCount < puzzles.length}
+            className={`px-12 py-6 rounded-xl font-bold text-2xl shadow-2xl transition-all duration-300 border-4 ${
+              isSubmitting
+                ? 'bg-gray-600 cursor-not-allowed border-gray-500'
+                : solvedCount === puzzles.length
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-amber-400 hover:border-amber-300 transform hover:scale-105 animate-pulse'
+                : 'bg-gradient-to-r from-stone-600 to-stone-700 text-stone-300 border-stone-500 cursor-not-allowed'
+            }`}
+            style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '2px' }}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-white mr-4"></div>
+                PROBABILITY CALCULATIONS PROCESSING...
+              </span>
+            ) : solvedCount === puzzles.length ? (
+              '🎲 COMPLETE PROBABILITY SEQUENCE'
+            ) : (
+              `🔢 SOLVE ${puzzles.length - solvedCount} MORE CALCULATIONS`
+            )}
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-gray-400 font-mono text-sm">
+          "Probability governs the dance of genetics..."
+        </div>
       </div>
     </div>
   )
