@@ -10,6 +10,20 @@ export default function Room3() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeLock, setActiveLock] = useState(null)
   const [puzzles, setPuzzles] = useState([])
+  const [crossSettings, setCrossSettings] = useState({
+    female: 'BY Dd',
+    male: 'BR d',
+    description: 'Cross: Female (BY Dd) × Male (BR d)',
+    notes: [
+      'Scale Color: B = Blue, R = Red, Y = Yellow (codominant)',
+      'Dark Vision: D = Dark vision, d = no dark vision',
+      'Sex-linked: Dark vision is X-linked recessive'
+    ]
+  })
+  const [showPedigree, setShowPedigree] = useState(false)
+  const [pedigreeImages, setPedigreeImages] = useState({})
+  const [pedigreeImageLoaded, setPedigreeImageLoaded] = useState(false)
+  const [pedigreeImageError, setPedigreeImageError] = useState(false)
   const navigate = useNavigate()
   const { setRoomUnlocked, setCurrentProgress, trackAttempt, startRoomTimer, completeRoom, studentInfo } = useGame()
 
@@ -17,6 +31,8 @@ export default function Room3() {
   useEffect(() => {
     if (studentInfo?.groupNumber) {
       loadPuzzlesForGroup(studentInfo.groupNumber)
+      loadCrossSettings(studentInfo.groupNumber)
+      loadPedigreeImages()
     }
   }, [studentInfo])
 
@@ -69,6 +85,46 @@ export default function Room3() {
       ];
       setPuzzles(defaultPuzzles);
     }
+  };
+
+  const loadCrossSettings = (groupNumber) => {
+    const savedSettings = localStorage.getItem('instructor-cross-settings');
+    if (savedSettings) {
+      const allSettings = JSON.parse(savedSettings);
+      const groupSettings = allSettings.groups?.[groupNumber];
+      if (groupSettings) {
+        setCrossSettings(groupSettings);
+      }
+    }
+  };
+
+  const loadPedigreeImages = () => {
+    const savedImages = localStorage.getItem('instructor-question-images');
+    if (savedImages) {
+      setPedigreeImages(JSON.parse(savedImages));
+    }
+  };
+
+  const getPedigreeImageForGroup = () => {
+    if (!studentInfo?.groupNumber) return null;
+    
+    // First check if there's a Room 3 specific pedigree image
+    const room3ImageKey = `room3_group${studentInfo.groupNumber}_pedigree`;
+    const room3Image = pedigreeImages[room3ImageKey];
+    if (room3Image) {
+      return room3Image.data;
+    }
+    
+    // Fallback to Room 2 images (any of the 3 questions)
+    for (let i = 1; i <= 3; i++) {
+      const room2ImageKey = `room2_group${studentInfo.groupNumber}_p${i}`;
+      const room2Image = pedigreeImages[room2ImageKey];
+      if (room2Image) {
+        return room2Image.data;
+      }
+    }
+    
+    return null;
   };
 
   // Show loading if no student info
@@ -211,6 +267,16 @@ export default function Room3() {
     setIsSubmitting(false)
   }
 
+  const handlePedigreeImageLoad = () => {
+    setPedigreeImageLoaded(true)
+    setPedigreeImageError(false)
+  }
+
+  const handlePedigreeImageError = () => {
+    setPedigreeImageError(true)
+    setPedigreeImageLoaded(false)
+  }
+
   const answeredCount = Object.keys(checkedAnswers).length
   const isLockSolved = (puzzleId) => feedback[puzzleId]?.isCorrect
   const solvedCount = puzzles.filter(p => isLockSolved(p.id)).length
@@ -234,24 +300,6 @@ export default function Room3() {
           </h1>
           <div className="h-1 w-48 mx-auto bg-gradient-to-r from-amber-400 to-orange-400 mb-4 animate-pulse"></div>
           <p className="text-amber-300 text-lg">Group {studentInfo.groupNumber} - Genetic Probability Division</p>
-        </div>
-
-        {/* Genetics Cross Information */}
-        <div className="mb-8 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6">
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-orange-800 mb-4">🧬 Genetic Cross Analysis</h2>
-            <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
-              <div className="text-orange-700 mb-2 font-semibold">Cross: Female (BY Dd) × Male (BR d)</div>
-              <div className="text-sm text-orange-600 space-y-1">
-                <div><strong>Scale Color:</strong> B = Blue, R = Red, Y = Yellow (codominant)</div>
-                <div><strong>Dark Vision:</strong> D = Dark vision, d = no dark vision</div>
-                <div><strong>Sex-linked:</strong> Dark vision is X-linked recessive</div>
-              </div>
-              <div className="mt-4 text-xs text-orange-500">
-                Remember: Use Punnett squares and multiplication rule for independent traits
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Probability Mechanism */}
@@ -443,6 +491,98 @@ export default function Room3() {
         {/* Active Calculation Display */}
         {activeLock && (
           <div className="mt-16" id={`puzzle-${activeLock}`}>
+            {/* Genetics Cross Information - Moved here and customizable */}
+            <div className="mb-8 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6">
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-orange-800 mb-4">🧬 Genetic Cross Analysis</h2>
+                <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
+                  <div className="text-orange-700 mb-2 font-semibold">{crossSettings.description}</div>
+                  <div className="text-sm text-orange-600 space-y-1">
+                    {crossSettings.notes.map((note, index) => (
+                      <div key={index}><strong>{note.split(':')[0]}:</strong> {note.split(':')[1]}</div>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-xs text-orange-500">
+                    Remember: Use Punnett squares and multiplication rule for independent traits
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pedigree Access Button */}
+            <div className="mb-6 flex justify-center">
+              <button
+                onClick={() => setShowPedigree(!showPedigree)}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-bold text-lg border-2 border-blue-400 hover:border-blue-300 transition-all transform hover:scale-105 shadow-lg"
+                style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
+              >
+                {showPedigree ? 'HIDE' : 'VIEW'} PEDIGREE CHART
+              </button>
+            </div>
+
+            {/* Pedigree Chart Display */}
+            {showPedigree && (
+              <div className="mb-8 bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 border-4 border-blue-400 rounded-xl p-6 shadow-2xl">
+                <h3 className="text-center text-2xl font-bold text-blue-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
+                  PEDIGREE ANALYSIS CHART
+                </h3>
+                <div className="flex justify-center">
+                  {getPedigreeImageForGroup() ? (
+                    <div className="relative">
+                      {/* Loading indicator */}
+                      {!pedigreeImageLoaded && !pedigreeImageError && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                            <p className="text-blue-300">Loading pedigree chart...</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Error state */}
+                      {pedigreeImageError && (
+                        <div className="bg-red-900 border-2 border-red-400 rounded-lg p-8 text-center">
+                          <div className="text-6xl mb-4">⚠️</div>
+                          <p className="text-red-300 text-lg mb-2">Error Loading Pedigree Chart</p>
+                          <p className="text-red-400 text-sm">Please contact your instructor</p>
+                        </div>
+                      )}
+                      
+                      {/* Actual image */}
+                      <img 
+                        src={getPedigreeImageForGroup()} 
+                        alt={`Pedigree Chart - Group ${studentInfo.groupNumber}`}
+                        className={`max-w-full max-h-96 rounded-lg shadow-lg border-2 border-blue-300 ${
+                          !pedigreeImageLoaded ? 'hidden' : 'block'
+                        }`}
+                        onLoad={handlePedigreeImageLoad}
+                        onError={handlePedigreeImageError}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-gray-800 border-2 border-blue-400 rounded-lg p-8 text-center min-w-[400px]">
+                      <div className="text-6xl mb-4">🧬</div>
+                      <p className="text-blue-300 text-lg mb-2">Pedigree Analysis Chart</p>
+                      <p className="text-blue-400 text-sm mb-4">
+                        No pedigree chart available for Group {studentInfo.groupNumber}
+                      </p>
+                      <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mt-4">
+                        <div className="text-yellow-400 text-sm">
+                          <p>🎓 <strong>For Instructors:</strong> Upload pedigree images in Room 2 or Room 3 settings.</p>
+                          <p className="mt-2">📝 <strong>Note:</strong> Room 3 will automatically use Room 2 pedigree images if available.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="text-center mt-4">
+                  <p className="text-blue-200 text-sm">
+                    Reference pedigree chart from genetic analysis archives
+                  </p>
+                </div>
+              </div>
+            )}
+
             {puzzles.filter(p => p.id === activeLock).map((puzzle, index) => {
               const puzzleIndex = puzzles.findIndex(p => p.id === puzzle.id);
               const hasBeenChecked = checkedAnswers[puzzle.id];
