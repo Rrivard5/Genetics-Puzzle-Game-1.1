@@ -683,7 +683,7 @@ export default function Room3() {
                             } text-white border-2 border-amber-400`}
                             style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
                           >
-                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '🎲 CALCULATE PROBABILITY'}
+                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '📝 SUBMIT ANSWER'}
                           </button>
                         </div>
 
