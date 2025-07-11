@@ -59,21 +59,24 @@ export default function Room4() {
           question: "A population of aliens is at Hardy-Weinberg equilibrium. The frequency of the dominant allele for wings is 0.6. What is the frequency of homozygous recessive genotypes in this population?",
           type: "multiple_choice",
           answer: "0.16",
-          options: ["0.04", "0.16", "0.36", "0.64"]
+          options: ["0.04", "0.16", "0.36", "0.64"],
+          caseSensitive: false
         },
         {
           id: "p2",
           question: "If a population is NOT in Hardy-Weinberg equilibrium, which of the following factors could be responsible?",
           type: "multiple_choice",
           answer: "All of the above",
-          options: ["Natural selection", "Gene flow (migration)", "Genetic drift", "All of the above"]
+          options: ["Natural selection", "Gene flow (migration)", "Genetic drift", "All of the above"],
+          caseSensitive: false
         },
         {
           id: "p3",
           question: "In RNA processing, which segments are removed from the pre-mRNA to create the final mature mRNA?",
           type: "multiple_choice",
           answer: "Introns",
-          options: ["Exons", "Introns", "Both exons and introns", "Neither exons nor introns"]
+          options: ["Exons", "Introns", "Both exons and introns", "Neither exons nor introns"],
+          caseSensitive: false
         }
       ];
       setPuzzles(defaultPuzzles);
@@ -102,7 +105,8 @@ export default function Room4() {
             "The rate of mutations in DNA",
             "The process of natural selection",
             "The inheritance of dominant traits"
-          ]
+          ],
+          caseSensitive: false
         });
       }
     } else {
@@ -117,7 +121,8 @@ export default function Room4() {
           "The rate of mutations in DNA",
           "The process of natural selection",
           "The inheritance of dominant traits"
-        ]
+        ],
+        caseSensitive: false
       });
     }
   };
@@ -174,7 +179,12 @@ export default function Room4() {
     if (puzzle.type === 'multiple_choice') {
       isCorrect = puzzle.answer === userAnswer
     } else {
-      isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      // Handle case sensitivity for text questions
+      if (puzzle.caseSensitive) {
+        isCorrect = puzzle.answer === userAnswer
+      } else {
+        isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      }
     }
     
     // Track the attempt
@@ -626,31 +636,75 @@ export default function Room4() {
                           <span className="text-purple-400">POPULATION LOCK {puzzleIndex + 1}:</span> {puzzle.question}
                         </h3>
                         
-                        {/* Answer Input - Multiple Choice */}
+                        {/* Answer Input - Multiple Choice or Text */}
                         <div className="mb-4">
-                          <div className="space-y-2">
-                            {puzzle.options && puzzle.options.map((option, optIndex) => (
-                              <label 
-                                key={optIndex}
-                                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
-                                  responses[puzzle.id] === option 
-                                    ? 'border-purple-400 bg-purple-900/30' 
-                                    : 'border-slate-600 bg-slate-800/50 hover:border-purple-400/50'
-                                }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name={puzzle.id}
-                                  value={option}
-                                  checked={responses[puzzle.id] === option}
-                                  onChange={(e) => handleChange(e, puzzle.id)}
-                                  disabled={currentFeedback?.isCorrect}
-                                  className="mr-4 h-5 w-5 text-purple-500 border-slate-400 focus:ring-purple-500"
-                                />
-                                <span className="text-white font-mono text-lg">{option}</span>
-                              </label>
-                            ))}
-                          </div>
+                          {puzzle.type === 'multiple_choice' ? (
+                            <div className="space-y-2">
+                              {puzzle.options && puzzle.options.map((option, optIndex) => (
+                                <label 
+                                  key={optIndex}
+                                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                                    responses[puzzle.id] === option 
+                                      ? 'border-purple-400 bg-purple-900/30' 
+                                      : 'border-slate-600 bg-slate-800/50 hover:border-purple-400/50'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={puzzle.id}
+                                    value={option}
+                                    checked={responses[puzzle.id] === option}
+                                    onChange={(e) => handleChange(e, puzzle.id)}
+                                    disabled={currentFeedback?.isCorrect}
+                                    className="mr-4 h-5 w-5 text-purple-500 border-slate-400 focus:ring-purple-500"
+                                  />
+                                  <span className="text-white font-mono text-lg">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {/* Case Sensitivity Notification */}
+                              {puzzle.type === 'text' && (
+                                <div className={`p-3 rounded-lg border-2 ${
+                                  puzzle.caseSensitive 
+                                    ? 'bg-yellow-900/30 border-yellow-400/50' 
+                                    : 'bg-blue-900/30 border-blue-400/50'
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">
+                                      {puzzle.caseSensitive ? '⚠️' : 'ℹ️'}
+                                    </span>
+                                    <span className={`text-sm font-medium ${
+                                      puzzle.caseSensitive ? 'text-yellow-200' : 'text-blue-200'
+                                    }`}>
+                                      {puzzle.caseSensitive ? 
+                                        'Case-sensitive answer: Capitalization matters!' : 
+                                        'Case-insensitive answer: Capitalization doesn\'t matter'
+                                      }
+                                    </span>
+                                  </div>
+                                  <div className={`text-xs mt-1 ${
+                                    puzzle.caseSensitive ? 'text-yellow-300' : 'text-blue-300'
+                                  }`}>
+                                    {puzzle.caseSensitive ? 
+                                      'Make sure your answer matches the exact capitalization required.' : 
+                                      'You can type your answer in any capitalization.'
+                                    }
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <input
+                                type="text"
+                                value={responses[puzzle.id] || ''}
+                                onChange={(e) => handleChange(e, puzzle.id)}
+                                placeholder="Type your answer here..."
+                                className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border-2 border-slate-600 focus:border-purple-400 focus:outline-none font-mono text-lg"
+                                disabled={currentFeedback?.isCorrect}
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* Check Answer Button */}
@@ -667,7 +721,7 @@ export default function Room4() {
                             } text-white border-2 border-purple-400`}
                             style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
                           >
-                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : 'Submit Answer'}
+                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '📝 SUBMIT ANSWER'}
                           </button>
                         </div>
 
