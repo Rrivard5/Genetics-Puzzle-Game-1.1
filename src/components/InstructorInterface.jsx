@@ -507,21 +507,24 @@ const InstructorInterface = () => {
                 question: "What type of mutation results from changing the highlighted G to A in the DNA sequence?",
                 type: "text",
                 answer: "Point mutation from G to A",
-                options: []
+                options: [],
+                caseSensitive: false
               },
               {
                 id: "p2",
                 question: "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
                 type: "text",
                 answer: "RPQ",
-                options: []
+                options: [],
+                caseSensitive: false
               },
               {
                 id: "p3", 
                 question: "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
                 type: "text",
                 answer: "CPE → RPQ",
-                options: []
+                options: [],
+                caseSensitive: false
               }
             ]
           }
@@ -657,7 +660,8 @@ const InstructorInterface = () => {
       question: 'New question here...',
       type: 'text',
       answer: 'Correct answer here...',
-      options: []
+      options: [],
+      caseSensitive: false
     };
     
     const updatedPuzzles = [...regularPuzzles, newPuzzle];
@@ -756,6 +760,18 @@ const InstructorInterface = () => {
             "The process of natural selection",
             "The inheritance of dominant traits"
           ]
+        }
+      ];
+    } else {
+      // Default text puzzle for other rooms
+      defaultPuzzles = [
+        {
+          id: "p1",
+          question: "New question here...",
+          type: "text",
+          answer: "Correct answer here...",
+          options: [],
+          caseSensitive: false
         }
       ];
     }
@@ -2045,6 +2061,10 @@ const InstructorInterface = () => {
                             if (newType === 'multiple_choice' && (!puzzle.options || puzzle.options.length === 0)) {
                               updatedPuzzle.options = ['Option A', 'Option B', 'Option C', 'Option D'];
                             }
+                            // Set default case sensitivity for text questions
+                            if (newType === 'text' && puzzle.caseSensitive === undefined) {
+                              updatedPuzzle.caseSensitive = false;
+                            }
                             updatePuzzle(activeTab, selectedGroup, puzzle.id, updatedPuzzle);
                           }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2054,6 +2074,46 @@ const InstructorInterface = () => {
                         </select>
                       </div>
 
+                      {/* Case Sensitivity Option - Only for Text Questions */}
+                      {puzzle.type === 'text' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-medium text-blue-800 mb-2">📝 Case Sensitivity Settings</h4>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={puzzle.caseSensitive || false}
+                              onChange={(e) => updatePuzzle(activeTab, selectedGroup, puzzle.id, { 
+                                ...puzzle, 
+                                caseSensitive: e.target.checked 
+                              })}
+                              className="mr-3 h-4 w-4 text-blue-600"
+                            />
+                            <div>
+                              <span className="text-sm font-medium text-blue-800">
+                                Make this answer case-sensitive
+                              </span>
+                              <p className="text-xs text-blue-600 mt-1">
+                                When enabled, student answers must match the exact capitalization. 
+                                Students will see a notification about case sensitivity.
+                              </p>
+                            </div>
+                          </label>
+                          
+                          <div className="mt-3 p-3 bg-blue-100 rounded-lg">
+                            <div className="text-xs text-blue-700">
+                              <strong>Current setting:</strong> {puzzle.caseSensitive ? 
+                                'Case-sensitive (students must match exact capitalization)' : 
+                                'Case-insensitive (capitalization doesn\'t matter)'
+                              }
+                            </div>
+                            <div className="text-xs text-blue-600 mt-1">
+                              <strong>Example:</strong> If answer is "DNA" and case-sensitive is {puzzle.caseSensitive ? 'enabled' : 'disabled'}, 
+                              student answers like "{puzzle.caseSensitive ? 'dna' : 'dna'}" would be {puzzle.caseSensitive ? 'incorrect' : 'correct'}.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
                         <input
@@ -2062,6 +2122,14 @@ const InstructorInterface = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Enter the correct answer"
                         />
+                        {puzzle.type === 'text' && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {puzzle.caseSensitive ? 
+                              '⚠️ Case-sensitive: Students must match exact capitalization' : 
+                              'ℹ️ Case-insensitive: Capitalization will be ignored'
+                            }
+                          </p>
+                        )}
                       </div>
 
                       {puzzle.type === 'multiple_choice' && (
