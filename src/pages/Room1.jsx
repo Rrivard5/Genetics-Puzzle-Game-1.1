@@ -469,7 +469,11 @@ export default function Room1() {
                 className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-6 py-3 rounded-lg font-bold text-lg border-2 border-purple-400 hover:border-purple-300 transition-all transform hover:scale-105 shadow-lg"
                 style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
               >
-                {showGeneticCode && (
+                {showGeneticCode ? 'HIDE' : 'REVEAL'} CODON CHART
+              </button>
+            </div>
+
+            {showGeneticCode && (
               <div className="mb-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-black border-4 border-purple-400 rounded-xl p-6 shadow-2xl">
                 <h3 className="text-center text-2xl font-bold text-purple-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
                   CODON CHART
@@ -685,8 +689,4 @@ export default function Room1() {
       </div>
     </div>
   )
-}eneticCode ? 'HIDE' : 'REVEAL'} CODON CHART
-              </button>
-            </div>
-
-            {showG
+}
