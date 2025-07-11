@@ -56,21 +56,24 @@ export default function Room2() {
             question: "Looking at the pedigree, what type of inheritance pattern does this trait follow?",
             type: "multiple_choice",
             answer: "X-linked recessive",
-            options: ["Autosomal dominant", "Autosomal recessive", "X-linked recessive", "X-linked dominant"]
+            options: ["Autosomal dominant", "Autosomal recessive", "X-linked recessive", "X-linked dominant"],
+            caseSensitive: false
           },
           {
             id: "p2",
             question: "In the same pedigree family, what is individual 9's genotype for dark vision AND scale color?",
             type: "multiple_choice",
             answer: "XdXd BB",
-            options: ["XDXd RB", "XdXd BB", "XdXd RB", "XDXd BB"]
+            options: ["XDXd RB", "XdXd BB", "XdXd RB", "XDXd BB"],
+            caseSensitive: false
           },
           {
             id: "p3",
             question: "Based on the inheritance patterns shown, if individual 9 had children with a normal vision male, what percentage of their daughters would have dark vision?",
             type: "multiple_choice",
             answer: "0%",
-            options: ["0%", "25%", "50%", "100%"]
+            options: ["0%", "25%", "50%", "100%"],
+            caseSensitive: false
           }
         ];
         
@@ -89,21 +92,24 @@ export default function Room2() {
           question: "Looking at the pedigree, what type of inheritance pattern does this trait follow?",
           type: "multiple_choice",
           answer: "X-linked recessive",
-          options: ["Autosomal dominant", "Autosomal recessive", "X-linked recessive", "X-linked dominant"]
+          options: ["Autosomal dominant", "Autosomal recessive", "X-linked recessive", "X-linked dominant"],
+          caseSensitive: false
         },
         {
           id: "p2",
           question: "In the same pedigree family, what is individual 9's genotype for dark vision AND scale color?",
           type: "multiple_choice",
           answer: "XdXd BB",
-          options: ["XDXd RB", "XdXd BB", "XdXd RB", "XDXd BB"]
+          options: ["XDXd RB", "XdXd BB", "XdXd RB", "XDXd BB"],
+          caseSensitive: false
         },
         {
           id: "p3",
           question: "Based on the inheritance patterns shown, if individual 9 had children with a normal vision male, what percentage of their daughters would have dark vision?",
           type: "multiple_choice",
           answer: "0%",
-          options: ["0%", "25%", "50%", "100%"]
+          options: ["0%", "25%", "50%", "100%"],
+          caseSensitive: false
         }
       ];
       setPuzzles(defaultPuzzles);
@@ -188,7 +194,12 @@ export default function Room2() {
     if (puzzle.type === 'multiple_choice') {
       isCorrect = puzzle.answer === userAnswer
     } else {
-      isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      // Handle case sensitivity for text questions
+      if (puzzle.caseSensitive) {
+        isCorrect = puzzle.answer === userAnswer
+      } else {
+        isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      }
     }
     
     // Track the attempt
@@ -666,14 +677,47 @@ export default function Room2() {
                               ))}
                             </div>
                           ) : (
-                            <input
-                              type="text"
-                              value={responses[puzzle.id] || ''}
-                              onChange={(e) => handleChange(e, puzzle.id)}
-                              placeholder="Type your answer here..."
-                              className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border-2 border-slate-600 focus:border-cyan-400 focus:outline-none font-mono text-lg"
-                              disabled={currentFeedback?.isCorrect}
-                            />
+                            <div className="space-y-2">
+                              {/* Case Sensitivity Notification */}
+                              {puzzle.type === 'text' && (
+                                <div className={`p-3 rounded-lg border-2 ${
+                                  puzzle.caseSensitive 
+                                    ? 'bg-yellow-900/30 border-yellow-400/50' 
+                                    : 'bg-blue-900/30 border-blue-400/50'
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">
+                                      {puzzle.caseSensitive ? '⚠️' : 'ℹ️'}
+                                    </span>
+                                    <span className={`text-sm font-medium ${
+                                      puzzle.caseSensitive ? 'text-yellow-200' : 'text-blue-200'
+                                    }`}>
+                                      {puzzle.caseSensitive ? 
+                                        'Case-sensitive answer: Capitalization matters!' : 
+                                        'Case-insensitive answer: Capitalization doesn\'t matter'
+                                      }
+                                    </span>
+                                  </div>
+                                  <div className={`text-xs mt-1 ${
+                                    puzzle.caseSensitive ? 'text-yellow-300' : 'text-blue-300'
+                                  }`}>
+                                    {puzzle.caseSensitive ? 
+                                      'Make sure your answer matches the exact capitalization required.' : 
+                                      'You can type your answer in any capitalization.'
+                                    }
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <input
+                                type="text"
+                                value={responses[puzzle.id] || ''}
+                                onChange={(e) => handleChange(e, puzzle.id)}
+                                placeholder="Type your answer here..."
+                                className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border-2 border-slate-600 focus:border-cyan-400 focus:outline-none font-mono text-lg"
+                                disabled={currentFeedback?.isCorrect}
+                              />
+                            </div>
                           )}
                         </div>
 
@@ -691,7 +735,7 @@ export default function Room2() {
                             } text-white border-2 border-cyan-400`}
                             style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
                           >
-                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '🔬 ANALYZE DATA'}
+                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '📝 SUBMIT ANSWER'}
                           </button>
                         </div>
 
