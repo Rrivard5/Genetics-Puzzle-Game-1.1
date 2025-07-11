@@ -69,21 +69,24 @@ export default function Room1() {
           question: "What type of mutation results from changing the highlighted G to A in the DNA sequence?",
           type: "text",
           answer: "Point mutation from G to A",
-          options: []
+          options: [],
+          caseSensitive: false
         },
         {
           id: "p2",
           question: "Based on the genetic code wheel, what amino acid sequence would result from the correct mutation in the previous question?",
           type: "text",
           answer: "RPQ",
-          options: []
+          options: [],
+          caseSensitive: false
         },
         {
           id: "p3", 
           question: "Looking at the answer options in the table, which represents the correct translated product following the point mutation?",
           type: "text",
           answer: "CPE → RPQ",
-          options: []
+          options: [],
+          caseSensitive: false
         }
       ];
       setPuzzles(defaultPuzzles);
@@ -135,7 +138,12 @@ export default function Room1() {
     if (puzzle.type === 'multiple_choice') {
       isCorrect = puzzle.answer === userAnswer
     } else {
-      isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      // Handle case sensitivity for text questions
+      if (puzzle.caseSensitive) {
+        isCorrect = puzzle.answer === userAnswer
+      } else {
+        isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      }
     }
     
     // Track the attempt
@@ -461,11 +469,7 @@ export default function Room1() {
                 className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-6 py-3 rounded-lg font-bold text-lg border-2 border-purple-400 hover:border-purple-300 transition-all transform hover:scale-105 shadow-lg"
                 style={{ fontFamily: 'Impact, "Arial Black", sans-serif', letterSpacing: '1px' }}
               >
-                {showGeneticCode ? 'HIDE' : 'REVEAL'} CODON CHART
-              </button>
-            </div>
-
-            {showGeneticCode && (
+                {showGeneticCode && (
               <div className="mb-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-black border-4 border-purple-400 rounded-xl p-6 shadow-2xl">
                 <h3 className="text-center text-2xl font-bold text-purple-300 mb-6" style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}>
                   CODON CHART
@@ -556,14 +560,47 @@ export default function Room1() {
                               ))}
                             </div>
                           ) : (
-                            <input
-                              type="text"
-                              value={responses[puzzle.id] || ''}
-                              onChange={(e) => handleChange(e, puzzle.id)}
-                              placeholder="Type your answer here..."
-                              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
-                              disabled={currentFeedback?.isCorrect}
-                            />
+                            <div className="space-y-2">
+                              {/* Case Sensitivity Notification */}
+                              {puzzle.type === 'text' && (
+                                <div className={`p-3 rounded-lg border-2 ${
+                                  puzzle.caseSensitive 
+                                    ? 'bg-yellow-900/30 border-yellow-400/50' 
+                                    : 'bg-blue-900/30 border-blue-400/50'
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">
+                                      {puzzle.caseSensitive ? '⚠️' : 'ℹ️'}
+                                    </span>
+                                    <span className={`text-sm font-medium ${
+                                      puzzle.caseSensitive ? 'text-yellow-200' : 'text-blue-200'
+                                    }`}>
+                                      {puzzle.caseSensitive ? 
+                                        'Case-sensitive answer: Capitalization matters!' : 
+                                        'Case-insensitive answer: Capitalization doesn\'t matter'
+                                      }
+                                    </span>
+                                  </div>
+                                  <div className={`text-xs mt-1 ${
+                                    puzzle.caseSensitive ? 'text-yellow-300' : 'text-blue-300'
+                                  }`}>
+                                    {puzzle.caseSensitive ? 
+                                      'Make sure your answer matches the exact capitalization required.' : 
+                                      'You can type your answer in any capitalization.'
+                                    }
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <input
+                                type="text"
+                                value={responses[puzzle.id] || ''}
+                                onChange={(e) => handleChange(e, puzzle.id)}
+                                placeholder="Type your answer here..."
+                                className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
+                                disabled={currentFeedback?.isCorrect}
+                              />
+                            </div>
                           )}
                         </div>
 
@@ -648,4 +685,8 @@ export default function Room1() {
       </div>
     </div>
   )
-}
+}eneticCode ? 'HIDE' : 'REVEAL'} CODON CHART
+              </button>
+            </div>
+
+            {showG
