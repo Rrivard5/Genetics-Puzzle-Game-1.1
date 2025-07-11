@@ -8,7 +8,6 @@ export default function WordScramble() {
   const [userGuess, setUserGuess] = useState('')
   const [attempts, setAttempts] = useState([])
   const [isCorrect, setIsCorrect] = useState(false)
-  const [showHint, setShowHint] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [groupLetterMap, setGroupLetterMap] = useState({})
   const [debugInfo, setDebugInfo] = useState({})
@@ -18,11 +17,11 @@ export default function WordScramble() {
 
   useEffect(() => {
     loadWordScrambleData()
-    // Reduce auto-refresh frequency to be less aggressive
+    // Auto-refresh every 5 seconds
     const interval = setInterval(() => {
       console.log('Auto-refresh triggered at', new Date().toLocaleTimeString())
       loadWordScrambleData()
-    }, 5000) // Every 5 seconds instead of 3
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -161,103 +160,6 @@ export default function WordScramble() {
     }
   }
 
-  const handleGuessSubmit = (e) => {
-    e.preventDefault()
-    if (!userGuess.trim() || isCorrect) return
-
-    const guess = userGuess.trim().toUpperCase()
-    const target = targetWord.toUpperCase()
-    
-    const newAttempt = {
-      guess: guess,
-      isCorrect: guess === target,
-      timestamp: new Date().toISOString()
-    }
-    
-    setAttempts(prev => [newAttempt, ...prev])
-    
-    if (guess === target) {
-      setIsCorrect(true)
-      // Broadcast success to all students
-      broadcastSuccess()
-    }
-    
-    setUserGuess('')
-  }
-
-  const broadcastSuccess = () => {
-    // Save success state to localStorage so all students can see it
-    const successData = {
-      solved: true,
-      solvedAt: new Date().toISOString(),
-      targetWord: targetWord,
-      solvedBy: 'class' // Could be enhanced to track who solved it
-    }
-    localStorage.setItem('word-scramble-success', JSON.stringify(successData))
-    console.log('Success broadcasted:', successData)
-  }
-
-  // Check if puzzle has been solved by anyone
-  useEffect(() => {
-    const checkSolvedStatus = () => {
-      const successData = localStorage.getItem('word-scramble-success')
-      if (successData) {
-        try {
-          const data = JSON.parse(successData)
-          if (data.solved && data.targetWord === targetWord) {
-            setIsCorrect(true)
-          }
-        } catch (error) {
-          console.error('Error parsing success data:', error)
-        }
-      }
-    }
-    
-    checkSolvedStatus()
-    const interval = setInterval(checkSolvedStatus, 2000)
-    return () => clearInterval(interval)
-  }, [targetWord])
-
-  const getLetterFrequency = (letters) => {
-    const frequency = {}
-    letters.forEach(letter => {
-      frequency[letter] = (frequency[letter] || 0) + 1
-    })
-    return frequency
-  }
-
-  const canFormWord = (letters, word) => {
-    if (!word || !letters.length) return false
-    
-    const letterFreq = getLetterFrequency(letters)
-    const wordFreq = getLetterFrequency(word.split(''))
-    
-    return Object.entries(wordFreq).every(([letter, count]) => 
-      letterFreq[letter] >= count
-    )
-  }
-
-  const getHint = () => {
-    if (!targetWord) return "No hint available"
-    
-    // Don't reveal the target word in hints for students
-    const hints = [
-      `The word has ${targetWord.length} letters`,
-      `The word starts with "${targetWord[0]}"`,
-      `The word is related to genetics and inheritance`,
-      `The word ends with "${targetWord[targetWord.length - 1]}"`,
-      `The word relates to the study of heredity and genes`
-    ]
-    
-    return hints[Math.min(attempts.length, hints.length - 1)]
-  }
-
-  const getTotalExpectedLetters = () => {
-    if (!targetWord) return 0
-    // Count letters only (not spaces or punctuation)
-    return targetWord.replace(/[^A-Za-z]/g, '').length
-  }
-
   // Add the current student's letter if they completed all rooms
   const addMyLetter = () => {
     // Get current student info
@@ -334,43 +236,98 @@ export default function WordScramble() {
 
   const currentStudent = getCurrentStudentInfo()
 
-  // Quick test data function for debugging
-  const addTestCompletion = () => {
-    const testGroup = Math.floor(Math.random() * 15) + 1
-    const testLetter = groupLetterMap[testGroup] || 'X'
+  const handleGuessSubmit = (e) => {
+    e.preventDefault()
+    if (!userGuess.trim() || isCorrect) return
+
+    const guess = userGuess.trim().toUpperCase()
+    const target = targetWord.toUpperCase()
     
-    const currentProgress = JSON.parse(localStorage.getItem('class-letters-progress') || '[]')
-    
-    // Don't add duplicate
-    if (currentProgress.find(p => p.group === testGroup)) {
-      alert(`Group ${testGroup} already completed!`)
-      return
+    const newAttempt = {
+      guess: guess,
+      isCorrect: guess === target,
+      timestamp: new Date().toISOString()
     }
     
-    const newCompletion = {
-      group: testGroup,
-      letter: testLetter,
-      completedAt: new Date().toISOString(),
-      studentName: `Test Student ${testGroup}`,
-      sessionId: `test-${Date.now()}`
+    setAttempts(prev => [newAttempt, ...prev])
+    
+    if (guess === target) {
+      setIsCorrect(true)
+      // Broadcast success to all students
+      broadcastSuccess()
     }
     
-    currentProgress.push(newCompletion)
-    localStorage.setItem('class-letters-progress', JSON.stringify(currentProgress))
-    
-    console.log('Added test completion:', newCompletion)
-    manualRefresh()
+    setUserGuess('')
   }
 
-  const clearAllProgress = () => {
-    if (confirm('Clear ALL progress data? This will reset everything.')) {
-      localStorage.removeItem('class-letters-progress')
-      localStorage.removeItem('word-scramble-success')
-      setIsCorrect(false)
-      setAttempts([])
-      console.log('All progress cleared')
-      manualRefresh()
+  const broadcastSuccess = () => {
+    // Save success state to localStorage so all students can see it
+    const successData = {
+      solved: true,
+      solvedAt: new Date().toISOString(),
+      targetWord: targetWord,
+      solvedBy: 'class' // Could be enhanced to track who solved it
     }
+    localStorage.setItem('word-scramble-success', JSON.stringify(successData))
+    console.log('Success broadcasted:', successData)
+  }
+
+  // Check if puzzle has been solved by anyone
+  useEffect(() => {
+    const checkSolvedStatus = () => {
+      const successData = localStorage.getItem('word-scramble-success')
+      if (successData) {
+        try {
+          const data = JSON.parse(successData)
+          if (data.solved && data.targetWord === targetWord) {
+            setIsCorrect(true)
+          }
+        } catch (error) {
+          console.error('Error parsing success data:', error)
+        }
+      }
+    }
+    
+    checkSolvedStatus()
+    const interval = setInterval(checkSolvedStatus, 2000)
+    return () => clearInterval(interval)
+  }, [targetWord])
+
+  const getLetterFrequency = (letters) => {
+    const frequency = {}
+    letters.forEach(letter => {
+      frequency[letter] = (frequency[letter] || 0) + 1
+    })
+    return frequency
+  }
+
+  const canFormWord = (letters, word) => {
+    if (!word || !letters.length) return false
+    
+    const letterFreq = getLetterFrequency(letters)
+    const wordFreq = getLetterFrequency(word.split(''))
+    
+    return Object.entries(wordFreq).every(([letter, count]) => 
+      letterFreq[letter] >= count
+    )
+  }
+
+  const getTotalExpectedLetters = () => {
+    if (!targetWord) return 0
+    // Count letters only (not spaces or punctuation)
+    return targetWord.replace(/[^A-Za-z]/g, '').length
+  }
+
+  const getWordStats = () => {
+    if (!targetWord) return { letterCount: 0, wordCount: 0 }
+    
+    // Count total letters (excluding spaces and punctuation)
+    const letterCount = targetWord.replace(/[^A-Za-z]/g, '').length
+    
+    // Count words (split by spaces and filter out empty strings)
+    const wordCount = targetWord.trim().split(/\s+/).filter(word => word.length > 0).length
+    
+    return { letterCount, wordCount }
   }
 
   if (isLoading) {
@@ -383,6 +340,8 @@ export default function WordScramble() {
       </div>
     )
   }
+
+  const wordStats = getWordStats()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
@@ -397,6 +356,21 @@ export default function WordScramble() {
           <p className="text-blue-200 text-lg">
             Real-time tracking: Only groups that complete Room 4 contribute letters!
           </p>
+          
+          {/* Word Stats */}
+          <div className="mt-4 bg-white bg-opacity-10 rounded-lg p-4 inline-block">
+            <h3 className="text-white font-bold mb-2">🎯 Target Challenge</h3>
+            <div className="flex gap-6 justify-center text-white">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-300">{wordStats.letterCount}</div>
+                <div className="text-sm text-blue-200">Letters</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-pink-300">{wordStats.wordCount}</div>
+                <div className="text-sm text-blue-200">Word{wordStats.wordCount !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Manual Refresh Controls */}
@@ -431,23 +405,6 @@ export default function WordScramble() {
                 ) : (
                   '🔄 Reload Class Progress'
                 )}
-              </button>
-              
-              {/* Debug buttons for testing */}
-              <button
-                onClick={addTestCompletion}
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-semibold"
-                title="Add a random test completion for debugging"
-              >
-                🧪 Test Add
-              </button>
-              
-              <button
-                onClick={clearAllProgress}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
-                title="Clear all progress data"
-              >
-                🗑️ Clear
               </button>
             </div>
           </div>
@@ -684,22 +641,6 @@ export default function WordScramble() {
               </div>
             </form>
 
-            {/* Hint System */}
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setShowHint(!showHint)}
-                className="text-yellow-300 hover:text-yellow-400 text-sm underline"
-              >
-                {showHint ? 'Hide Hint' : 'Need a hint?'}
-              </button>
-              
-              {showHint && (
-                <div className="mt-2 bg-yellow-900 bg-opacity-50 rounded-lg p-3 text-yellow-200">
-                  💡 {getHint()}
-                </div>
-              )}
-            </div>
-
             {/* Can Form Word Check - without revealing target */}
             {targetWord && availableLetters.length > 0 && (
               <div className="mt-4 text-center">
@@ -747,7 +688,7 @@ export default function WordScramble() {
               <li>• <strong>Real tracking:</strong> Only groups that complete all 4 rooms contribute letters</li>
               <li>• <strong>Manual refresh:</strong> Click "🔄 Reload Class Progress" to check for new completions</li>
               <li>• <strong>Auto-refresh:</strong> Page updates automatically every 5 seconds</li>
-              <li>• <strong>No fake data:</strong> Letters only appear when Room 4 is actually completed</li>
+              <li>• <strong>Add your letter:</strong> Click "Add My Letter" if you completed all rooms</li>
               <li>• <strong>Class collaboration:</strong> Work together to solve the final word puzzle</li>
             </ul>
           </div>
