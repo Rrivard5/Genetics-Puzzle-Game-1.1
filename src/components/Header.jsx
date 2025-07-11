@@ -3,12 +3,18 @@ import { useGame } from '../context/GameStateContext'
 
 export default function Header() {
   const location = useLocation()
-  const { roomUnlocked } = useGame()
+  const { roomUnlocked, studentInfo } = useGame()
   
   const isHome = location.pathname === '/'
   const isComplete = location.pathname === '/complete'
+  const isStudentInfo = location.pathname === '/student-info'
+  const isInstructor = location.pathname === '/instructor'
 
-  if (isHome || isComplete) return null
+  // Don't show header on these pages
+  if (isHome || isComplete || isStudentInfo || isInstructor) return null
+
+  // Check if student info exists
+  const hasStudentInfo = studentInfo || localStorage.getItem('current-student-info')
 
   const rooms = [
     { name: 'Room 1', path: '/room1', unlocked: true },
@@ -28,24 +34,34 @@ export default function Header() {
             🧬 Genetics Escape Room
           </Link>
           
-          <nav className="flex flex-wrap gap-2">
-            {rooms.map((room) => (
-              <Link
-                key={room.name}
-                to={room.path}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  room.unlocked
-                    ? location.pathname === room.path
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-                onClick={(e) => !room.unlocked && e.preventDefault()}
-              >
-                {room.unlocked ? room.name : `🔒 ${room.name}`}
-              </Link>
-            ))}
-          </nav>
+          {/* Only show navigation if student info exists */}
+          {hasStudentInfo && (
+            <nav className="flex flex-wrap gap-2">
+              {rooms.map((room) => (
+                <Link
+                  key={room.name}
+                  to={room.path}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    room.unlocked
+                      ? location.pathname === room.path
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                  onClick={(e) => !room.unlocked && e.preventDefault()}
+                >
+                  {room.unlocked ? room.name : `🔒 ${room.name}`}
+                </Link>
+              ))}
+            </nav>
+          )}
+          
+          {/* Show message if no student info */}
+          {!hasStudentInfo && (
+            <div className="text-amber-600 font-medium">
+              Please complete student information to access rooms
+            </div>
+          )}
         </div>
       </div>
     </header>
