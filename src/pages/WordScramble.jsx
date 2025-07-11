@@ -258,6 +258,82 @@ export default function WordScramble() {
     return targetWord.replace(/[^A-Za-z]/g, '').length
   }
 
+  // Add the current student's letter if they completed all rooms
+  const addMyLetter = () => {
+    // Get current student info
+    const studentInfoStr = localStorage.getItem('current-student-info')
+    if (!studentInfoStr) {
+      alert('❌ No student information found. Please complete the student info form first.')
+      return
+    }
+
+    let studentInfo
+    try {
+      studentInfo = JSON.parse(studentInfoStr)
+    } catch (error) {
+      alert('❌ Error reading student information. Please restart the game.')
+      return
+    }
+
+    if (!studentInfo.groupNumber) {
+      alert('❌ No group number found in student information.')
+      return
+    }
+
+    const groupNumber = parseInt(studentInfo.groupNumber)
+    const assignedLetter = groupLetterMap[groupNumber]
+    
+    if (!assignedLetter) {
+      alert(`❌ No letter assigned to group ${groupNumber}. Please contact your instructor.`)
+      return
+    }
+
+    // Check current progress
+    const currentProgress = JSON.parse(localStorage.getItem('class-letters-progress') || '[]')
+    
+    // Check if this group already has a completion record
+    const existingRecord = currentProgress.find(p => p.group === groupNumber)
+    if (existingRecord) {
+      alert(`✅ Group ${groupNumber} letter "${existingRecord.letter}" is already unlocked!\n\nCompleted by: ${existingRecord.studentName}\nTime: ${new Date(existingRecord.completedAt).toLocaleString()}`)
+      return
+    }
+    
+    // Add the completion record
+    const newCompletion = {
+      group: groupNumber,
+      letter: assignedLetter,
+      completedAt: new Date().toISOString(),
+      studentName: studentInfo.name,
+      sessionId: studentInfo.sessionId || `manual-${Date.now()}`,
+      addedManually: true // Flag to indicate this was added manually vs automatic completion
+    }
+    
+    currentProgress.push(newCompletion)
+    localStorage.setItem('class-letters-progress', JSON.stringify(currentProgress))
+    
+    console.log('Added student completion:', newCompletion)
+    
+    // Show success message
+    alert(`🎉 Success! Your group's letter "${assignedLetter}" has been unlocked!\n\nGroup ${groupNumber}: ${studentInfo.name}\nLetter: ${assignedLetter}`)
+    
+    // Refresh the display
+    manualRefresh()
+  }
+
+  // Get current student info for UI purposes
+  const getCurrentStudentInfo = () => {
+    const studentInfoStr = localStorage.getItem('current-student-info')
+    if (!studentInfoStr) return null
+    
+    try {
+      return JSON.parse(studentInfoStr)
+    } catch (error) {
+      return null
+    }
+  }
+
+  const currentStudent = getCurrentStudentInfo()
+
   // Quick test data function for debugging
   const addTestCompletion = () => {
     const testGroup = Math.floor(Math.random() * 15) + 1
@@ -376,6 +452,71 @@ export default function WordScramble() {
             </div>
           </div>
         </div>
+
+        {/* Student's Letter Addition */}
+        {currentStudent && (
+          <div className="mb-6 bg-gradient-to-r from-green-700 to-emerald-700 rounded-lg p-6 text-white">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-center md:text-left">
+                <h3 className="font-bold text-xl mb-2">🎓 Welcome, {currentStudent.name}!</h3>
+                <p className="text-green-200">
+                  You completed all 4 rooms as <strong>Group {currentStudent.groupNumber}</strong>
+                </p>
+                <p className="text-sm text-green-300 mt-1">
+                  {(() => {
+                    const groupNumber = parseInt(currentStudent.groupNumber)
+                    const existingRecord = completedGroups.find(p => p.group === groupNumber)
+                    const assignedLetter = groupLetterMap[groupNumber]
+                    
+                    if (existingRecord) {
+                      return `✅ Your group's letter "${existingRecord.letter}" is already unlocked! (Added by ${existingRecord.studentName})`
+                    } else if (assignedLetter) {
+                      return `🔤 Your group's letter "${assignedLetter}" is ready to be unlocked!`
+                    } else {
+                      return `⚠️ No letter assigned to your group. Contact your instructor.`
+                    }
+                  })()}
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center gap-2">
+                {(() => {
+                  const groupNumber = parseInt(currentStudent.groupNumber)
+                  const existingRecord = completedGroups.find(p => p.group === groupNumber)
+                  const assignedLetter = groupLetterMap[groupNumber]
+                  
+                  if (existingRecord) {
+                    return (
+                      <div className="text-center">
+                        <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold">
+                          ✅ Letter Already Added
+                        </div>
+                        <div className="text-sm text-green-200 mt-1">
+                          Added {new Date(existingRecord.completedAt).toLocaleString()}
+                        </div>
+                      </div>
+                    )
+                  } else if (assignedLetter) {
+                    return (
+                      <button
+                        onClick={addMyLetter}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-xl font-bold text-lg shadow-lg transform hover:scale-105 transition-all"
+                      >
+                        🎯 Add My Letter "{assignedLetter}"
+                      </button>
+                    )
+                  } else {
+                    return (
+                      <div className="bg-red-500 text-white px-4 py-2 rounded-lg">
+                        ⚠️ No Letter Assigned
+                      </div>
+                    )
+                  }
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Enhanced Debug Info Panel */}
         <div className="mb-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 text-sm text-gray-300">
