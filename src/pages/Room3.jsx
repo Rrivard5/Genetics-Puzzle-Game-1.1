@@ -150,7 +150,12 @@ export default function Room3() {
     if (puzzle.type === 'multiple_choice') {
       isCorrect = puzzle.answer === userAnswer
     } else {
-      isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      // Handle case sensitivity for text questions
+      if (puzzle.caseSensitive) {
+        isCorrect = puzzle.answer === userAnswer
+      } else {
+        isCorrect = puzzle.answer.toLowerCase() === userAnswer.toLowerCase()
+      }
     }
     
     // Track the attempt
@@ -618,14 +623,47 @@ export default function Room3() {
                               ))}
                             </div>
                           ) : (
-                            <input
-                              type="text"
-                              value={responses[puzzle.id] || ''}
-                              onChange={(e) => handleChange(e, puzzle.id)}
-                              placeholder="Type your answer here..."
-                              className="w-full px-4 py-3 rounded-lg bg-stone-700 text-white border-2 border-stone-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
-                              disabled={currentFeedback?.isCorrect}
-                            />
+                            <div className="space-y-2">
+                              {/* Case Sensitivity Notification */}
+                              {puzzle.type === 'text' && (
+                                <div className={`p-3 rounded-lg border-2 ${
+                                  puzzle.caseSensitive 
+                                    ? 'bg-yellow-900/30 border-yellow-400/50' 
+                                    : 'bg-blue-900/30 border-blue-400/50'
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">
+                                      {puzzle.caseSensitive ? '⚠️' : 'ℹ️'}
+                                    </span>
+                                    <span className={`text-sm font-medium ${
+                                      puzzle.caseSensitive ? 'text-yellow-200' : 'text-blue-200'
+                                    }`}>
+                                      {puzzle.caseSensitive ? 
+                                        'Case-sensitive answer: Capitalization matters!' : 
+                                        'Case-insensitive answer: Capitalization doesn\'t matter'
+                                      }
+                                    </span>
+                                  </div>
+                                  <div className={`text-xs mt-1 ${
+                                    puzzle.caseSensitive ? 'text-yellow-300' : 'text-blue-300'
+                                  }`}>
+                                    {puzzle.caseSensitive ? 
+                                      'Make sure your answer matches the exact capitalization required.' : 
+                                      'You can type your answer in any capitalization.'
+                                    }
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <input
+                                type="text"
+                                value={responses[puzzle.id] || ''}
+                                onChange={(e) => handleChange(e, puzzle.id)}
+                                placeholder="Type your answer here..."
+                                className="w-full px-4 py-3 rounded-lg bg-stone-700 text-white border-2 border-stone-600 focus:border-amber-400 focus:outline-none font-mono text-lg"
+                                disabled={currentFeedback?.isCorrect}
+                              />
+                            </div>
                           )}
                         </div>
 
