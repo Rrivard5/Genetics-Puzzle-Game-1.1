@@ -11,16 +11,43 @@ export default function WordScramble() {
   const [showHint, setShowHint] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [groupLetterMap, setGroupLetterMap] = useState({})
-  const [debugInfo, setDebugInfo] = useState({}) // For debugging
+  const [debugInfo, setDebugInfo] = useState({})
+  const [lastRefresh, setLastRefresh] = useState(null)
+  const [refreshCount, setRefreshCount] = useState(0)
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false)
 
   useEffect(() => {
     loadWordScrambleData()
-    const interval = setInterval(loadWordScrambleData, 3000) // Refresh every 3 seconds
+    // Reduce auto-refresh frequency to be less aggressive
+    const interval = setInterval(() => {
+      console.log('Auto-refresh triggered at', new Date().toLocaleTimeString())
+      loadWordScrambleData()
+    }, 5000) // Every 5 seconds instead of 3
     return () => clearInterval(interval)
   }, [])
 
-  const loadWordScrambleData = () => {
+  const manualRefresh = async () => {
+    setIsManualRefreshing(true)
+    console.log('=== MANUAL REFRESH TRIGGERED ===')
+    
     try {
+      await loadWordScrambleData()
+      setRefreshCount(prev => prev + 1)
+      
+      // Show a brief success indicator
+      setTimeout(() => {
+        setIsManualRefreshing(false)
+      }, 1000)
+    } catch (error) {
+      console.error('Manual refresh failed:', error)
+      setIsManualRefreshing(false)
+    }
+  }
+
+  const loadWordScrambleData = async () => {
+    try {
+      const startTime = Date.now()
+      
       // Load target word and group assignments from instructor settings
       const instructorSettings = localStorage.getItem('instructor-word-settings')
       let wordSettings = {}
@@ -32,43 +59,54 @@ export default function WordScramble() {
       } else {
         // Default settings if instructor hasn't configured anything
         setTargetWord('GENETICS')
-        setGroupLetterMap({
-          1: 'G', 2: 'E', 3: 'N', 4: 'E', 5: 'T', 6: 'I', 7: 'C', 8: 'S'
-        })
+        const defaultMap = {}
+        // Create a basic mapping for demonstration
+        const defaultLetters = 'GENETICS'.split('')
+        for (let i = 1; i <= 15; i++) {
+          defaultMap[i] = defaultLetters[(i - 1) % defaultLetters.length]
+        }
+        setGroupLetterMap(defaultMap)
+        
+        console.warn('No instructor settings found - using defaults')
       }
 
       // Load ONLY completed groups from class progress - this is the source of truth
       const classProgress = localStorage.getItem('class-letters-progress')
       let progress = []
+      let rawProgressData = null
       
       if (classProgress) {
         try {
-          progress = JSON.parse(classProgress)
+          rawProgressData = JSON.parse(classProgress)
+          console.log('Raw class progress data:', rawProgressData)
+          
           // Validate the data structure
-          if (Array.isArray(progress)) {
+          if (Array.isArray(rawProgressData)) {
             // Only include records that have all required fields
-            progress = progress.filter(group => 
-              group && 
-              typeof group.group === 'number' && 
-              typeof group.letter === 'string' && 
-              group.letter.trim() !== '' &&
-              group.letter !== '?'  // Exclude incomplete records
-            )
+            progress = rawProgressData.filter(group => {
+              const isValid = group && 
+                typeof group.group === 'number' && 
+                typeof group.letter === 'string' && 
+                group.letter.trim() !== '' &&
+                group.letter !== '?'  // Exclude incomplete records
+              
+              if (!isValid) {
+                console.log('Filtering out invalid record:', group)
+              }
+              return isValid
+            })
+            
+            console.log('Filtered valid progress:', progress)
             setCompletedGroups(progress)
             
             // Extract letters from ONLY the completed groups
             const letters = progress.map(group => group.letter.trim().toUpperCase()).filter(letter => letter)
             setAvailableLetters(letters)
+            console.log('Available letters from completions:', letters)
             
-            // Debug logging to track the issue
-            console.log('=== WORD SCRAMBLE DEBUG ===')
-            console.log('Raw class progress:', classProgress)
-            console.log('Parsed progress:', progress)
-            console.log('Filtered progress:', progress)
-            console.log('Available letters:', letters)
           } else {
             // Invalid data structure
-            console.error('Invalid class progress data structure:', progress)
+            console.error('Invalid class progress data structure:', rawProgressData)
             setCompletedGroups([])
             setAvailableLetters([])
           }
@@ -79,26 +117,45 @@ export default function WordScramble() {
         }
       } else {
         // No completions yet
-        console.log('No class progress found')
+        console.log('No class progress found in localStorage')
         setCompletedGroups([])
         setAvailableLetters([])
       }
       
-      // Set debug info for troubleshooting
-      setDebugInfo({
+      const loadTime = Date.now() - startTime
+      
+      // Enhanced debug info for troubleshooting
+      const newDebugInfo = {
         totalGroups: Object.keys(wordSettings.groupLetters || {}).length,
         completedCount: progress.length,
         lastUpdated: new Date().toLocaleTimeString(),
+        lastRefreshDuration: `${loadTime}ms`,
         hasClassProgress: !!classProgress,
-        hasInstructorSettings: !!instructorSettings
-      })
+        hasInstructorSettings: !!instructorSettings,
+        rawProgressLength: rawProgressData ? rawProgressData.length : 0,
+        validProgressLength: progress.length,
+        targetWord: wordSettings.targetWord || 'GENETICS',
+        availableLettersCount: availableLetters.length,
+        groupLetterSample: Object.entries(wordSettings.groupLetters || {}).slice(0, 3),
+        storageKeys: Object.keys(localStorage).filter(k => 
+          k.includes('progress') || k.includes('letters') || k.includes('word')
+        ),
+        refreshCount: refreshCount
+      }
       
+      setDebugInfo(newDebugInfo)
+      setLastRefresh(new Date())
       setIsLoading(false)
+      
+      console.log('=== WORD SCRAMBLE DATA LOADED ===')
+      console.log('Debug info:', newDebugInfo)
+      
     } catch (error) {
       console.error('Error loading word scramble data:', error)
       setDebugInfo({
         error: error.message,
-        lastUpdated: new Date().toLocaleTimeString()
+        lastUpdated: new Date().toLocaleTimeString(),
+        refreshCount: refreshCount
       })
       setIsLoading(false)
     }
@@ -137,6 +194,7 @@ export default function WordScramble() {
       solvedBy: 'class' // Could be enhanced to track who solved it
     }
     localStorage.setItem('word-scramble-success', JSON.stringify(successData))
+    console.log('Success broadcasted:', successData)
   }
 
   // Check if puzzle has been solved by anyone
@@ -188,7 +246,7 @@ export default function WordScramble() {
       `The word starts with "${targetWord[0]}"`,
       `The word is related to genetics and inheritance`,
       `The word ends with "${targetWord[targetWord.length - 1]}"`,
-      `The word relates to traits that are not expressed when dominant alleles are present`
+      `The word relates to the study of heredity and genes`
     ]
     
     return hints[Math.min(attempts.length, hints.length - 1)]
@@ -198,6 +256,45 @@ export default function WordScramble() {
     if (!targetWord) return 0
     // Count letters only (not spaces or punctuation)
     return targetWord.replace(/[^A-Za-z]/g, '').length
+  }
+
+  // Quick test data function for debugging
+  const addTestCompletion = () => {
+    const testGroup = Math.floor(Math.random() * 15) + 1
+    const testLetter = groupLetterMap[testGroup] || 'X'
+    
+    const currentProgress = JSON.parse(localStorage.getItem('class-letters-progress') || '[]')
+    
+    // Don't add duplicate
+    if (currentProgress.find(p => p.group === testGroup)) {
+      alert(`Group ${testGroup} already completed!`)
+      return
+    }
+    
+    const newCompletion = {
+      group: testGroup,
+      letter: testLetter,
+      completedAt: new Date().toISOString(),
+      studentName: `Test Student ${testGroup}`,
+      sessionId: `test-${Date.now()}`
+    }
+    
+    currentProgress.push(newCompletion)
+    localStorage.setItem('class-letters-progress', JSON.stringify(currentProgress))
+    
+    console.log('Added test completion:', newCompletion)
+    manualRefresh()
+  }
+
+  const clearAllProgress = () => {
+    if (confirm('Clear ALL progress data? This will reset everything.')) {
+      localStorage.removeItem('class-letters-progress')
+      localStorage.removeItem('word-scramble-success')
+      setIsCorrect(false)
+      setAttempts([])
+      console.log('All progress cleared')
+      manualRefresh()
+    }
   }
 
   if (isLoading) {
@@ -226,111 +323,94 @@ export default function WordScramble() {
           </p>
         </div>
 
-        {/* Debug Info Panel (for instructors only) */}
-        {window.location.pathname === '/instructor' && (
-          <div className="mb-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 text-sm text-gray-300">
-            <h3 className="font-bold text-white mb-2">📊 Instructor Debug Panel</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <div className="text-yellow-400 font-semibold">Target Word:</div>
-                <div>{debugInfo.targetWord || 'Not set'}</div>
-              </div>
-              <div>
-                <div className="text-blue-400 font-semibold">Groups Completed:</div>
-                <div>{debugInfo.completedCount || 0} / {debugInfo.totalGroups || 0}</div>
-              </div>
-              <div>
-                <div className="text-green-400 font-semibold">Letters Available:</div>
-                <div>{availableLetters.length} / {getTotalExpectedLetters()}</div>
-              </div>
-              <div>
-                <div className="text-purple-400 font-semibold">Last Updated:</div>
-                <div>{debugInfo.lastUpdated || 'Never'}</div>
-              </div>
+        {/* Manual Refresh Controls */}
+        <div className="mb-6 bg-gradient-to-r from-blue-800 to-purple-800 rounded-lg p-4 text-white">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-center md:text-left">
+              <h3 className="font-bold text-lg">📊 Live Progress Tracking</h3>
+              <p className="text-sm text-blue-200">
+                Last updated: {lastRefresh ? lastRefresh.toLocaleTimeString() : 'Never'} 
+                {debugInfo.lastRefreshDuration && ` (${debugInfo.lastRefreshDuration})`}
+              </p>
+              <p className="text-xs text-blue-300">
+                Auto-refresh every 5 seconds • Manual refreshes: {refreshCount}
+              </p>
             </div>
             
-            {/* Additional debug info */}
-            <div className="mt-3 pt-3 border-t border-gray-600">
-              <div className="text-gray-400 text-xs">
-                <div>Config Status: {debugInfo.hasInstructorSettings ? '✅' : '❌'} Settings | {debugInfo.hasClassProgress ? '✅' : '❌'} Progress</div>
-                {debugInfo.groupLetterSample && (
-                  <div>Sample assignments: {debugInfo.groupLetterSample.map(([g,l]) => `${g}→${l}`).join(', ')}</div>
+            <div className="flex gap-2">
+              <button
+                onClick={manualRefresh}
+                disabled={isManualRefreshing}
+                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  isManualRefreshing 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-green-600 hover:bg-green-700 transform hover:scale-105'
+                } text-white shadow-lg`}
+              >
+                {isManualRefreshing ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Refreshing...
+                  </span>
+                ) : (
+                  '🔄 Reload Class Progress'
                 )}
-                <div>Available letters: [{availableLetters.join(', ')}]</div>
-                <div>Raw progress records: {debugInfo.rawProgressLength || 0} | Valid records: {debugInfo.validProgressLength || 0}</div>
-                <div>localStorage keys: {Object.keys(localStorage).filter(k => k.includes('progress') || k.includes('letters') || k.includes('word')).join(', ')}</div>
-              </div>
-            </div>
-            
-            {debugInfo.error && (
-              <div className="mt-2 text-red-400">Error: {debugInfo.error}</div>
-            )}
-            
-            {/* Quick debugging buttons for instructors */}
-            <div className="mt-3 pt-3 border-t border-gray-600">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    console.log('Manual refresh triggered')
-                    loadWordScrambleData()
-                  }}
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                >
-                  🔄 Manual Refresh
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('=== MANUAL DEBUG CHECK ===')
-                    console.log('localStorage class-letters-progress:', localStorage.getItem('class-letters-progress'))
-                    console.log('localStorage instructor-word-settings:', localStorage.getItem('instructor-word-settings'))
-                    console.log('Current completedGroups:', completedGroups)
-                    console.log('Current availableLetters:', availableLetters)
-                    console.log('Current groupLetterMap:', groupLetterMap)
-                  }}
-                  className="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
-                >
-                  🔍 Debug Check
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Clear all word scramble progress data? This will reset the challenge.')) {
-                      localStorage.removeItem('class-letters-progress');
-                      localStorage.removeItem('word-scramble-success');
-                      loadWordScrambleData();
-                      alert('Word scramble data cleared!');
-                    }
-                  }}
-                  className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                >
-                  🗑️ Clear Progress
-                </button>
-              </div>
+              </button>
+              
+              {/* Debug buttons for testing */}
+              <button
+                onClick={addTestCompletion}
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-semibold"
+                title="Add a random test completion for debugging"
+              >
+                🧪 Test Add
+              </button>
+              
+              <button
+                onClick={clearAllProgress}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
+                title="Clear all progress data"
+              >
+                🗑️ Clear
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Student Status Panel */}
-        {window.location.pathname !== '/instructor' && (
-          <div className="mb-6 bg-blue-800 bg-opacity-50 rounded-lg p-4 text-sm text-blue-200">
-            <h3 className="font-bold text-white mb-2">📊 Class Progress Status</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-green-300 font-semibold">Groups Completed:</div>
-                <div>{completedGroups.length} / {Object.keys(groupLetterMap).length}</div>
-              </div>
-              <div>
-                <div className="text-yellow-300 font-semibold">Letters Available:</div>
-                <div>{availableLetters.length} letters unlocked</div>
-              </div>
+        {/* Enhanced Debug Info Panel */}
+        <div className="mb-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 text-sm text-gray-300">
+          <h3 className="font-bold text-white mb-2">📊 System Status</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <div className="text-yellow-400 font-semibold">Target Word:</div>
+              <div className="font-mono">{debugInfo.targetWord || 'Not set'}</div>
             </div>
-            <div className="mt-3 pt-3 border-t border-blue-600">
-              <div className="text-blue-300 text-xs">
-                <div>Available letters: [{availableLetters.join(', ')}]</div>
-                <div>Last updated: {debugInfo.lastUpdated || 'Never'}</div>
+            <div>
+              <div className="text-blue-400 font-semibold">Groups Completed:</div>
+              <div>{debugInfo.completedCount || 0} / {debugInfo.totalGroups || 0}</div>
+            </div>
+            <div>
+              <div className="text-green-400 font-semibold">Letters Available:</div>
+              <div>{availableLetters.length} / {getTotalExpectedLetters()}</div>
+            </div>
+            <div>
+              <div className="text-purple-400 font-semibold">Data Sources:</div>
+              <div>
+                {debugInfo.hasInstructorSettings ? '✅' : '❌'} Settings | {debugInfo.hasClassProgress ? '✅' : '❌'} Progress
               </div>
             </div>
           </div>
-        )}
+          
+          <div className="text-xs text-gray-400 space-y-1">
+            <div><strong>Available Letters:</strong> [{availableLetters.join(', ')}]</div>
+            <div><strong>Progress Records:</strong> {debugInfo.rawProgressLength || 0} raw → {debugInfo.validProgressLength || 0} valid</div>
+            <div><strong>Storage Keys:</strong> {debugInfo.storageKeys?.join(', ') || 'None'}</div>
+            {debugInfo.error && (
+              <div className="text-red-400"><strong>Error:</strong> {debugInfo.error}</div>
+            )}
+          </div>
+        </div>
 
         {/* Success Banner */}
         {isCorrect && (
@@ -370,6 +450,9 @@ export default function WordScramble() {
                 <p className="text-lg text-yellow-100">
                   Letters will appear here automatically as groups finish their challenges
                 </p>
+                <p className="text-sm text-yellow-200 mt-4">
+                  💡 Try the "🔄 Reload Class Progress" button to check for updates manually
+                </p>
               </div>
             )}
           </div>
@@ -399,9 +482,9 @@ export default function WordScramble() {
               return (
                 <div
                   key={groupNum}
-                  className={`p-3 rounded-lg text-center ${
+                  className={`p-3 rounded-lg text-center transition-all duration-300 ${
                     isCompleted 
-                      ? 'bg-green-500 text-white' 
+                      ? 'bg-green-500 text-white transform scale-105' 
                       : 'bg-gray-600 text-gray-300'
                   }`}
                 >
@@ -417,14 +500,14 @@ export default function WordScramble() {
                           {completionRecord.studentName?.split(' ')[0] || 'Student'}
                         </div>
                         <div className="text-xs text-green-200">
-                          Expected: {assignedLetter}, Got: {actualLetter}
+                          {new Date(completionRecord.completedAt).toLocaleTimeString()}
                         </div>
                       </div>
                     ) : (
                       <div>
                         <div>⏳ In Progress</div>
                         <div className="text-xs text-gray-400">
-                          Letter assigned
+                          Will get: {assignedLetter}
                         </div>
                       </div>
                     )}
@@ -521,10 +604,10 @@ export default function WordScramble() {
             <h2 className="text-xl font-bold mb-3">📚 How It Works</h2>
             <ul className="space-y-2 text-sm">
               <li>• <strong>Real tracking:</strong> Only groups that complete all 4 rooms contribute letters</li>
-              <li>• <strong>Live updates:</strong> This page updates automatically as groups finish</li>
+              <li>• <strong>Manual refresh:</strong> Click "🔄 Reload Class Progress" to check for new completions</li>
+              <li>• <strong>Auto-refresh:</strong> Page updates automatically every 5 seconds</li>
               <li>• <strong>No fake data:</strong> Letters only appear when Room 4 is actually completed</li>
               <li>• <strong>Class collaboration:</strong> Work together to solve the final word puzzle</li>
-              <li>• <strong>Immediate notification:</strong> Everyone sees the solution when it's found</li>
             </ul>
           </div>
         )}
