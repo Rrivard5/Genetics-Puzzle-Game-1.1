@@ -10,6 +10,7 @@ import WordScramble from './pages/WordScramble'
 import InstructorInterface from './components/InstructorInterface'
 import { GameProvider } from './context/GameStateContext'
 import Header from './components/Header'
+import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
   return (
@@ -21,12 +22,53 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/student-info" element={<StudentInfo />} />
-              <Route path="/room1" element={<Room1 />} />
-              <Route path="/room2" element={<Room2 />} />
-              <Route path="/room3" element={<Room3 />} />
-              <Route path="/room4" element={<Room4 />} />
-              <Route path="/complete" element={<Completion />} />
+              
+              {/* Protected Room Routes */}
+              <Route 
+                path="/room1" 
+                element={
+                  <ProtectedRoute>
+                    <Room1 />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/room2" 
+                element={
+                  <ProtectedRoute>
+                    <Room2 />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/room3" 
+                element={
+                  <ProtectedRoute>
+                    <Room3 />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/room4" 
+                element={
+                  <ProtectedRoute>
+                    <Room4 />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/complete" 
+                element={
+                  <ProtectedRoute>
+                    <Completion />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Word Scramble can be accessed without student info */}
               <Route path="/word-scramble" element={<WordScramble />} />
+              
+              {/* Instructor Interface */}
               <Route path="/instructor" element={<InstructorInterface />} />
             </Routes>
           </main>
