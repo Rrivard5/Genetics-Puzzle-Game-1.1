@@ -52,7 +52,7 @@ export default function Room4() {
       const regularPuzzles = groupPuzzles.filter(p => p.id !== 'help');
       setPuzzles(regularPuzzles);
     } else {
-      // Default puzzles for group 1 (excluding help question)
+      // Default puzzles for group (excluding help question)
       const defaultPuzzles = [
         {
           id: "p1",
@@ -384,7 +384,7 @@ export default function Room4() {
                             : 'bg-blue-600 hover:bg-blue-700 text-white'
                         }`}
                       >
-                        {helpAnswered ? '✅ Correct!' : '🔍 Check Answer'}
+                        {helpAnswered ? '✅ Correct!' : 'Submit Answer'}
                       </button>
                     </div>
                     
@@ -629,7 +629,7 @@ export default function Room4() {
                         {/* Answer Input - Multiple Choice */}
                         <div className="mb-4">
                           <div className="space-y-2">
-                            {puzzle.options.map((option, optIndex) => (
+                            {puzzle.options && puzzle.options.map((option, optIndex) => (
                               <label 
                                 key={optIndex}
                                 className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border-2 ${
@@ -667,7 +667,7 @@ export default function Room4() {
                             } text-white border-2 border-purple-400`}
                             style={{ fontFamily: 'Impact, "Arial Black", sans-serif' }}
                           >
-                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : '🌍 ANALYZE POPULATION'}
+                            {currentFeedback?.isCorrect ? '✅ CORRECT!' : 'Submit Answer'}
                           </button>
                         </div>
 
