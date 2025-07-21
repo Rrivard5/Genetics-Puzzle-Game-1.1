@@ -861,9 +861,6 @@ const InstructorInterface = () => {
               )}
             </button>
           </div>
-          <div className="mt-6 text-center text-sm text-gray-500">
-            Default password: genetics2024
-          </div>
         </div>
       </div>
     );
